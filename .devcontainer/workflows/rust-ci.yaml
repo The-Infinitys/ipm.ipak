@@ -1,0 +1,51 @@
+name: Rust CI (Auto-format)
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      # Fetch all history so that we can push back later.
+      # If you have a very large history, consider adjusting fetch-depth.
+      with:
+        fetch-depth: 0
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+
+    - name: Run cargo check
+      run: cargo check --verbose
+
+    - name: Run cargo clippy
+      run: cargo clippy --verbose --all-targets --all-features --no-deps
+      # Consider adding -- -D warnings to treat clippy warnings as errors
+
+    - name: Run cargo fmt
+      run: cargo fmt --all # --checkを削除し、実際にフォーマットを実行
+
+    - name: Commit and Push changes (if any)
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        # Check if there are any changes after fmt
+        if git status --porcelain | grep -q .; then
+          echo "Formatting changes found. Committing..."
+          git add .
+          git commit -m "ci: auto-format code with cargo fmt"
+          # Push changes - use the GITHUB_TOKEN for authentication
+          # The '--follow-tags' is not strictly necessary here, but good practice
+          git push origin HEAD:dev # Push to the dev branch
+        else
+          echo "No formatting changes found."
+        fi
