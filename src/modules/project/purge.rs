@@ -50,7 +50,7 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
 
     // プロジェクトのメタデータディレクトリを取得
     let target_dir = metadata::get_dir().map_err(|_| {
-        "Error: Couldn't find Ipkg Directory. Make sure you are in an ipak project.".to_string()
+        "Error: Couldn't find Ipak Directory. Make sure you are in an ipak project.".to_string()
     })?;
 
     // プロジェクトのメタデータを読み込む

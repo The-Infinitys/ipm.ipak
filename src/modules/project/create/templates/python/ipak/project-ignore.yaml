@@ -9,7 +9,7 @@ normal:
   - ".gitattributes"
   - "README.md"
 min:
-  - "src/"
+  - "**/*.py"
   - "venv/"
   - "__pycache__/"
   - "*.pyc"

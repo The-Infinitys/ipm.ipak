@@ -48,10 +48,10 @@ impl Display for RemoveOptions {
 pub fn remove(opts: RemoveOptions) -> Result<(), String> {
     dprintln!("{}", &opts); // デバッグログ出力
 
-    // Ipkg ディレクトリのパスを取得します。
+    // Ipak ディレクトリのパスを取得します。
     // エラーの場合は、より詳細なエラーメッセージを返します。
     let target_dir = metadata::get_dir().map_err(|_| {
-        "Error: Couldn't find Ipkg Directory. Make sure you are in a project directory or Ipkg is installed."
+        "Error: Couldn't find Ipak Directory. Make sure you are in a project directory or Ipak is installed."
             .to_string()
     })?;
 

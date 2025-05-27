@@ -23,7 +23,7 @@ case "$IPAK_INSTALL_MODE" in
 esac
 # Determine source and destination paths
 BINARY_DIR="dist"
-BINARY_PATH="$BINARY_DIR/main"
+BINARY_PATH="$BINARY_DIR/__main__"
 if [ "$IPAK_INSTALL_MODE" = "local" ]; then
     INSTALL_DIR="$HOME/.ipak/bin"
 else

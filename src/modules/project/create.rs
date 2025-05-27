@@ -5,7 +5,7 @@ mod templates;
 use super::super::pkg::{AuthorAboutData, PackageData}; // 複数のアイテムを一行でインポート
 use crate::utils::files::file_creation;
 use std::fmt::{self, Display, Formatter};
-
+use colored::Colorize;
 /// プロジェクトテンプレートのタイプを定義します。
 #[derive(PartialEq, Eq, Default)] // Default を追加して、ProjectParams のデフォルト実装を容易にする
 pub enum ProjectTemplateType {
@@ -43,11 +43,12 @@ pub struct ProjectParams {
 impl Display for ProjectParams {
     /// `ProjectParams` の内容を整形して表示します。
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(
+        writeln!(f, "{}: {}", "Project".bold(), self.project_name)?;
+        writeln!(f, "{}: {}", "Template".bold(), self.project_template)?;
+        writeln!(
             f,
-            "Project: {}\nTemplate: {}\nAuthor: {} <{}>", // Author 情報も表示に追加
-            self.project_name,
-            self.project_template,
+            "{}: {} <{}>", // Author 情報も表示に追加
+            "Author".bold(),
             self.author.name,
             self.author.email
         )
@@ -95,6 +96,18 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     project_data.about.package.name = params.project_name.clone(); // to_string() は不要、clone() で十分
     project_data.about.author = params.author.clone();
 
+    // テンプレートに基づくファイル生成
+    let project_data = match params.project_template {
+        ProjectTemplateType::Default => templates::default(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+        ProjectTemplateType::Rust => templates::rust(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+        ProjectTemplateType::Python => templates::python(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+        ProjectTemplateType::Dotnet => templates::dotnet(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+    }?; // ここで ? 演算子を使用し、エラーを自動伝播
+
     let project_data_filename = "ipak/project.yaml";
     let data = serde_yaml::to_string(&project_data)?; // YamlError を自動変換
 
@@ -102,18 +115,6 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     // ここでは file_creation が直接 io::Result を返すことを想定
     file_creation(project_data_filename, &data)
         .map_err(ProjectCreationError::Io)?; // io::Error を ProjectCreationError::Io にマップ
-
-    // テンプレートに基づくファイル生成
-    match params.project_template {
-        ProjectTemplateType::Default => templates::default()
-            .map_err(|e| ProjectCreationError::Template(e.to_string())),
-        ProjectTemplateType::Rust => templates::rust()
-            .map_err(|e| ProjectCreationError::Template(e.to_string())),
-        ProjectTemplateType::Python => templates::python()
-            .map_err(|e| ProjectCreationError::Template(e.to_string())),
-            ProjectTemplateType::Dotnet => templates::dotnet()
-            .map_err(|e| ProjectCreationError::Template(e.to_string())),
-    }?; // ここで ? 演算子を使用し、エラーを自動伝播
 
     Ok(())
 }
