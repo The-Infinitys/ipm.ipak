@@ -23,9 +23,9 @@ esac
 echo "Building $IPAK_PROJECT_NAME version $IPAK_PROJECT_VERSION in $BUILD_MODE mode"
 
 if [ "$BUILD_MODE" = "release" ]; then
-    dotnet build --configuration Release
+    dotnet build --configuration Release --output=target/$BUILD_MODE/
 else
-    dotnet build --configuration Debug
+    dotnet build --configuration Debug --output=target/$BUILD_MODE/
 fi
 
 echo "Build completed successfully"

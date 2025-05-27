@@ -1,0 +1,22 @@
+source-build:
+  - "**/*.user"
+  - "**/*.suo"
+  - "**/*.log"
+  - "**/*.tmp"
+  - "**/*.cache"
+  - "**/*.pdb"
+  - "**/*.mdb"
+
+normal:
+  - ".git/"
+  - ".gitignore"
+  - ".gitattributes"
+  - "README.md"
+  - "LICENSE"
+  - "*.csproj.user"
+  - "*.sln"
+  - "*.csproj"
+
+min:
+  - "src/"
+  
