@@ -278,3 +278,77 @@ pub fn python() -> Result<(), io::Error> {
     ];
     setup_files(setup_list)
 }
+
+pub fn dotnet() -> Result<(), io::Error> {
+    // 'dotnet' コマンドの利用可能性をチェック
+    if !shell::is_cmd_available("dotnet") {
+        let dotnet_url = "https://dotnet.microsoft.com/download";
+        eprintln!("Error: 'dotnet' command not found.");
+        eprintln!("To create a .NET project, you need to install .NET");
+        eprintln!("For more information, please visit {}.", dotnet_url);
+        return Err(Error::new(
+            ErrorKind::NotFound,
+            "dotnet command not found. Please install .NET.",
+        ));
+    }
+    
+
+    // 'dotnet new' を実行してDotnetプロジェクトを初期化
+    let status =
+        Command::new("dotnet").arg("new").arg("console").arg("--output=./").status().map_err(|e| {
+            Error::new(
+                ErrorKind::Other,
+                format!("Failed to execute 'dotnet new': {}", e),
+            )
+        })?;
+
+    if !status.success() {
+        return Err(Error::new(
+            ErrorKind::Other,
+            format!(
+                "'dotnet new' command failed with exit status: {}",
+                status
+            ),
+        ));
+    }
+
+    // ipak スクリプトをdotnetプロジェクトに追加
+    let setup_list = vec![
+        SetUpItem {
+            path: "ipak/scripts/build.sh".to_string(),
+            content: include_str!("templates/dotnet/ipak/scripts/build.sh")
+                .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/install.sh".to_string(),
+            content: include_str!(
+                "templates/dotnet/ipak/scripts/install.sh"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/remove.sh".to_string(),
+            content: include_str!("templates/dotnet/ipak/scripts/remove.sh")
+                .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/purge.sh".to_string(),
+            content: include_str!("templates/dotnet/ipak/scripts/purge.sh")
+                .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/project-ignore.yaml".to_string(),
+            content: include_str!(
+                "templates/dotnet/ipak/project-ignore.yaml"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/README.md".to_string(),
+            content: include_str!("templates/script-README.md")
+                .to_string(),
+        },
+    ];
+    setup_files(setup_list)?;
+    Ok(())
+}

@@ -14,6 +14,7 @@ pub enum ProjectTemplateType {
     Default,
     Rust,
     Python,
+    Dotnet,
 }
 
 impl FromStr for ProjectTemplateType {
@@ -25,6 +26,7 @@ impl FromStr for ProjectTemplateType {
             "default" => Ok(Self::Default),
             "rust" => Ok(Self::Rust),
             "python" => Ok(Self::Python),
+            "dotnet" => Ok(Self::Dotnet),
             _ => Err(format!("Unavailable Template: '{}'", s)),
         }
     }
@@ -58,6 +60,7 @@ impl Display for ProjectTemplateType {
             ProjectTemplateType::Default => "default",
             ProjectTemplateType::Rust => "rust",
             ProjectTemplateType::Python => "python",
+            ProjectTemplateType::Dotnet => "dotnet",
         };
         write!(f, "{}", template_str)
     }
@@ -107,6 +110,8 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
         ProjectTemplateType::Rust => templates::rust()
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
         ProjectTemplateType::Python => templates::python()
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+            ProjectTemplateType::Dotnet => templates::dotnet()
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
     }?; // ここで ? 演算子を使用し、エラーを自動伝播
 
