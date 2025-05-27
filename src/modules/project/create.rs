@@ -95,6 +95,18 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     project_data.about.package.name = params.project_name.clone(); // to_string() は不要、clone() で十分
     project_data.about.author = params.author.clone();
 
+    // テンプレートに基づくファイル生成
+    let project_data =match params.project_template {
+        ProjectTemplateType::Default => templates::default(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+        ProjectTemplateType::Rust => templates::rust(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+        ProjectTemplateType::Python => templates::python(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+            ProjectTemplateType::Dotnet => templates::dotnet(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+    }?; // ここで ? 演算子を使用し、エラーを自動伝播
+
     let project_data_filename = "ipak/project.yaml";
     let data = serde_yaml::to_string(&project_data)?; // YamlError を自動変換
 
@@ -102,18 +114,6 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
     // ここでは file_creation が直接 io::Result を返すことを想定
     file_creation(project_data_filename, &data)
         .map_err(ProjectCreationError::Io)?; // io::Error を ProjectCreationError::Io にマップ
-
-    // テンプレートに基づくファイル生成
-    match params.project_template {
-        ProjectTemplateType::Default => templates::default()
-            .map_err(|e| ProjectCreationError::Template(e.to_string())),
-        ProjectTemplateType::Rust => templates::rust()
-            .map_err(|e| ProjectCreationError::Template(e.to_string())),
-        ProjectTemplateType::Python => templates::python()
-            .map_err(|e| ProjectCreationError::Template(e.to_string())),
-            ProjectTemplateType::Dotnet => templates::dotnet()
-            .map_err(|e| ProjectCreationError::Template(e.to_string())),
-    }?; // ここで ? 演算子を使用し、エラーを自動伝播
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-use crate::utils::files::file_creation;
+use crate::{modules::pkg::PackageData, utils::files::file_creation};
 use crate::utils::shell;
 use std::{
     io::{self, Error, ErrorKind},
@@ -48,7 +48,7 @@ fn setup_files(setup_list: Vec<SetUpItem>) -> Result<(), io::Error> {
 /// # 戻り値
 ///
 /// テンプレートの設定が成功した場合は `Ok(())`、ファイル作成に失敗した場合は `std::io::Error` を返します。
-pub fn default() -> Result<(), io::Error> {
+pub fn default(pkg_data:PackageData) -> Result<PackageData, io::Error> {
     let setup_list = vec![
         SetUpItem {
             path: "ipak/scripts/build.sh".to_string(),
@@ -98,7 +98,7 @@ pub fn default() -> Result<(), io::Error> {
 ///
 /// テンプレートの設定が成功した場合は `Ok(())`、`cargo` が見つからない場合や
 /// コマンドの実行に失敗した場合は `std::io::Error` を返します。
-pub fn rust() -> Result<(), io::Error> {
+pub fn rust(pkg_data:PackageData) -> Result<PackageData, io::Error> {
     // 'cargo' コマンドの利用可能性をチェック
     if !shell::is_cmd_available("cargo") {
         let rustup_url = "https://www.rust-lang.org/tools/install";
@@ -186,7 +186,7 @@ pub fn rust() -> Result<(), io::Error> {
 ///
 /// テンプレートの設定が成功した場合は `Ok(())`、`python3` が見つからない場合や
 /// コマンドの実行またはファイル作成に失敗した場合は `std::io::Error` を返します。
-pub fn python() -> Result<(), io::Error> {
+pub fn python(pkg_data:PackageData) -> Result<PackageData, io::Error> {
     // 'python3' コマンドの利用可能性をチェック
     if !shell::is_cmd_available("python3") {
         let python_url = "https://www.python.org/downloads/";
@@ -279,7 +279,7 @@ pub fn python() -> Result<(), io::Error> {
     setup_files(setup_list)
 }
 
-pub fn dotnet() -> Result<(), io::Error> {
+pub fn dotnet(pkg_data:PackageData) -> Result<PackageData, io::Error> {
     // 'dotnet' コマンドの利用可能性をチェック
     if !shell::is_cmd_available("dotnet") {
         let dotnet_url = "https://dotnet.microsoft.com/download";
