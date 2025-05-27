@@ -167,7 +167,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     // Get project directory
     let target_dir = metadata::get_dir().map_err(|e| {
         format!(
-            "Error: Couldn't find Ipkg Directory. Make sure you are in an ipak project. Details: {:?}", 
+            "Error: Couldn't find Ipak Directory. Make sure you are in an ipak project. Details: {:?}", 
             e
         )
     })?;

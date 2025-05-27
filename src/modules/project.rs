@@ -420,6 +420,7 @@ fn project_create(args: Vec<&Option>) -> Result<(), std::io::Error> {
                     &format!("{}", ProjectTemplateType::Default),
                     &format!("{}", ProjectTemplateType::Rust),
                     &format!("{}", ProjectTemplateType::Python),
+                    &format!("{}", ProjectTemplateType::Dotnet),
                 ],
             ))
             .unwrap_or_default();

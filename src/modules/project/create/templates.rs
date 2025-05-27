@@ -1,5 +1,7 @@
-use crate::utils::files::file_creation;
+use crate::modules::version::Version;
 use crate::utils::shell;
+use crate::{modules::pkg::PackageData, utils::files::file_creation};
+use std::str::FromStr;
 use std::{
     io::{self, Error, ErrorKind},
     process::Command,
@@ -48,7 +50,7 @@ fn setup_files(setup_list: Vec<SetUpItem>) -> Result<(), io::Error> {
 /// # 戻り値
 ///
 /// テンプレートの設定が成功した場合は `Ok(())`、ファイル作成に失敗した場合は `std::io::Error` を返します。
-pub fn default() -> Result<(), io::Error> {
+pub fn default(pkg_data: PackageData) -> Result<PackageData, io::Error> {
     let setup_list = vec![
         SetUpItem {
             path: "ipak/scripts/build.sh".to_string(),
@@ -84,7 +86,8 @@ pub fn default() -> Result<(), io::Error> {
                 .to_string(),
         },
     ];
-    setup_files(setup_list)
+    setup_files(setup_list)?;
+    Ok(pkg_data)
 }
 
 /// Rust プロジェクトテンプレートを設定します。
@@ -98,8 +101,13 @@ pub fn default() -> Result<(), io::Error> {
 ///
 /// テンプレートの設定が成功した場合は `Ok(())`、`cargo` が見つからない場合や
 /// コマンドの実行に失敗した場合は `std::io::Error` を返します。
-pub fn rust() -> Result<(), io::Error> {
+pub fn rust(pkg_data: PackageData) -> Result<PackageData, io::Error> {
     // 'cargo' コマンドの利用可能性をチェック
+    let mut pkg_data = pkg_data;
+    pkg_data.about.package.version =
+        Version::from_str("0.1.0").map_err(|e| -> io::Error {
+            io::Error::new(io::ErrorKind::InvalidInput, e)
+        })?;
     if !shell::is_cmd_available("cargo") {
         let rustup_url = "https://www.rust-lang.org/tools/install";
         eprintln!("Error: 'cargo' command not found.");
@@ -172,7 +180,8 @@ pub fn rust() -> Result<(), io::Error> {
                 .to_string(),
         },
     ];
-    setup_files(setup_list)
+    setup_files(setup_list)?;
+    Ok(pkg_data)
 }
 
 /// Python プロジェクトテンプレートを設定します。
@@ -186,8 +195,7 @@ pub fn rust() -> Result<(), io::Error> {
 ///
 /// テンプレートの設定が成功した場合は `Ok(())`、`python3` が見つからない場合や
 /// コマンドの実行またはファイル作成に失敗した場合は `std::io::Error` を返します。
-pub fn python() -> Result<(), io::Error> {
-    // 'python3' コマンドの利用可能性をチェック
+pub fn python(pkg_data: PackageData) -> Result<PackageData, io::Error> {
     if !shell::is_cmd_available("python3") {
         let python_url = "https://www.python.org/downloads/";
         eprintln!("Error: 'python3' command not found.");
@@ -266,8 +274,13 @@ pub fn python() -> Result<(), io::Error> {
                 .to_string(), // 共通のREADMEを使用
         },
         SetUpItem {
-            path: "src/main.py".to_string(),
-            content: include_str!("templates/python/src/main.py")
+            path: format!("{}/__main__.py", &pkg_data.about.package.name),
+            content: include_str!("templates/python/src/__main__.py")
+                .to_string(),
+        },
+        SetUpItem {
+            path: format!("{}/__init__.py", &pkg_data.about.package.name),
+            content: include_str!("templates/python/src/__init__.py")
                 .to_string(),
         },
         SetUpItem {
@@ -276,5 +289,90 @@ pub fn python() -> Result<(), io::Error> {
                 .to_string(),
         },
     ];
-    setup_files(setup_list)
+    setup_files(setup_list)?;
+    Ok(pkg_data)
+}
+
+pub fn dotnet(pkg_data: PackageData) -> Result<PackageData, io::Error> {
+    // 'dotnet' コマンドの利用可能性をチェック
+    let mut pkg_data = pkg_data;
+    if !shell::is_cmd_available("dotnet") {
+        let dotnet_url = "https://dotnet.microsoft.com/download";
+        eprintln!("Error: 'dotnet' command not found.");
+        eprintln!("To create a .NET project, you need to install .NET");
+        eprintln!("For more information, please visit {}.", dotnet_url);
+        return Err(Error::new(
+            ErrorKind::NotFound,
+            "dotnet command not found. Please install .NET.",
+        ));
+    }
+    pkg_data.relation.depend_cmds.push("dotnet".to_owned());
+    // 'dotnet new' を実行してDotnetプロジェクトを初期化
+    let status = Command::new("dotnet")
+        .arg("new")
+        .arg("console")
+        .arg("--output=./")
+        .status()
+        .map_err(|e| {
+            Error::new(
+                ErrorKind::Other,
+                format!("Failed to execute 'dotnet new': {}", e),
+            )
+        })?;
+
+    if !status.success() {
+        return Err(Error::new(
+            ErrorKind::Other,
+            format!(
+                "'dotnet new' command failed with exit status: {}",
+                status
+            ),
+        ));
+    }
+
+    // ipak スクリプトをdotnetプロジェクトに追加
+    let setup_list = vec![
+        SetUpItem {
+            path: "ipak/scripts/build.sh".to_string(),
+            content: include_str!(
+                "templates/dotnet/ipak/scripts/build.sh"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/install.sh".to_string(),
+            content: include_str!(
+                "templates/dotnet/ipak/scripts/install.sh"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/remove.sh".to_string(),
+            content: include_str!(
+                "templates/dotnet/ipak/scripts/remove.sh"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/purge.sh".to_string(),
+            content: include_str!(
+                "templates/dotnet/ipak/scripts/purge.sh"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/project-ignore.yaml".to_string(),
+            content: include_str!(
+                "templates/dotnet/ipak/project-ignore.yaml"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/README.md".to_string(),
+            content: include_str!("templates/script-README.md")
+                .to_string(),
+        },
+    ];
+    setup_files(setup_list)?;
+    Ok(pkg_data)
 }

@@ -22,21 +22,11 @@ esac
 
 echo "Building $IPAK_PROJECT_NAME version $IPAK_PROJECT_VERSION in $BUILD_MODE mode"
 
-# activate python venv
-if [ ! -d venv ]; then
-    echo "Couldn't found venv. recreating."
-    python3 -m venv ./venv/
-fi
-source ./venv/bin/activate
-# install requirements
-pip install -r ./requirements.txt
-rm -rf ./dist/ ./build
 if [ "$BUILD_MODE" = "release" ]; then
-    pyinstaller $IPAK_PROJECT_NAME/__main__.py --onefile --clean
+    dotnet build --configuration Release --output=target/$BUILD_MODE/
 else
-    pyinstaller $IPAK_PROJECT_NAME/__main__.py --onedir --clean
+    dotnet build --configuration Debug --output=target/$BUILD_MODE/
 fi
 
-deactivate
 echo "Build completed successfully"
 # build binary

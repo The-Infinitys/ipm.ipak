@@ -22,8 +22,8 @@ case "$IPAK_INSTALL_MODE" in
         ;;
 esac
 # Determine source and destination paths
-BINARY_DIR="dist"
-BINARY_PATH="$BINARY_DIR/__main__"
+BINARY_DIR="target/release"
+BINARY_PATH="$BINARY_DIR/$IPAK_PROJECT_NAME"
 if [ "$IPAK_INSTALL_MODE" = "local" ]; then
     INSTALL_DIR="$HOME/.ipak/bin"
 else
@@ -44,6 +44,7 @@ echo "Installing $IPAK_PROJECT_NAME version $IPAK_PROJECT_VERSION to $DEST_PATH"
 
 # Copy binary
 cp "$BINARY_PATH" "$DEST_PATH"
+cp "$BINARY_PATH.dll" "$DEST_PATH"
 
 # Set executable permissions
 chmod +x "$DEST_PATH"
