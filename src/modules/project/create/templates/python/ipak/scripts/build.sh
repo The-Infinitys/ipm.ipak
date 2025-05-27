@@ -32,9 +32,9 @@ source ./venv/bin/activate
 pip install -r ./requirements.txt
 rm -rf ./dist/ ./build
 if [ "$BUILD_MODE" = "release" ]; then
-    pyinstaller $IPKG_PROJECT_NAME/__main__.py --onefile --clean
+    pyinstaller $IPAK_PROJECT_NAME/__main__.py --onefile --clean
 else
-    pyinstaller $IPKG_PROJECT_NAME/__main__.py --onedir --clean
+    pyinstaller $IPAK_PROJECT_NAME/__main__.py --onedir --clean
 fi
 
 deactivate
