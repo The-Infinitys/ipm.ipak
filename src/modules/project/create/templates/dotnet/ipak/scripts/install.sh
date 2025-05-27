@@ -44,6 +44,7 @@ echo "Installing $IPAK_PROJECT_NAME version $IPAK_PROJECT_VERSION to $DEST_PATH"
 
 # Copy binary
 cp "$BINARY_PATH" "$DEST_PATH"
+cp "$BINARY_PATH.dll" "$DEST_PATH"
 
 # Set executable permissions
 chmod +x "$DEST_PATH"

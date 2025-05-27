@@ -34,6 +34,7 @@ echo "Removing $IPAK_PROJECT_NAME version $IPAK_PROJECT_VERSION from $BINARY_PAT
 # Remove binary if it exists
 if [ -f "$BINARY_PATH" ]; then
     rm "$BINARY_PATH"
+    rm "$BINARY_PATH.dll"
     echo "Removed successfully"
 else
     echo "Warning: Binary '$BINARY_PATH' not found, nothing to remove"
