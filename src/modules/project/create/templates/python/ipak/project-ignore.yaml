@@ -1,0 +1,19 @@
+source-build:
+  - "log/"
+  - "**/*.log"
+  - "tmp/"
+  - "**/*.tmp"
+normal:
+  - ".git/"
+  - ".gitignore"
+  - ".gitattributes"
+  - "README.md"
+min:
+  - "src/"
+  - "venv/"
+  - "__pycache__/"
+  - "*.pyc"
+  - "*.pyo"
+  - "requirements.txt"
+  - "setup.py"
+  - "build/"

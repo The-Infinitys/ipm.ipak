@@ -1,0 +1,9 @@
+{name} {version} ({architecture})
+
+Usage: {name} command [options]
+
+{name}はThe Infinity'sによって開発されたシステム用パッケージマネージャーです。
+詳しい情報については、 {name} --help で参照;
+それぞれのコマンドについての情報は {name} --help command で参照してください。
+
+The Infinity's
