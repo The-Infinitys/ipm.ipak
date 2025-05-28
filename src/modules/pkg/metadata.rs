@@ -143,6 +143,6 @@ pub fn metadata(args: Vec<&Option>) -> Result<(), std::io::Error> {
 
 fn metadata_process() -> Result<pkg::PackageData, std::io::Error> {
     project::metadata::metadata()
-        .map_err(|e| std::io::Error::other(e))?;
+        .map_err(std::io::Error::other)?;
     project::metadata::metadata()
 }

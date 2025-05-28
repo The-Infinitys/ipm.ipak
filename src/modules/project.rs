@@ -162,7 +162,7 @@ fn project_package(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     package::package(package_options)
-        .map_err(|msg| std::io::Error::other(msg))
+        .map_err(std::io::Error::other)
 }
 
 fn project_build(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -201,7 +201,7 @@ fn project_build(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     build::build(build_options)
-        .map_err(|msg| std::io::Error::other(msg))
+        .map_err(std::io::Error::other)
 }
 
 fn project_install(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -240,7 +240,7 @@ fn project_install(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     install::install(install_options)
-        .map_err(|msg| std::io::Error::other(msg))
+        .map_err(std::io::Error::other)
 }
 
 fn project_remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -277,7 +277,7 @@ fn project_remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     remove::remove(remove_options)
-        .map_err(|msg| std::io::Error::other(msg))
+        .map_err(std::io::Error::other)
 }
 
 fn project_purge(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -314,7 +314,7 @@ fn project_purge(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     purge::purge(purge_options)
-        .map_err(|msg| std::io::Error::other(msg))
+        .map_err(std::io::Error::other)
 }
 
 fn project_metadata() -> Result<(), std::io::Error> {
