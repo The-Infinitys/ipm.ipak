@@ -155,7 +155,7 @@ fn uninstall_process(
                 remove_shell: project::ExecShell::default(),
             };
             project::remove::remove(opts).map_err(|e| {
-                std::io::Error::new(std::io::ErrorKind::Other, e)
+                std::io::Error::other(e)
             })?;
             Ok(())
         }

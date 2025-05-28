@@ -127,15 +127,13 @@ pub fn rust(pkg_data: PackageData) -> Result<PackageData, io::Error> {
     // 'cargo init' を実行してRustプロジェクトを初期化
     let status =
         Command::new("cargo").arg("init").status().map_err(|e| {
-            Error::new(
-                ErrorKind::Other,
+            Error::other(
                 format!("Failed to execute 'cargo init': {}", e),
             )
         })?;
 
     if !status.success() {
-        return Err(Error::new(
-            ErrorKind::Other,
+        return Err(Error::other(
             format!(
                 "'cargo init' command failed with exit status: {}",
                 status
@@ -218,15 +216,13 @@ pub fn python(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         .args(["-m", "venv", "venv"]) // 'venv' という名前のフォルダを作成します
         .status()
         .map_err(|e| {
-            Error::new(
-                ErrorKind::Other,
+            Error::other(
                 format!("Failed to execute 'python3 -m venv venv': {}", e),
             )
         })?;
 
     if !venv_status.success() {
-        return Err(Error::new(
-            ErrorKind::Other,
+        return Err(Error::other(
             format!(
                 "'python3 -m venv venv' command failed with exit status: {}",
                 venv_status
@@ -314,15 +310,13 @@ pub fn dotnet(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         .arg("--output=./")
         .status()
         .map_err(|e| {
-            Error::new(
-                ErrorKind::Other,
+            Error::other(
                 format!("Failed to execute 'dotnet new': {}", e),
             )
         })?;
 
     if !status.success() {
-        return Err(Error::new(
-            ErrorKind::Other,
+        return Err(Error::other(
             format!(
                 "'dotnet new' command failed with exit status: {}",
                 status

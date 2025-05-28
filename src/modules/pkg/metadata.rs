@@ -72,8 +72,7 @@ pub fn metadata(args: Vec<&Option>) -> Result<(), std::io::Error> {
     if !extract_command_output.status.success() {
         let stderr =
             String::from_utf8_lossy(&extract_command_output.stderr);
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
+        return Err(std::io::Error::other(
             format!("Failed to exec tar command: {}", stderr),
         ));
     }
@@ -144,6 +143,6 @@ pub fn metadata(args: Vec<&Option>) -> Result<(), std::io::Error> {
 
 fn metadata_process() -> Result<pkg::PackageData, std::io::Error> {
     project::metadata::metadata()
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        .map_err(|e| std::io::Error::other(e))?;
     project::metadata::metadata()
 }

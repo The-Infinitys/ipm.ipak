@@ -10,7 +10,8 @@ pub fn configure(args: Vec<&Option>) -> Result<(), std::io::Error> {
 
     let sub_cmd = args.first().unwrap();
     // let sub_args: Vec<&Option> = args[1..].to_vec();
-    let result = match sub_cmd.opt_str.as_str() {
+    
+    match sub_cmd.opt_str.as_str() {
         "local" | "--local" | "-l" => local::configure(),
         "global" | "--global" | "-g" => global::configure(),
         _ => {
@@ -20,6 +21,5 @@ pub fn configure(args: Vec<&Option>) -> Result<(), std::io::Error> {
                 local::configure()
             }
         }
-    };
-    result
+    }
 }

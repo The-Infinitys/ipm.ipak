@@ -162,7 +162,7 @@ fn project_package(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     package::package(package_options)
-        .map_err(|msg| std::io::Error::new(std::io::ErrorKind::Other, msg))
+        .map_err(|msg| std::io::Error::other(msg))
 }
 
 fn project_build(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -201,7 +201,7 @@ fn project_build(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     build::build(build_options)
-        .map_err(|msg| std::io::Error::new(std::io::ErrorKind::Other, msg))
+        .map_err(|msg| std::io::Error::other(msg))
 }
 
 fn project_install(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -240,7 +240,7 @@ fn project_install(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     install::install(install_options)
-        .map_err(|msg| std::io::Error::new(std::io::ErrorKind::Other, msg))
+        .map_err(|msg| std::io::Error::other(msg))
 }
 
 fn project_remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -277,7 +277,7 @@ fn project_remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     remove::remove(remove_options)
-        .map_err(|msg| std::io::Error::new(std::io::ErrorKind::Other, msg))
+        .map_err(|msg| std::io::Error::other(msg))
 }
 
 fn project_purge(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -314,14 +314,13 @@ fn project_purge(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
     purge::purge(purge_options)
-        .map_err(|msg| std::io::Error::new(std::io::ErrorKind::Other, msg))
+        .map_err(|msg| std::io::Error::other(msg))
 }
 
 fn project_metadata() -> Result<(), std::io::Error> {
     metadata::show_metadata().map_err(|_| {
         // エラー詳細が不要な場合は `_` で無視
-        std::io::Error::new(
-            std::io::ErrorKind::Other,
+        std::io::Error::other(
             "failed to get metadata",
         )
     })
@@ -435,8 +434,7 @@ fn project_create(args: Vec<&Option>) -> Result<(), std::io::Error> {
     println!("{}", params); // Debugging/User info
 
     fs::create_dir(&params.project_name).map_err(|err| {
-        std::io::Error::new(
-            std::io::ErrorKind::Other,
+        std::io::Error::other(
             format!(
                 "failed to create dir: {}\nDue to: {}",
                 &params.project_name,
@@ -446,15 +444,13 @@ fn project_create(args: Vec<&Option>) -> Result<(), std::io::Error> {
     })?;
 
     env::set_current_dir(&params.project_name).map_err(|_| {
-        std::io::Error::new(
-            std::io::ErrorKind::Other,
+        std::io::Error::other(
             format!("failed to set current dir: {}", &params.project_name),
         )
     })?;
 
     create::create(&params).map_err(|_| {
-        std::io::Error::new(
-            std::io::ErrorKind::Other,
+        std::io::Error::other(
             format!("failed to create project: {}", &params.project_name),
         )
     })?;
