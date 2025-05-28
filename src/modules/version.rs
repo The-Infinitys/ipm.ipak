@@ -218,6 +218,17 @@ impl Version {
                 } else {
                     range_data.earlier_or_equal = Some(self.clone());
                 }
+
+                // >= x, <= x の場合は == x に変換
+                if let Some(later_ver) = &range_data.later_or_equal {
+                    if let Some(earlier_ver) = &range_data.earlier_or_equal {
+                        if later_ver == earlier_ver {
+                            range_data.exactly_equal = Some(later_ver.clone());
+                            range_data.earlier_or_equal = None;
+                            range_data.later_or_equal = None;
+                        }
+                    }
+                }
             }
             VersionRangeInsertType::ExactlyEqual => {
                 // 矛盾チェック:
@@ -243,9 +254,9 @@ impl Version {
                 range_data.exactly_equal = Some(self.clone());
                 // == が設定されたら、他の制約を絞り込む
                 range_data.strictly_earlier = None;
-                range_data.earlier_or_equal = Some(self.clone());
+                range_data.earlier_or_equal = None;
                 range_data.strictly_later = None;
-                range_data.later_or_equal = Some(self.clone());
+                range_data.later_or_equal = None;
             }
             VersionRangeInsertType::LaterOrEqual => {
                 // 矛盾チェック:
@@ -273,6 +284,17 @@ impl Version {
                     }
                 } else {
                     range_data.later_or_equal = Some(self.clone());
+                }
+
+                // >= x, <= x の場合は == x に変換
+                if let Some(earlier_ver) = &range_data.earlier_or_equal {
+                    if let Some(later_ver) = &range_data.later_or_equal {
+                        if later_ver == earlier_ver {
+                            range_data.exactly_equal = Some(later_ver.clone());
+                            range_data.earlier_or_equal = None;
+                            range_data.later_or_equal = None;
+                        }
+                    }
                 }
             }
             VersionRangeInsertType::StrictlyLater => {
@@ -564,7 +586,7 @@ impl Display for RangeData {
             parts.push(format!("<= {}", v.string));
         }
         if let Some(v) = &self.exactly_equal {
-            parts.push(format!("== {}", v.string));
+            parts.push(format!("= {}", v.string));
         }
         if let Some(v) = &self.later_or_equal {
             parts.push(format!(">= {}", v.string));
@@ -611,7 +633,8 @@ mod tests {
             "In RangeExact, version1: {}",
             range_exact.compare(&version1)
         );
-
+        let range_debug = VersionRange::from_str("<= 2.0, = 2.0").unwrap();
+        assert_eq!(range_debug.to_string(), "= 2.0");
         let conflict_range = VersionRange::from_str(">= 2.0, < 1.0");
         println!("Conflict Range: {:?}", conflict_range);
     }
