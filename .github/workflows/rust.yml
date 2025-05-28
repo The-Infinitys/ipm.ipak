@@ -1,0 +1,44 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # この行を追加: プッシュできるようにtokenを設定
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check
+      run: cargo check --verbose
+
+    - name: Clippy
+      run: cargo clippy --verbose
+
+    - name: Format
+      run: cargo fmt
+
+    - name: Commit formatted code
+      # このステップを追加
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add .
+        git commit -m "Automated formatting by cargo fmt" || echo "No changes to commit"
+        git push || echo "Nothing to push"
+
+    - name: Build
+      run: cargo build --verbose
+
+    - name: Run tests
+      run: cargo test --verbose
