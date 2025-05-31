@@ -422,7 +422,7 @@ pub fn clang(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         SetUpItem {
             path: "CMakeLists.txt".to_string(),
             content: include_str!("templates/clang/CMakeLists.txt")
-                .to_string(),
+                .to_string().replace("{name}", &pkg_data.about.package.name),
         },
     ];
     setup_files(setup_list)?;
