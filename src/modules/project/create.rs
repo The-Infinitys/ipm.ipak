@@ -4,8 +4,8 @@ use thiserror::Error;
 mod templates;
 use super::super::pkg::{AuthorAboutData, PackageData}; // 複数のアイテムを一行でインポート
 use crate::utils::files::file_creation;
-use std::fmt::{self, Display, Formatter};
 use colored::Colorize;
+use std::fmt::{self, Display, Formatter};
 /// プロジェクトテンプレートのタイプを定義します。
 #[derive(PartialEq, Eq, Default)] // Default を追加して、ProjectParams のデフォルト実装を容易にする
 pub enum ProjectTemplateType {
@@ -15,6 +15,7 @@ pub enum ProjectTemplateType {
     Rust,
     Python,
     Dotnet,
+    CLang,
 }
 
 impl FromStr for ProjectTemplateType {
@@ -27,6 +28,7 @@ impl FromStr for ProjectTemplateType {
             "rust" => Ok(Self::Rust),
             "python" => Ok(Self::Python),
             "dotnet" => Ok(Self::Dotnet),
+            "clang" | "cpp" => Ok(Self::CLang),
             _ => Err(format!("Unavailable Template: '{}'", s)),
         }
     }
@@ -58,10 +60,11 @@ impl Display for ProjectTemplateType {
     /// `ProjectTemplateType` の内容を整形して表示します。
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let template_str = match self {
-            ProjectTemplateType::Default => "default",
-            ProjectTemplateType::Rust => "rust",
-            ProjectTemplateType::Python => "python",
-            ProjectTemplateType::Dotnet => "dotnet",
+            Self::Default => "default",
+            Self::Rust => "rust",
+            Self::Python => "python",
+            Self::Dotnet => "dotnet",
+            Self::CLang => "clang",
         };
         write!(f, "{}", template_str)
     }
@@ -105,6 +108,8 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
         ProjectTemplateType::Python => templates::python(project_data)
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
         ProjectTemplateType::Dotnet => templates::dotnet(project_data)
+            .map_err(|e| ProjectCreationError::Template(e.to_string())),
+            ProjectTemplateType::CLang => templates::clang(project_data)
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
     }?; // ここで ? 演算子を使用し、エラーを自動伝播
 

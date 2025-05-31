@@ -127,18 +127,14 @@ pub fn rust(pkg_data: PackageData) -> Result<PackageData, io::Error> {
     // 'cargo init' を実行してRustプロジェクトを初期化
     let status =
         Command::new("cargo").arg("init").status().map_err(|e| {
-            Error::other(
-                format!("Failed to execute 'cargo init': {}", e),
-            )
+            Error::other(format!("Failed to execute 'cargo init': {}", e))
         })?;
 
     if !status.success() {
-        return Err(Error::other(
-            format!(
-                "'cargo init' command failed with exit status: {}",
-                status
-            ),
-        ));
+        return Err(Error::other(format!(
+            "'cargo init' command failed with exit status: {}",
+            status
+        )));
     }
 
     // ipak スクリプトをRustプロジェクトに追加
@@ -216,18 +212,17 @@ pub fn python(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         .args(["-m", "venv", "venv"]) // 'venv' という名前のフォルダを作成します
         .status()
         .map_err(|e| {
-            Error::other(
-                format!("Failed to execute 'python3 -m venv venv': {}", e),
-            )
+            Error::other(format!(
+                "Failed to execute 'python3 -m venv venv': {}",
+                e
+            ))
         })?;
 
     if !venv_status.success() {
-        return Err(Error::other(
-            format!(
-                "'python3 -m venv venv' command failed with exit status: {}",
-                venv_status
-            ),
-        ));
+        return Err(Error::other(format!(
+            "'python3 -m venv venv' command failed with exit status: {}",
+            venv_status
+        )));
     }
     eprintln!(
         "Virtual environment 'venv' created successfully in the current directory."
@@ -310,18 +305,14 @@ pub fn dotnet(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         .arg("--output=./")
         .status()
         .map_err(|e| {
-            Error::other(
-                format!("Failed to execute 'dotnet new': {}", e),
-            )
+            Error::other(format!("Failed to execute 'dotnet new': {}", e))
         })?;
 
     if !status.success() {
-        return Err(Error::other(
-            format!(
-                "'dotnet new' command failed with exit status: {}",
-                status
-            ),
-        ));
+        return Err(Error::other(format!(
+            "'dotnet new' command failed with exit status: {}",
+            status
+        )));
     }
 
     // ipak スクリプトをdotnetプロジェクトに追加
@@ -364,6 +355,73 @@ pub fn dotnet(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         SetUpItem {
             path: "ipak/scripts/README.md".to_string(),
             content: include_str!("templates/script-README.md")
+                .to_string(),
+        },
+    ];
+    setup_files(setup_list)?;
+    Ok(pkg_data)
+}
+
+pub fn clang(pkg_data: PackageData) -> Result<PackageData, io::Error> {
+    // 'clang' コマンドの利用可能性をチェック
+    let mut pkg_data = pkg_data;
+    if !shell::is_cmd_available("cmake") {
+        let clang_url = "https://clang.llvm.org/download.html";
+        eprintln!("Error: 'clang' command not found.");
+        eprintln!("To create a C++ project, you need to install clang");
+        eprintln!("For more information, please visit {}.", clang_url);
+        return Err(Error::new(
+            ErrorKind::NotFound,
+            "clang command not found. Please install clang.",
+        ));
+    }
+    pkg_data.relation.depend_cmds.push("cmake".to_owned());
+    // 予め用意しておいたファイルを利用してプロジェクトを初期化する。
+    let setup_list = vec![
+        SetUpItem {
+            path: "ipak/scripts/build.sh".to_string(),
+            content: include_str!("templates/clang/ipak/scripts/build.sh")
+                .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/install.sh".to_string(),
+            content: include_str!(
+                "templates/clang/ipak/scripts/install.sh"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/remove.sh".to_string(),
+            content: include_str!(
+                "templates/clang/ipak/scripts/remove.sh"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/purge.sh".to_string(),
+            content: include_str!("templates/clang/ipak/scripts/purge.sh")
+                .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/project-ignore.yaml".to_string(),
+            content: include_str!(
+                "templates/clang/ipak/project-ignore.yaml"
+            )
+            .to_string(),
+        },
+        SetUpItem {
+            path: "ipak/scripts/README.md".to_string(),
+            content: include_str!("templates/script-README.md")
+                .to_string(),
+        },
+        SetUpItem {
+            path: "src/main.cpp".to_string(),
+            content: include_str!("templates/clang/src/main.cpp")
+                .to_string(),
+        },
+        SetUpItem {
+            path: "CMakeLists.txt".to_string(),
+            content: include_str!("templates/clang/CMakeLists.txt")
                 .to_string(),
         },
     ];
