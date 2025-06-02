@@ -94,7 +94,6 @@ fn walk_and_copy(
         let dir_rel = dir.strip_prefix(source_base).map_err(|_| {
             format!("Failed to get relative path for directory {:?}", dir)
         })?;
-
         // If the current directory's relative path starts with the skip prefix,
         // skip this directory and its contents
         if dir_rel.starts_with(skip_prefix) {
@@ -126,7 +125,20 @@ fn walk_and_copy(
                 )?;
             } else {
                 // Check if the file is ignored
-                if !gitignore.matched(path_rel, true).is_ignore() {
+                // Convert path to a relative path from source_base
+                // let path =
+                //     path.strip_prefix(source_base).map_err(|_| {
+                //         format!(
+                //             "Failed to get relative path for {:?}",
+                //             path
+                //         )
+                //     })?;
+
+                // Check if the file is ignored using the relative path
+
+                if gitignore.matched(path_rel, true).is_ignore() {
+                    dprintln!("Ignored: {}", path_rel.display());
+                } else {
                     // Compute the destination path
                     let dest = dest_base.join(path_rel);
 
@@ -225,7 +237,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     // Build Gitignore from the ignore list
     let mut builder = GitignoreBuilder::new(&target_dir);
     for pattern in &ignore_list {
-        builder.add(pattern.as_str());
+        builder.add(target_dir.join(pattern.as_str()));
     }
     let gitignore = builder
         .build()
