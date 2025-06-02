@@ -1,8 +1,0 @@
-about:
-  author:
-    name: the-infinitys
-    email: the-infinitys@hyper-vubuntu.local
-  package:
-    name: hello-py
-    version: 1.0.0
-mode: Any

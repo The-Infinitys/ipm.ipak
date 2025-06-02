@@ -1,6 +1,7 @@
 use super::super::version::Version;
-use super::metadata::{self, metadata};
+use super::metadata;
 use crate::dprintln;
+use std::env;
 use std::fmt;
 use std::fs;
 use std::path::Path;
@@ -24,8 +25,8 @@ impl fmt::Display for PackageLanguage {
 }
 
 pub fn init() -> Result<(), std::io::Error> {
-    let mut pkg_metadata = metadata().unwrap_or_default();
-    let target_dir = metadata::get_dir()?;
+    let mut pkg_metadata = metadata::from_current().unwrap_or_default();
+    let target_dir = env::current_dir()?;
     let readme_path = target_dir.join("README.md");
 
     if readme_path.exists() {
