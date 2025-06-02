@@ -26,9 +26,10 @@ pub fn configure() -> Result<(), Error> {
     // Create .ipak/bin directory if it doesn't exist
     let ipak_bin_dir = home_dir.join(".ipak/bin");
     std::fs::create_dir_all(&ipak_bin_dir).map_err(|e| {
-        Error::other(
-            format!("Failed to create .ipak/bin directory: {}", e),
-        )
+        Error::other(format!(
+            "Failed to create .ipak/bin directory: {}",
+            e
+        ))
     })?;
 
     // Process the configure list
@@ -48,9 +49,10 @@ pub fn configure() -> Result<(), Error> {
     }
     let ipak_cache_dir = home_dir.join(".cache/ipak");
     std::fs::create_dir_all(&ipak_cache_dir).map_err(|e| {
-        Error::other(
-            format!("Failed to create .cache/ipak directory: {}", e),
-        )
+        Error::other(format!(
+            "Failed to create .cache/ipak directory: {}",
+            e
+        ))
     })?;
     Ok(())
 }

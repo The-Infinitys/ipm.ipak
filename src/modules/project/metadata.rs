@@ -110,23 +110,31 @@ pub fn write(package_data: &PackageData) -> Result<(), io::Error> {
     std::fs::create_dir_all(parent_dir)?; // ディレクトリが存在しない場合は作成
 
     // PackageData を YAML 文字列にシリアライズ
-    let yaml_string = serde_yaml::to_string(package_data).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("Failed to serialize PackageData to YAML: {}", e),
-        )
-    })?;
+    let yaml_string =
+        serde_yaml::to_string(package_data).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Failed to serialize PackageData to YAML: {}", e),
+            )
+        })?;
 
     // YAML 文字列を project.yaml ファイルに書き込み
     // std::fs::write はファイルが存在しない場合に作成します。
     std::fs::write(&metadata_path, yaml_string).map_err(|e| {
         io::Error::new(
             e.kind(),
-            format!("Failed to write to {}: {}", metadata_path.display(), e),
+            format!(
+                "Failed to write to {}: {}",
+                metadata_path.display(),
+                e
+            ),
         )
     })?;
 
-    dprintln!("Successfully wrote project metadata to {}", metadata_path.display());
+    dprintln!(
+        "Successfully wrote project metadata to {}",
+        metadata_path.display()
+    );
     Ok(())
 }
 
@@ -150,21 +158,25 @@ pub fn from_current() -> Result<PackageData, io::Error> {
     })?) {
         return Err(io::Error::new(
             io::ErrorKind::NotFound,
-            format!("'ipak/project.yaml' not found in current directory: {}", current_dir.display()),
+            format!(
+                "'ipak/project.yaml' not found in current directory: {}",
+                current_dir.display()
+            ),
         ));
     }
 
     // ファイルを読み込む
-    let read_data = std::fs::read_to_string(&metadata_path).map_err(|e| {
-        io::Error::new(
-            e.kind(),
-            format!(
-                "Failed to read {}: {}",
-                metadata_path.display(),
-                e
-            ),
-        )
-    })?;
+    let read_data =
+        std::fs::read_to_string(&metadata_path).map_err(|e| {
+            io::Error::new(
+                e.kind(),
+                format!(
+                    "Failed to read {}: {}",
+                    metadata_path.display(),
+                    e
+                ),
+            )
+        })?;
 
     // YAML を PackageData にパースする
     serde_yaml::from_str::<PackageData>(&read_data).map_err(|e| {
@@ -202,22 +214,30 @@ pub fn to_current(package_data: &PackageData) -> Result<(), io::Error> {
     dprintln!("Attempting to write to: {}", metadata_path.display());
 
     // PackageData を YAML 文字列にシリアライズ
-    let yaml_string = serde_yaml::to_string(package_data).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("Failed to serialize PackageData to YAML: {}", e),
-        )
-    })?;
+    let yaml_string =
+        serde_yaml::to_string(package_data).map_err(|e| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Failed to serialize PackageData to YAML: {}", e),
+            )
+        })?;
 
     // YAML 文字列を project.yaml ファイルに書き込みます。
     // std::fs::write はファイルが存在しない場合に新しく作成し、存在する場合は上書きします。
     std::fs::write(&metadata_path, yaml_string).map_err(|e| {
         io::Error::new(
             e.kind(),
-            format!("Failed to write to {}: {}", metadata_path.display(), e),
+            format!(
+                "Failed to write to {}: {}",
+                metadata_path.display(),
+                e
+            ),
         )
     })?;
 
-    dprintln!("Successfully wrote project metadata to {}", metadata_path.display());
+    dprintln!(
+        "Successfully wrote project metadata to {}",
+        metadata_path.display()
+    );
     Ok(())
 }

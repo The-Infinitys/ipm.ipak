@@ -32,12 +32,17 @@ struct SetUpItem {
 }
 
 // Helper function to create files from a list of SetUpItems
-fn setup_template_files(setup_list: Vec<SetUpItem>) -> Result<(), std::io::Error> {
+fn setup_template_files(
+    setup_list: Vec<SetUpItem>,
+) -> Result<(), std::io::Error> {
     for item in setup_list {
         file_creation(&item.path, &item.content).map_err(|e| {
             std::io::Error::new(
                 e.kind(),
-                format!("Failed to create template file '{}': {}", item.path, e),
+                format!(
+                    "Failed to create template file '{}': {}",
+                    item.path, e
+                ),
             )
         })?;
     }
@@ -123,34 +128,52 @@ pub fn init() -> Result<(), std::io::Error> {
         }
     }
     metadata::to_current(&pkg_metadata)?;
-    dprintln!("Project metadata initialized/updated in ipak/project.yaml.");
+    dprintln!(
+        "Project metadata initialized/updated in ipak/project.yaml."
+    );
 
     dprintln!("Setting up ipak scripts based on detected language...");
 
-    let script_readme_content = include_str!("create/templates/script-README.md").to_string();
+    let script_readme_content =
+        include_str!("create/templates/script-README.md").to_string();
 
     let script_setup_result = match pkg_lang {
         PackageLanguage::Rust => {
             let setup_list = vec![
                 SetUpItem {
                     path: "ipak/scripts/build.sh".to_string(),
-                    content: include_str!("create/templates/rust/ipak/scripts/build.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/rust/ipak/scripts/build.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/install.sh".to_string(),
-                    content: include_str!("create/templates/rust/ipak/scripts/install.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/rust/ipak/scripts/install.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/remove.sh".to_string(),
-                    content: include_str!("create/templates/rust/ipak/scripts/remove.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/rust/ipak/scripts/remove.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/purge.sh".to_string(),
-                    content: include_str!("create/templates/rust/ipak/scripts/purge.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/rust/ipak/scripts/purge.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/project-ignore.yaml".to_string(),
-                    content: include_str!("create/templates/rust/ipak/project-ignore.yaml").to_string(),
+                    content: include_str!(
+                        "create/templates/rust/ipak/project-ignore.yaml"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/README.md".to_string(),
@@ -163,19 +186,38 @@ pub fn init() -> Result<(), std::io::Error> {
             let setup_list = vec![
                 SetUpItem {
                     path: "ipak/scripts/build.sh".to_string(),
-                    content: include_str!("create/templates/python/ipak/scripts/build.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/python/ipak/scripts/build.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/install.sh".to_string(),
-                    content: include_str!("create/templates/python/ipak/scripts/install.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/python/ipak/scripts/install.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/remove.sh".to_string(),
-                    content: include_str!("create/templates/python/ipak/scripts/remove.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/python/ipak/scripts/remove.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/purge.sh".to_string(),
-                    content: include_str!("create/templates/python/ipak/scripts/purge.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/python/ipak/scripts/purge.sh"
+                    )
+                    .to_string(),
+                },
+                SetUpItem {
+                    path: "ipak/project-ignore.yaml".to_string(),
+                    content: include_str!(
+                        "create/templates/python/ipak/project-ignore.yaml"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/README.md".to_string(),
@@ -188,23 +230,38 @@ pub fn init() -> Result<(), std::io::Error> {
             let setup_list = vec![
                 SetUpItem {
                     path: "ipak/scripts/build.sh".to_string(),
-                    content: include_str!("create/templates/dotnet/ipak/scripts/build.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/dotnet/ipak/scripts/build.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/install.sh".to_string(),
-                    content: include_str!("create/templates/dotnet/ipak/scripts/install.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/dotnet/ipak/scripts/install.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/remove.sh".to_string(),
-                    content: include_str!("create/templates/dotnet/ipak/scripts/remove.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/dotnet/ipak/scripts/remove.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/purge.sh".to_string(),
-                    content: include_str!("create/templates/dotnet/ipak/scripts/purge.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/dotnet/ipak/scripts/purge.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/project-ignore.yaml".to_string(),
-                    content: include_str!("create/templates/dotnet/ipak/project-ignore.yaml").to_string(),
+                    content: include_str!(
+                        "create/templates/dotnet/ipak/project-ignore.yaml"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/README.md".to_string(),
@@ -213,23 +270,36 @@ pub fn init() -> Result<(), std::io::Error> {
             ];
             setup_template_files(setup_list)
         }
-        PackageLanguage::Other => { // Default scripts
+        PackageLanguage::Other => {
+            // Default scripts
             let setup_list = vec![
                 SetUpItem {
                     path: "ipak/scripts/build.sh".to_string(),
-                    content: include_str!("create/templates/default/ipak/scripts/build.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/default/ipak/scripts/build.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/install.sh".to_string(),
-                    content: include_str!("create/templates/default/ipak/scripts/install.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/default/ipak/scripts/install.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/remove.sh".to_string(),
-                    content: include_str!("create/templates/default/ipak/scripts/remove.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/default/ipak/scripts/remove.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/purge.sh".to_string(),
-                    content: include_str!("create/templates/default/ipak/scripts/purge.sh").to_string(),
+                    content: include_str!(
+                        "create/templates/default/ipak/scripts/purge.sh"
+                    )
+                    .to_string(),
                 },
                 SetUpItem {
                     path: "ipak/scripts/README.md".to_string(),

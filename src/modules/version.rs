@@ -221,9 +221,11 @@ impl Version {
 
                 // >= x, <= x の場合は == x に変換
                 if let Some(later_ver) = &range_data.later_or_equal {
-                    if let Some(earlier_ver) = &range_data.earlier_or_equal {
+                    if let Some(earlier_ver) = &range_data.earlier_or_equal
+                    {
                         if later_ver == earlier_ver {
-                            range_data.exactly_equal = Some(later_ver.clone());
+                            range_data.exactly_equal =
+                                Some(later_ver.clone());
                             range_data.earlier_or_equal = None;
                             range_data.later_or_equal = None;
                         }
@@ -290,7 +292,8 @@ impl Version {
                 if let Some(earlier_ver) = &range_data.earlier_or_equal {
                     if let Some(later_ver) = &range_data.later_or_equal {
                         if later_ver == earlier_ver {
-                            range_data.exactly_equal = Some(later_ver.clone());
+                            range_data.exactly_equal =
+                                Some(later_ver.clone());
                             range_data.earlier_or_equal = None;
                             range_data.later_or_equal = None;
                         }

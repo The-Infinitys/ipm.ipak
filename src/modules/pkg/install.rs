@@ -83,9 +83,10 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
     if !extract_command_output.status.success() {
         let stderr =
             String::from_utf8_lossy(&extract_command_output.stderr);
-        return Err(std::io::Error::other(
-            format!("Failed to exec tar command: {}", stderr),
-        ));
+        return Err(std::io::Error::other(format!(
+            "Failed to exec tar command: {}",
+            stderr
+        )));
     }
 
     std::fs::remove_file(&pkg_archive_in_cache)?;
@@ -233,9 +234,8 @@ fn installation_process(
                 install_mode,
                 install_shell: project::ExecShell::default(),
             };
-            project::install::install(opts).map_err(|e| {
-                std::io::Error::other(e)
-            })?;
+            project::install::install(opts)
+                .map_err(|e| std::io::Error::other(e))?;
             Ok(project::metadata::metadata()?)
         }
         Err(e) => {

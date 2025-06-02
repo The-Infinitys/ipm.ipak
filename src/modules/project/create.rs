@@ -109,7 +109,7 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
         ProjectTemplateType::Dotnet => templates::dotnet(project_data)
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
-            ProjectTemplateType::CLang => templates::clang(project_data)
+        ProjectTemplateType::CLang => templates::clang(project_data)
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
     }?; // ここで ? 演算子を使用し、エラーを自動伝播
 

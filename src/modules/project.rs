@@ -10,9 +10,9 @@ use remove::RemoveOptions; // Import RemoveOptions
 use std::{env, fs, str::FromStr};
 mod build;
 mod create;
+mod init;
 pub mod install;
 pub mod metadata;
-mod init;
 mod package;
 pub mod purge;
 pub mod remove;

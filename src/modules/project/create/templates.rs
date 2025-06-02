@@ -277,7 +277,8 @@ pub fn python(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         SetUpItem {
             path: "pyproject.toml".to_string(),
             content: include_str!("templates/python/pyproject.toml")
-                .to_string().replace("project-name", &pkg_data.about.package.name),
+                .to_string()
+                .replace("project-name", &pkg_data.about.package.name),
         },
     ];
     setup_files(setup_list)?;
