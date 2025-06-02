@@ -1,8 +1,0 @@
-about:
-  author:
-    name: default
-    email: default@default.local
-  package:
-    name: hello-py
-    version: 0.1.0
-mode: Any
