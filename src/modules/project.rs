@@ -12,6 +12,7 @@ mod build;
 mod create;
 pub mod install;
 pub mod metadata;
+mod init;
 mod package;
 pub mod purge;
 pub mod remove;
@@ -118,13 +119,16 @@ pub fn project(args: Vec<&Option>) -> Result<(), std::io::Error> {
         "remove" => project_remove(sub_args.to_vec()),
         "purge" => project_purge(sub_args.to_vec()),
         "package" | "pkg" => project_package(sub_args.to_vec()),
+        "init" => project_init(),
         _ => Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             format!("Unknown subcommand: {}", sub_cmd.opt_str),
         )),
     }
 }
-
+fn project_init() -> Result<(), std::io::Error> {
+    init::init()
+}
 fn project_package(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut package_options = package::PackageOptions::default();
 
@@ -161,8 +165,7 @@ fn project_package(args: Vec<&Option>) -> Result<(), std::io::Error> {
             }
         }
     }
-    package::package(package_options)
-        .map_err(std::io::Error::other)
+    package::package(package_options).map_err(std::io::Error::other)
 }
 
 fn project_build(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -200,8 +203,7 @@ fn project_build(args: Vec<&Option>) -> Result<(), std::io::Error> {
             }
         }
     }
-    build::build(build_options)
-        .map_err(std::io::Error::other)
+    build::build(build_options).map_err(std::io::Error::other)
 }
 
 fn project_install(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -239,8 +241,7 @@ fn project_install(args: Vec<&Option>) -> Result<(), std::io::Error> {
             }
         }
     }
-    install::install(install_options)
-        .map_err(std::io::Error::other)
+    install::install(install_options).map_err(std::io::Error::other)
 }
 
 fn project_remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -276,8 +277,7 @@ fn project_remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
             }
         }
     }
-    remove::remove(remove_options)
-        .map_err(std::io::Error::other)
+    remove::remove(remove_options).map_err(std::io::Error::other)
 }
 
 fn project_purge(args: Vec<&Option>) -> Result<(), std::io::Error> {
@@ -313,16 +313,13 @@ fn project_purge(args: Vec<&Option>) -> Result<(), std::io::Error> {
             }
         }
     }
-    purge::purge(purge_options)
-        .map_err(std::io::Error::other)
+    purge::purge(purge_options).map_err(std::io::Error::other)
 }
 
 fn project_metadata() -> Result<(), std::io::Error> {
     metadata::show_metadata().map_err(|_| {
         // エラー詳細が不要な場合は `_` で無視
-        std::io::Error::other(
-            "failed to get metadata",
-        )
+        std::io::Error::other("failed to get metadata")
     })
 }
 
@@ -434,25 +431,25 @@ fn project_create(args: Vec<&Option>) -> Result<(), std::io::Error> {
     println!("{}", params); // Debugging/User info
 
     fs::create_dir(&params.project_name).map_err(|err| {
-        std::io::Error::other(
-            format!(
-                "failed to create dir: {}\nDue to: {}",
-                &params.project_name,
-                err.kind()
-            ),
-        )
+        std::io::Error::other(format!(
+            "failed to create dir: {}\nDue to: {}",
+            &params.project_name,
+            err.kind()
+        ))
     })?;
 
     env::set_current_dir(&params.project_name).map_err(|_| {
-        std::io::Error::other(
-            format!("failed to set current dir: {}", &params.project_name),
-        )
+        std::io::Error::other(format!(
+            "failed to set current dir: {}",
+            &params.project_name
+        ))
     })?;
 
     create::create(&params).map_err(|_| {
-        std::io::Error::other(
-            format!("failed to create project: {}", &params.project_name),
-        )
+        std::io::Error::other(format!(
+            "failed to create project: {}",
+            &params.project_name
+        ))
     })?;
 
     Ok(())
