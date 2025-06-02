@@ -64,7 +64,7 @@ pub fn init() -> Result<(), std::io::Error> {
         PackageLanguage::Rust => {
             if !lang_file_path_str.is_empty() {
                 if let Some((name, version)) =
-                    parse_cargo_toml(&Path::new(&lang_file_path_str))?
+                    parse_cargo_toml(Path::new(&lang_file_path_str))?
                 {
                     pkg_metadata.about.package.name = name;
                     pkg_metadata.about.package.version =
@@ -75,7 +75,7 @@ pub fn init() -> Result<(), std::io::Error> {
         PackageLanguage::Python => {
             if !lang_file_path_str.is_empty() {
                 if let Some((name, version)) =
-                    parse_pyproject_toml(&Path::new(&lang_file_path_str))?
+                    parse_pyproject_toml(Path::new(&lang_file_path_str))?
                 {
                     pkg_metadata.about.package.name = name;
                     pkg_metadata.about.package.version =
@@ -86,7 +86,7 @@ pub fn init() -> Result<(), std::io::Error> {
         PackageLanguage::DotNet => {
             if !lang_file_path_str.is_empty() {
                 if let Some((name, version)) =
-                    parse_csproj(&Path::new(&lang_file_path_str))?
+                    parse_csproj(Path::new(&lang_file_path_str))?
                 {
                     pkg_metadata.about.package.name = name;
                     pkg_metadata.about.package.version =
@@ -112,12 +112,12 @@ fn find_csproj_file_recursive(
         let entry = entry?;
         let path = entry.path();
         if path.is_file() {
-            if path.extension().map_or(false, |ext| ext == "csproj") {
+            if path.extension().is_some_and(|ext| ext == "csproj") {
                 return Ok(Some(path));
             }
         } else if path.is_dir() {
             // Avoid recursing into common dependency directories
-            if path.file_name().map_or(false, |name| {
+            if path.file_name().is_some_and(|name| {
                 name == "target"
                     || name == "node_modules"
                     || name == "bin"
