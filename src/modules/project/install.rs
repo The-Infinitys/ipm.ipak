@@ -3,7 +3,7 @@ use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::dprintln;
 use crate::modules::version::Version;
-use colored::Colorize;
+use crate::utils::color::colorize::*;
 use std::fmt::{self, Display};
 use std::process::Command;
 #[derive(Default)]

@@ -1,7 +1,7 @@
 use super::metadata;
 use crate::dprintln;
 use crate::utils::shell::is_cmd_available;
-use colored::Colorize;
+use crate::utils::color::colorize::*;
 use ignore::gitignore::GitignoreBuilder;
 use serde_yaml;
 use std::fmt::{self, Display};

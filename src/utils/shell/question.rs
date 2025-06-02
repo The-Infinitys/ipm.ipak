@@ -1,4 +1,4 @@
-use colored::Colorize;
+use crate::utils::color::colorize::*;
 use dialoguer;
 use regex::Regex;
 

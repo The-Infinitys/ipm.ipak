@@ -1,10 +1,10 @@
 use super::messages;
 use super::version::{Version, VersionRange};
+use crate::utils::color::colorize::*;
 use crate::utils::{
     generate_email_address, shell::markdown, shell::username,
 };
 use cmd_arg::cmd_arg::Option;
-use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 pub mod depend;
@@ -241,7 +241,7 @@ impl Display for PackageData {
                 writeln!(
                     f,
                     "  - {} ({})",
-                    virtual_pkg.name.purple(),
+                    virtual_pkg.name.magenta(),
                     virtual_pkg.version
                 )?;
             }
@@ -343,7 +343,7 @@ impl Display for RelationData {
         if !self.virtuals.is_empty() {
             writeln!(f, "\n{}", "Virtual Packages:".bold())?;
             for virtual_pkg in &self.virtuals {
-                writeln!(f, "  - {}", virtual_pkg.to_string().purple())?;
+                writeln!(f, "  - {}", virtual_pkg.to_string().magenta())?;
             }
         }
 
