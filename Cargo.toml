@@ -14,6 +14,6 @@ quick-xml = "0.37.5"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = "0.9.34"
-termimad = "0.32.0"
+termimad = "0.33.0"
 thiserror = "2.0.12"
 toml = "0.8.22"
