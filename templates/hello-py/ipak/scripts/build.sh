@@ -29,7 +29,7 @@ if [ ! -d venv ]; then
 fi
 source ./venv/bin/activate
 # install requirements
-pip install -r ./requirements.txt
+pip install .
 rm -rf ./dist/ ./build
 if [ "$BUILD_MODE" = "release" ]; then
     pyinstaller $IPAK_PROJECT_NAME/__main__.py --onefile --clean

@@ -275,9 +275,9 @@ pub fn python(pkg_data: PackageData) -> Result<PackageData, io::Error> {
                 .to_string(),
         },
         SetUpItem {
-            path: "requirements.txt".to_string(),
-            content: include_str!("templates/python/requirements.txt")
-                .to_string(),
+            path: "pyproject.toml".to_string(),
+            content: include_str!("templates/python/pyproject.toml")
+                .to_string().replace("project-name", &pkg_data.about.package.name),
         },
     ];
     setup_files(setup_list)?;
@@ -422,7 +422,8 @@ pub fn clang(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         SetUpItem {
             path: "CMakeLists.txt".to_string(),
             content: include_str!("templates/clang/CMakeLists.txt")
-                .to_string().replace("{name}", &pkg_data.about.package.name),
+                .to_string()
+                .replace("{name}", &pkg_data.about.package.name),
         },
     ];
     setup_files(setup_list)?;

@@ -9,6 +9,9 @@ pub fn init() -> Result<(), std::io::Error> {
         pkg_metadata.about.package.description = readme_content;
         dprintln!("Initialized project metadata.");
     }
-    
+    // let clang_meta_path=target_dir.join("CMakeLists.txt");
+    let rust_metadata_path = target_dir.join("Cargo.toml");
+    let python_metadata_path = target_dir.join("pyproject.toml");
+    let dotnet_
     Ok(())
 }

@@ -1,7 +1,7 @@
 about:
   author:
-    name: default
-    email: default@default.local
+    name: the-infinitys
+    email: the-infinitys@hyper-vubuntu.local
   package:
     name: hello-py
     version: 1.0.0
