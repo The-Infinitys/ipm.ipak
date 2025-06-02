@@ -405,7 +405,6 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "cmd_arg",
- "colored",
  "dialoguer",
  "ignore",
  "regex",
