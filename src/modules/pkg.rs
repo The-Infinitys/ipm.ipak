@@ -64,6 +64,8 @@ pub struct AuthorAboutData {
 pub struct PackageAboutData {
     pub name: String,
     pub version: Version,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub description: String, // Added description field
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,6 +116,14 @@ impl Display for PackageData {
             "Version:".bold(),
             self.about.package.version
         )?;
+        if !self.about.package.description.is_empty() {
+            writeln!(
+                f,
+                "{} {}",
+                "Description:".bold(),
+                self.about.package.description
+            )?;
+        }
         writeln!(
             f,
             "{} {} <{}>",
@@ -264,6 +274,9 @@ impl Display for AuthorAboutData {
 impl Display for PackageAboutData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} ({})", self.name.cyan(), self.version)?;
+        if !self.description.is_empty() {
+            write!(f, "\n  {}", self.description)?; // Indent for better readability
+        }
         Ok(())
     }
 }
@@ -371,6 +384,7 @@ impl Default for PackageAboutData {
         PackageAboutData {
             name: "default-package".to_string(),
             version: Version::default(),
+            description: String::default(), // Default to empty string
         }
     }
 }
@@ -420,6 +434,7 @@ mod tests {
         data.about.package = PackageAboutData {
             name: "my-package".to_string(),
             version: Version::default(),
+            description: "This is a test package for demonstration.".to_string(), // Added description
         };
 
         data.architecture =
@@ -496,9 +511,18 @@ mod tests {
         let package = PackageAboutData {
             name: "test-package".to_string(),
             version: Version::default(),
+            description: "A short description of the test package.".to_string(), // Added description
         };
         println!("\n--- Test Display Package ---");
         println!("{}", package);
+
+        let package_no_desc = PackageAboutData {
+            name: "test-package-no-desc".to_string(),
+            version: Version::default(),
+            description: String::new(), // Empty description
+        };
+        println!("\n--- Test Display Package (No Description) ---");
+        println!("{}", package_no_desc);
     }
 
     #[test]
