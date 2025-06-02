@@ -8,7 +8,6 @@ pub trait Colorize {
     fn magenta(&self) -> String;
     fn rgb(&self, rgb: RGB) -> String;
 }
-
 impl Colorize for String {
     fn red(&self) -> String {
         format!("\x1b[31m{}\x1b[0m", self)
@@ -63,6 +62,67 @@ impl Colorize for &str {
     }
 }
 
+pub trait ColorizeBg {
+    fn red_bg(&self) -> String;
+    fn yellow_bg(&self) -> String;
+    fn green_bg(&self) -> String;
+    fn cyan_bg(&self) -> String;
+    fn blue_bg(&self) -> String;
+    fn magenta_bg(&self) -> String;
+    fn rgb_bg(&self, rgb: RGB) -> String;
+}
+impl ColorizeBg for String {
+    fn red_bg(&self) -> String {
+        format!("\x1b[41m{}\x1b[0m", self)
+    }
+    fn yellow_bg(&self) -> String {
+        format!("\x1b[43m{}\x1b[0m", self)
+    }
+    fn green_bg(&self) -> String {
+        format!("\x1b[42m{}\x1b[0m", self)
+    }
+    fn cyan_bg(&self) -> String {
+        format!("\x1b[46m{}\x1b[0m", self)
+    }
+    fn blue_bg(&self) -> String {
+        format!("\x1b[44m{}\x1b[0m", self)
+    }
+    fn magenta_bg(&self) -> String {
+        format!("\x1b[45m{}\x1b[0m", self)
+    }
+    fn rgb_bg(&self, rgb: RGB) -> String {
+        format!(
+            "\x1b[48;2;{};{};{}m{}\x1b[0m",
+            rgb.red, rgb.green, rgb.blue, self
+        )
+    }
+}
+impl ColorizeBg for &str {
+    fn red_bg(&self) -> String {
+        format!("\x1b[41m{}\x1b[0m", self)
+    }
+    fn yellow_bg(&self) -> String {
+        format!("\x1b[43m{}\x1b[0m", self)
+    }
+    fn green_bg(&self) -> String {
+        format!("\x1b[42m{}\x1b[0m", self)
+    }
+    fn cyan_bg(&self) -> String {
+        format!("\x1b[46m{}\x1b[0m", self)
+    }
+    fn blue_bg(&self) -> String {
+        format!("\x1b[44m{}\x1b[0m", self)
+    }
+    fn magenta_bg(&self) -> String {
+        format!("\x1b[45m{}\x1b[0m", self)
+    }
+    fn rgb_bg(&self, rgb: RGB) -> String {
+        format!(
+            "\x1b[48;2;{};{};{}m{}\x1b[0m",
+            rgb.red, rgb.green, rgb.blue, self
+        )
+    }
+}
 pub trait StyleModifier {
     fn bold(&self) -> String;
     fn italic(&self) -> String;
