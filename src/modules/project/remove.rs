@@ -2,7 +2,7 @@ use super::ExecMode;
 use super::ExecShell;
 use super::metadata; // metadata モジュール全体をインポート
 use crate::dprintln;
-use colored::Colorize;
+use crate::utils::color::colorize::*;
 use std::fmt::{self, Display};
 /// プロジェクト削除時のオプションを定義する構造体です。
 #[derive(Default)]

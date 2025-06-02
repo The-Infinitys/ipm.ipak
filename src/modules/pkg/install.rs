@@ -235,7 +235,7 @@ fn installation_process(
                 install_shell: project::ExecShell::default(),
             };
             project::install::install(opts)
-                .map_err(|e| std::io::Error::other(e))?;
+                .map_err(std::io::Error::other)?;
             Ok(project::metadata::metadata()?)
         }
         Err(e) => {

@@ -2,7 +2,7 @@ use super::ExecMode;
 use super::ExecShell;
 use super::metadata; // metadata モジュール全体をインポート
 use crate::dprintln;
-use colored::Colorize;
+use crate::utils::color::colorize::*;
 use std::fmt::{self, Display};
 /// パッケージのパージ（完全削除）に関するオプションを保持する構造体。
 #[derive(Default)]

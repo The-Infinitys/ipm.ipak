@@ -3,7 +3,7 @@ use super::PackageData;
 use crate::utils::shell;
 use chrono::{DateTime, Local};
 use cmd_arg::cmd_arg::Option;
-use colored::Colorize;
+use crate::utils::color::colorize::*;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::fmt::{self, Display, Formatter};

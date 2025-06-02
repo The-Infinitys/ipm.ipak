@@ -1,7 +1,7 @@
 use super::metadata;
 use crate::dprintln;
+use crate::utils::color::colorize::*;
 use crate::utils::shell::is_cmd_available;
-use colored::Colorize;
 use ignore::gitignore::GitignoreBuilder;
 use serde_yaml;
 use std::fmt::{self, Display};
@@ -233,16 +233,23 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         opts.target,
         ignore_list.join("\n")
     );
-
+    dprintln!("Target Directory: {}", target_dir.display());
     // Build Gitignore from the ignore list
     let mut builder = GitignoreBuilder::new(&target_dir);
     for pattern in &ignore_list {
-        builder.add(target_dir.join(pattern.as_str()));
+        match builder.add_line(None, pattern.as_str()) {
+            Err(e) => {
+                eprintln!("Error: {}", e)
+            }
+            Ok(_) => {}
+        };
+        dprintln!("Adding ignore pattern: {}", pattern);
+
     }
     let gitignore = builder
         .build()
         .map_err(|e| format!("Failed to build gitignore: {}", e))?;
-
+    dprintln!("Gitignore built: {}", gitignore.len());
     // Define source base, destination base, and skip prefix
     let source_base = &target_dir;
     let package_name = &project_metadata.about.package.name;

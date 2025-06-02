@@ -1,4 +1,4 @@
-use colored::Colorize;
+use crate::utils::color::colorize::*;
 use dialoguer;
 use regex::Regex;
 
@@ -308,7 +308,7 @@ pub fn select(msg: &str, options: &[&str]) -> String {
     let selection = dialoguer::Select::with_theme(
         &dialoguer::theme::ColorfulTheme::default(),
     )
-    .with_prompt(format!("{}", msg.green()))
+    .with_prompt(msg.green().to_string())
     .default(0)
     .items(options)
     .interact()

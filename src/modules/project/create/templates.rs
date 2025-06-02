@@ -280,6 +280,13 @@ pub fn python(pkg_data: PackageData) -> Result<PackageData, io::Error> {
                 .to_string()
                 .replace("project-name", &pkg_data.about.package.name),
         },
+        SetUpItem {
+            path: "ipak/project-ignore.yaml".to_string(),
+            content: include_str!(
+                "templates/python/ipak/project-ignore.yaml"
+            )
+            .to_string(),
+        },
     ];
     setup_files(setup_list)?;
     Ok(pkg_data)
