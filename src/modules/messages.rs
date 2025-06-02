@@ -1,9 +1,7 @@
 //! このモジュールは、アプリケーションのメッセージ（ウェルカムメッセージ、バージョン情報、ヘルプメッセージなど）の表示を扱います。
 //! Cargo.tomlからパッケージ情報を取得し、メッセージテンプレート内のプレースホルダーを置換する機能を提供します。
-use crate::utils::shell;
+use crate::utils::shell::{self, markdown};
 use cmd_arg::cmd_arg::{Option, cmd_str}; // `Option`構造体が外部モジュールにあることを示しています
-use termimad::crossterm::style::{Attribute::*, Color::*};
-use termimad::*; // `termimad`は、ターミナルでのテキスト表示を扱うライブラリです。
 /// Cargo.tomlから取得したパッケージ情報を保持する構造体。
 ///
 /// `CARGO_PKG_NAME`, `CARGO_PKG_VERSION`, `std::env::consts::ARCH` 環境変数から情報を取得します。
@@ -141,14 +139,6 @@ fn get_help_msg(help_type: HelpType) -> String {
         HelpType::Package => include_str!("./messages/help/package.md"),
         HelpType::System => include_str!("./messages/help/system.md"),
     })
-}
-fn markdown(md_text: String) -> String {
-    let mut skin = MadSkin::default();
-    // let's decide bold is in light gray
-    skin.bold.set_fg(gray(20));
-    // let's make strikeout not striked out but red, with no specific background, and bold
-    skin.strikeout = CompoundStyle::new(Some(Red), None, Bold.into());
-    format!("{}", skin.term_text(&md_text))
 }
 /// 指定されたヘルプメッセージの種類に対応するテキストを標準出力に表示します。
 ///

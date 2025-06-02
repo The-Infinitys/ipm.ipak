@@ -1,6 +1,8 @@
 use super::messages;
 use super::version::{Version, VersionRange};
-use crate::utils::{generate_email_address, shell::username};
+use crate::utils::{
+    generate_email_address, shell::markdown, shell::username,
+};
 use cmd_arg::cmd_arg::Option;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
@@ -11,7 +13,6 @@ pub mod list;
 mod metadata;
 mod purge;
 mod remove;
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum Mode {
     Local,
@@ -275,7 +276,7 @@ impl Display for PackageAboutData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} ({})", self.name.cyan(), self.version)?;
         if !self.description.is_empty() {
-            write!(f, "\n  {}", self.description)?; // Indent for better readability
+            write!(f, "\n  {}", markdown(self.description.to_string()))?; // Indent for better readability
         }
         Ok(())
     }
@@ -434,7 +435,8 @@ mod tests {
         data.about.package = PackageAboutData {
             name: "my-package".to_string(),
             version: Version::default(),
-            description: "This is a test package for demonstration.".to_string(), // Added description
+            description: "This is a test package for demonstration."
+                .to_string(), // Added description
         };
 
         data.architecture =
@@ -511,7 +513,8 @@ mod tests {
         let package = PackageAboutData {
             name: "test-package".to_string(),
             version: Version::default(),
-            description: "A short description of the test package.".to_string(), // Added description
+            description: "A short description of the test package."
+                .to_string(), // Added description
         };
         println!("\n--- Test Display Package ---");
         println!("{}", package);

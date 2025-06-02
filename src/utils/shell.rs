@@ -4,6 +4,8 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process::Stdio;
 use std::process::{Command, Output};
+use termimad::crossterm::style::{Attribute::*, Color::*};
+use termimad::*; // `termimad`は、ターミナルでのテキスト表示を扱うライブラリです。
 
 pub fn is_cmd_available(cmd: &str) -> bool {
     let path_env = env::var("PATH");
@@ -34,7 +36,8 @@ pub fn username() -> String {
         let username: &str = info.split("\\").collect::<Vec<&str>>()[1];
         String::from(username.trim())
     } else if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
-        let username: String = String::from_utf8(output.stdout).unwrap().trim().to_owned();
+        let username: String =
+            String::from_utf8(output.stdout).unwrap().trim().to_owned();
         username
     } else {
         panic!("Error");
@@ -181,4 +184,13 @@ pub fn pager(target_string: String) {
             );
         }
     }
+}
+
+pub fn markdown(md_text: String) -> String {
+    let mut skin = MadSkin::default();
+    // let's decide bold is in light gray
+    skin.bold.set_fg(gray(20));
+    // let's make strikeout not striked out but red, with no specific background, and bold
+    skin.strikeout = CompoundStyle::new(Some(Red), None, Bold.into());
+    format!("{}", skin.term_text(&md_text))
 }
