@@ -10,8 +10,10 @@ cmd_arg = { git = "https://github.com/The-Infinitys/rust.cmd-arg.git"}
 colored = "3.0.0"
 dialoguer = "0.11.0"
 ignore = "0.4.23"
+quick-xml = "0.37.5"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = "0.9.34"
 termimad = "0.32.0"
 thiserror = "2.0.12"
+toml = "0.8.22"
