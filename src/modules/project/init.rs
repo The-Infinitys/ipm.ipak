@@ -100,7 +100,7 @@ pub fn init() -> Result<(), std::io::Error> {
             );
         }
     }
-
+    metadata::write(&pkg_metadata)?;
     Ok(())
 }
 

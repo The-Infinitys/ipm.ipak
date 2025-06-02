@@ -84,3 +84,44 @@ pub fn show_metadata() -> Result<(), io::Error> {
     println!("{}", package_data);
     Ok(())
 }
+
+/// `PackageData` 構造体を `project.yaml` ファイルにシリアライズして書き込みます。
+///
+/// # 引数
+/// * `package_data` - 書き込む `PackageData` 構造体への参照。
+///
+/// # 戻り値
+/// 書き込みに成功した場合は `Ok(())` を返します。
+/// ファイルのパス取得、ディレクトリ作成、シリアライズ、またはファイル書き込みに失敗した場合は
+/// `io::Error` を `Err` で返します。
+pub fn write(package_data: &PackageData) -> Result<(), io::Error> {
+    let metadata_path = get_path()?; // project.yaml へのパスを取得
+
+    // Ensure the directory exists
+    let parent_dir = metadata_path.parent().ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Could not determine parent directory for project.yaml",
+        )
+    })?;
+    std::fs::create_dir_all(parent_dir)?; // ディレクトリが存在しない場合は作成
+
+    // PackageData を YAML 文字列にシリアライズ
+    let yaml_string = serde_yaml::to_string(package_data).map_err(|e| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("Failed to serialize PackageData to YAML: {}", e),
+        )
+    })?;
+
+    // YAML 文字列を project.yaml ファイルに書き込み
+    std::fs::write(&metadata_path, yaml_string).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("Failed to write to {}: {}", metadata_path.display(), e),
+        )
+    })?;
+
+    dprintln!("Successfully wrote project metadata to {}", metadata_path.display());
+    Ok(())
+}
