@@ -56,9 +56,15 @@
   - 使用例: `{name} project metadata`
 
 - **package** または **pkg**: プロジェクトをパッケージ化します。
-  - 使用例: `{name} project package --target x86_64`
+  - 使用例: `{name} project package --target [min / normal(default) / source-build]`
   - オプション:
-    - `--target`: パッケージのターゲットアーキテクチャを指定します。
+    - `--target`: パッケージのターゲットを指定します。
+
+- **run** または **execute**: プロジェクトの任意のコマンドを実行します。
+  - 使用例: `{name} project run [command]`
+  - オプション:
+    - `--shell`: 使用するシェルを指定します。
+
 
 ## 注意事項
 
