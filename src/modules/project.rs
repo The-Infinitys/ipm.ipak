@@ -16,6 +16,7 @@ pub mod metadata;
 mod package;
 pub mod purge;
 pub mod remove;
+pub mod run;
 use super::pkg::AuthorAboutData;
 use create::{ProjectParams, ProjectTemplateType};
 use std::fmt::{self, Display};
@@ -120,11 +121,26 @@ pub fn project(args: Vec<&Option>) -> Result<(), std::io::Error> {
         "purge" => project_purge(sub_args.to_vec()),
         "package" | "pkg" => project_package(sub_args.to_vec()),
         "init" => project_init(),
-        _ => Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            format!("Unknown subcommand: {}", sub_cmd.opt_str),
-        )),
+        "run" => project_run(sub_args.to_vec()),
+        _ => project_run(args),
     }
+}
+fn project_run(args: Vec<&Option>) -> Result<(), std::io::Error> {
+    let sub_cmd = args
+        .first()
+        .ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "No subcommand provided",
+            )
+        })?
+        .opt_str
+        .clone();
+
+    let sub_args = &args[1..]; // スライスとして渡すことで不必要なコピーを避ける
+    run::run(&sub_cmd, sub_args.to_vec()).map_err(|e| {
+        std::io::Error::new(std::io::ErrorKind::Other, e.to_string())
+    })
 }
 fn project_init() -> Result<(), std::io::Error> {
     init::init()

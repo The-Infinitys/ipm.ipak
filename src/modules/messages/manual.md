@@ -40,6 +40,9 @@
 - **metadata**  
   プロジェクトのメタデータを表示します。  
   使用例: `{name} project metadata`
+- **run**
+  プロジェクトで任意のコマンドを実行します。  
+  使用例: `{name} project run [command]`
 
 ### system - システム設定
 - **configure**  
