@@ -237,11 +237,8 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     // Build Gitignore from the ignore list
     let mut builder = GitignoreBuilder::new(&target_dir);
     for pattern in &ignore_list {
-        match builder.add_line(None, pattern.as_str()) {
-            Err(e) => {
-                eprintln!("Error: {}", e)
-            }
-            Ok(_) => {}
+        if let Err(e) = builder.add_line(None, pattern.as_str()) {
+            eprintln!("Error: {}", e)
         };
         dprintln!("Adding ignore pattern: {}", pattern);
 
