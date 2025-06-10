@@ -109,31 +109,29 @@ fn walk_and_copy(
                     gitignore,
                     skip_prefix,
                 )?;
+            } else if gitignore.matched(path_rel, true).is_ignore() {
+                dprintln!("Ignored: {}", path_rel.display());
             } else {
-                if gitignore.matched(path_rel, true).is_ignore() {
-                    dprintln!("Ignored: {}", path_rel.display());
-                } else {
-                    let dest = dest_base.join(path_rel);
-                    if let Some(parent) = dest.parent() {
-                        fs::create_dir_all(parent).map_err(|e| {
-                            format!(
-                                "Failed to create directories for {:?}: {}",
-                                parent, e
-                            )
-                        })?;
-                    }
-                    fs::copy(&path, &dest).map_err(|e| {
+                let dest = dest_base.join(path_rel);
+                if let Some(parent) = dest.parent() {
+                    fs::create_dir_all(parent).map_err(|e| {
                         format!(
-                            "Failed to copy {:?} to {:?}: {}",
-                            path, dest, e
+                            "Failed to create directories for {:?}: {}",
+                            parent, e
                         )
                     })?;
-                    dprintln!(
-                        "Copied {} to {}",
-                        path.display(),
-                        dest.display()
-                    );
                 }
+                fs::copy(&path, &dest).map_err(|e| {
+                    format!(
+                        "Failed to copy {:?} to {:?}: {}",
+                        path, dest, e
+                    )
+                })?;
+                dprintln!(
+                    "Copied {} to {}",
+                    path.display(),
+                    dest.display()
+                );
             }
         }
 
