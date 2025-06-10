@@ -11,6 +11,7 @@ use walkdir::WalkDir;
 use xz2::write::XzEncoder;
 use zip::ZipWriter;
 use zstd::stream::Encoder as ZstdEncoder;
+use std::str::FromStr;
 
 #[derive(Default)]
 pub enum ArchiveType {
@@ -34,6 +35,19 @@ impl Display for ArchiveType {
     }
 }
 
+impl FromStr for ArchiveType {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "zip" => Ok(ArchiveType::Zip),
+            "tar.gz" | "tgz" => Ok(ArchiveType::TarGz),
+            "tar.xz" | "txz" => Ok(ArchiveType::TarXz),
+            "tar.zst" | "tar.zstd" | "tzst" => Ok(ArchiveType::TarZstd),
+            "tar" => Ok(ArchiveType::Tar),
+            _ => Err(format!("Invalid Archive Type: {}", s)),
+        }
+    }
+}
 // ファイル拡張子からアーカイブタイプを判定
 fn get_archive_type(path: &Path) -> Option<ArchiveType> {
     let archive_format = match FileFormat::from_file(path) {
