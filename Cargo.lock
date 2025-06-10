@@ -479,6 +479,7 @@ dependencies = [
  "serde_yaml",
  "tar",
  "tempdir",
+ "tempfile",
  "termimad",
  "thiserror 2.0.12",
  "toml",

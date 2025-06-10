@@ -15,6 +15,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = "0.9.34"
 tar = "0.4.44"
 tempdir = "0.3.7"
+tempfile = "3.20.0"
 termimad = "0.33.0"
 thiserror = "2.0.12"
 toml = "0.8.22"
