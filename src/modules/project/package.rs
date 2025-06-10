@@ -1,13 +1,12 @@
 use super::metadata;
 use crate::dprintln;
+use crate::utils::archive::{ArchiveType, create_archive}; // archive.rsからインポート
 use crate::utils::color::colorize::*;
-use crate::utils::shell::is_cmd_available;
 use ignore::gitignore::GitignoreBuilder;
 use serde_yaml;
 use std::fmt::{self, Display};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::str::FromStr;
 
 /// Defines the options for the packaging process.
@@ -32,15 +31,9 @@ pub enum PackageTarget {
 impl Display for PackageTarget {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PackageTarget::SourceBuild => {
-                write!(f, "source-build")
-            }
-            PackageTarget::Normal => {
-                write!(f, "normal")
-            }
-            PackageTarget::Min => {
-                write!(f, "minimal")
-            }
+            PackageTarget::SourceBuild => write!(f, "source-build"),
+            PackageTarget::Normal => write!(f, "normal"),
+            PackageTarget::Min => write!(f, "minimal"),
         }
     }
 }
@@ -90,32 +83,25 @@ fn walk_and_copy(
         gitignore: &ignore::gitignore::Gitignore,
         skip_prefix: &Path,
     ) -> Result<(), String> {
-        // Compute the relative path of the current directory
         let dir_rel = dir.strip_prefix(source_base).map_err(|_| {
             format!("Failed to get relative path for directory {:?}", dir)
         })?;
-        // If the current directory's relative path starts with the skip prefix,
-        // skip this directory and its contents
         if dir_rel.starts_with(skip_prefix) {
             return Ok(());
         }
 
-        // Iterate over all entries in the current directory
         for entry in fs::read_dir(dir).map_err(|e| {
             format!("Failed to read directory {:?}: {}", dir, e)
         })? {
             let entry = entry
                 .map_err(|e| format!("Failed to get entry: {}", e))?;
             let path = entry.path();
-
-            // Compute the relative path of the current file or directory
             let path_rel =
                 path.strip_prefix(source_base).map_err(|_| {
                     format!("Failed to get relative path for {:?}", path)
                 })?;
 
             if path.is_dir() {
-                // Recurse into subdirectories
                 inner(
                     &path,
                     source_base,
@@ -124,32 +110,18 @@ fn walk_and_copy(
                     skip_prefix,
                 )?;
             } else {
-                // Check if the file is ignored
-                // Convert path to a relative path from source_base
-                // let path =
-                //     path.strip_prefix(source_base).map_err(|_| {
-                //         format!(
-                //             "Failed to get relative path for {:?}",
-                //             path
-                //         )
-                //     })?;
-
-                // Check if the file is ignored using the relative path
-
                 if gitignore.matched(path_rel, true).is_ignore() {
                     dprintln!("Ignored: {}", path_rel.display());
                 } else {
-                    // Compute the destination path
                     let dest = dest_base.join(path_rel);
-
-                    // Ensure the parent directories of the destination exist
                     if let Some(parent) = dest.parent() {
                         fs::create_dir_all(parent).map_err(|e| {
-                            format!("Failed to create directories for {:?}: {}", parent, e)
+                            format!(
+                                "Failed to create directories for {:?}: {}",
+                                parent, e
+                            )
                         })?;
                     }
-
-                    // Copy the file to the destination
                     fs::copy(&path, &dest).map_err(|e| {
                         format!(
                             "Failed to copy {:?} to {:?}: {}",
@@ -168,7 +140,6 @@ fn walk_and_copy(
         Ok(())
     }
 
-    // Start the recursive walk from the source base
     inner(source_base, source_base, dest_base, gitignore, skip_prefix)
 }
 
@@ -198,7 +169,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     // Load project-ignore.yaml
     let ignore_file = target_dir.join("ipak").join("project-ignore.yaml");
     let ignore_config: ProjectIgnore = if ignore_file.exists() {
-        let file = std::fs::File::open(&ignore_file).map_err(|e| {
+        let file = fs::File::open(&ignore_file).map_err(|e| {
             format!("Failed to open '{}': {}", ignore_file.display(), e)
         })?;
         serde_yaml::from_reader(file).map_err(|e| {
@@ -234,6 +205,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         ignore_list.join("\n")
     );
     dprintln!("Target Directory: {}", target_dir.display());
+
     // Build Gitignore from the ignore list
     let mut builder = GitignoreBuilder::new(&target_dir);
     for pattern in &ignore_list {
@@ -241,12 +213,12 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
             eprintln!("Error: {}", e)
         };
         dprintln!("Adding ignore pattern: {}", pattern);
-
     }
     let gitignore = builder
         .build()
         .map_err(|e| format!("Failed to build gitignore: {}", e))?;
     dprintln!("Gitignore built: {}", gitignore.len());
+
     // Define source base, destination base, and skip prefix
     let source_base = &target_dir;
     let package_name = &project_metadata.about.package.name;
@@ -264,7 +236,8 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     let archive_path: PathBuf = source_base
         .join("ipak")
         .join("package")
-        .join(format!("{}-{}.ipak", package_name, version));
+        .join(format!("{}-{}.tar.gz", package_name, version)); // .ipakを.tar.gzに変更
+    // 注: .ipakを保持したい場合、拡張子を"{}-{}.ipak"に変更し、ArchiveType::TarGzを明示的に使用
 
     // Ensure the parent directory of the archive exists
     if let Some(parent) = archive_path.parent() {
@@ -273,54 +246,30 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         })?;
     }
 
-    // Check if tar command is available
-    if !is_cmd_available("tar") {
-        return Err(
-            "tarコマンドが利用できません。tarがインストールされていることを確認してください。"
-                .to_string(),
-        );
-    }
-
-    // Run tar command to create a tar.gz archive
-    let tar_output = Command::new("tar")
-        .arg("-czf")
-        .arg(&archive_path)
-        .arg("-C")
-        .arg(
-            dest_base.parent().ok_or(
-                "dest_baseの親ディレクトリを取得できませんでした",
-            )?,
-        )
-        .arg(
-            dest_base
-                .file_name()
-                .ok_or("ディレクトリ名を取得できませんでした")?,
-        )
-        .output()
-        .map_err(|e| format!("tarコマンドの実行に失敗しました: {}", e))?;
-
-    if !tar_output.status.success() {
-        return Err(format!(
-            "tarコマンドが失敗しました: {}",
-            String::from_utf8_lossy(&tar_output.stderr)
-        ));
-    }
-
-    dprintln!("アーカイブを {} に作成しました", archive_path.display());
+    // create_archiveを使用してTarGzアーカイブを作成
+    dprintln!("Creating tar.gz archive at {}", archive_path.display());
+    create_archive(
+        dest_base.clone(),
+        archive_path.clone(),
+        ArchiveType::TarGz,
+    )
+    .map_err(|e| format!("Failed to create archive: {}", e))?;
 
     // Clean up the destination directory after compression
     fs::remove_dir_all(&dest_base).map_err(|e| {
-        format!("ディレクトリ {:?} の削除に失敗しました: {}", dest_base, e)
+        format!("Failed to remove directory {:?}: {}", dest_base, e)
     })?;
-    dprintln!("一時ディレクトリ {} を削除しました", dest_base.display());
+    dprintln!("Removed temporary directory {}", dest_base.display());
 
     // Verify the archive exists
     if !archive_path.exists() {
         return Err(format!(
-            "アーカイブファイル {} が作成されませんでした",
+            "Archive file {} was not created",
             archive_path.display()
         ));
     }
+
+    dprintln!("Created archive at {}", archive_path.display());
 
     Ok(())
 }

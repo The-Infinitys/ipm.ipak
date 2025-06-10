@@ -4,12 +4,12 @@ use super::depend;
 use crate::dprintln;
 use crate::modules::project;
 use crate::modules::system::path;
-use crate::utils::shell::is_cmd_available;
+use crate::utils::archive::extract_archive; // archive.rsからインポート
 use chrono::Local;
 use cmd_arg::cmd_arg::{Option, OptionType};
 use std::env;
-use std::path::PathBuf; // Ensure Path is imported
-use std::process::Command; // Add this for Local::now()
+use std::fs;
+use std::path::PathBuf;
 
 pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut target_path_str = String::new();
@@ -29,20 +29,20 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let target_path = env::current_dir()?.join(&target_path_str);
 
     if !target_path.is_file() {
-        eprintln!("Couldn't found target file: {}", target_path.display());
+        eprintln!("Couldn't find target file: {}", target_path.display());
         return Err(std::io::Error::from(std::io::ErrorKind::NotFound));
     }
 
     let cache_path = path::local::cache_path();
 
     if cache_path.is_file() {
-        std::fs::remove_file(&cache_path)?;
+        fs::remove_file(&cache_path)?;
     }
     if cache_path.is_dir() && cache_path.read_dir()?.next().is_some() {
-        std::fs::remove_dir_all(&cache_path)?;
+        fs::remove_dir_all(&cache_path)?;
     }
     if !cache_path.is_dir() {
-        std::fs::create_dir_all(&cache_path)?;
+        fs::create_dir_all(&cache_path)?;
     }
 
     let pkg_archive_in_cache =
@@ -52,7 +52,7 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
                 "Target path has no filename",
             )
         })?);
-    std::fs::copy(&target_path, &pkg_archive_in_cache)?;
+    fs::copy(&target_path, &pkg_archive_in_cache)?;
 
     dprintln!(
         "Created cache for {} at {}",
@@ -60,36 +60,15 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
         pkg_archive_in_cache.display()
     );
 
-    if !is_cmd_available("tar") {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            "tar command is not available. please install tar",
-        ));
-    };
-
+    // アーカイブを展開（tarコマンドの代わりにextract_archiveを使用）
     dprintln!(
         "Trying to extract: from {}, to {}",
-        &pkg_archive_in_cache.display(),
-        &cache_path.display()
+        pkg_archive_in_cache.display(),
+        cache_path.display()
     );
+    extract_archive(pkg_archive_in_cache.clone(), cache_path.clone())?;
 
-    let extract_command_output = Command::new("tar")
-        .arg("-zxvf")
-        .arg(&pkg_archive_in_cache)
-        .arg("-C")
-        .arg(&cache_path)
-        .output()?;
-
-    if !extract_command_output.status.success() {
-        let stderr =
-            String::from_utf8_lossy(&extract_command_output.stderr);
-        return Err(std::io::Error::other(format!(
-            "Failed to exec tar command: {}",
-            stderr
-        )));
-    }
-
-    std::fs::remove_file(&pkg_archive_in_cache)?;
+    fs::remove_file(&pkg_archive_in_cache)?;
 
     let pkg_filename_str = pkg_archive_in_cache
         .file_name()
@@ -157,23 +136,23 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
         ExecMode::Global => {
             let list_file_path = path::global::packageslist_filepath();
             list_file_path.parent().ok_or_else(|| {
-                    std::io::Error::new(
-                        std::io::ErrorKind::InvalidInput,
-                        format!(
-                            "Global packages list file path '{}' does not have a parent directory.",
-                            list_file_path.display()
-                        ),
-                    )
-                })?.to_path_buf()
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    format!(
+                        "Global packages list file path '{}' does not have a parent directory.",
+                        list_file_path.display()
+                    ),
+                )
+            })?.to_path_buf()
         }
     };
 
-    std::fs::create_dir_all(&final_destination_base_dir)?;
+    fs::create_dir_all(&final_destination_base_dir)?;
     dprintln!(
         "Ensured final destination base directory exists: {}",
         final_destination_base_dir.display()
     );
-    let pkg_name = pkg_data.about.package.name.clone(); // Clone pkg_name for later use
+    let pkg_name = pkg_data.about.package.name.clone();
     let final_pkg_destination_path =
         final_destination_base_dir.join(&pkg_name);
 
@@ -183,20 +162,20 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
             final_pkg_destination_path.display()
         );
         if final_pkg_destination_path.is_dir() {
-            std::fs::remove_dir_all(&final_pkg_destination_path)?;
+            fs::remove_dir_all(&final_pkg_destination_path)?;
         } else {
-            std::fs::remove_file(&final_pkg_destination_path)?;
+            fs::remove_file(&final_pkg_destination_path)?;
         }
     }
 
-    std::fs::rename(&source_dir_to_move, &final_pkg_destination_path)?;
+    fs::rename(&source_dir_to_move, &final_pkg_destination_path)?;
     dprintln!(
         "Successfully moved package from {} to {}",
         source_dir_to_move.display(),
         final_pkg_destination_path.display()
     );
 
-    // --- Apply installed package information to the list ---
+    // インストール済みパッケージ情報をリストに追加
     let installed_package_data = pkg::list::InstalledPackageData {
         info: pkg_data,
         last_modified: Local::now(),
@@ -212,7 +191,6 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
             dprintln!("Added package '{}' to global list.", pkg_name);
         }
     }
-    // --- End of new code ---
 
     Ok(())
 }
