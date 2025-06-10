@@ -1,4 +1,5 @@
 use crate::dprintln;
+use file_format::{self, FileFormat};
 use flate2::Compression;
 use flate2::write::GzEncoder;
 use std::fmt::Display;
@@ -35,19 +36,20 @@ impl Display for ArchiveType {
 
 // ファイル拡張子からアーカイブタイプを判定
 fn get_archive_type(path: &Path) -> Option<ArchiveType> {
-    let path_str = path.to_str()?;
-    if path_str.ends_with(".zip") {
-        Some(ArchiveType::Zip)
-    } else if path_str.ends_with(".tar") {
-        Some(ArchiveType::Tar)
-    } else if path_str.ends_with(".tar.gz") || path_str.ends_with(".tgz") {
-        Some(ArchiveType::TarGz)
-    } else if path_str.ends_with(".tar.xz") {
-        Some(ArchiveType::TarXz)
-    } else if path_str.ends_with(".tar.zst") {
-        Some(ArchiveType::TarZstd)
-    } else {
-        None
+    let archive_format = match FileFormat::from_file(path) {
+        Ok(file_format) => file_format,
+        Err(_e) => return None,
+    };
+    match archive_format.media_type() {
+        "application/zip" => Some(ArchiveType::Zip),
+        "application/x-tar" => Some(ArchiveType::Tar),
+        "application/gzip" | "application/x-gzip"
+        | "application/x-gtar" => Some(ArchiveType::TarGz),
+        "application/x-xz" => Some(ArchiveType::TarXz),
+        "application/zstd" | "application/x-zstd" => {
+            Some(ArchiveType::TarZstd)
+        }
+        _ => None,
     }
 }
 
