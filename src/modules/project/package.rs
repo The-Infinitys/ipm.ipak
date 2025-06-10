@@ -236,7 +236,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     let archive_path: PathBuf = source_base
         .join("ipak")
         .join("package")
-        .join(format!("{}-{}.tar.gz", package_name, version)); // .ipakを.tar.gzに変更
+        .join(format!("{}-{}.ipak", package_name, version)); // .ipakを.tar.gzに変更
     // 注: .ipakを保持したい場合、拡張子を"{}-{}.ipak"に変更し、ArchiveType::TarGzを明示的に使用
 
     // Ensure the parent directory of the archive exists
@@ -251,7 +251,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     create_archive(
         dest_base.clone(),
         archive_path.clone(),
-        ArchiveType::TarGz,
+        ArchiveType::Zip,
     )
     .map_err(|e| format!("Failed to create archive: {}", e))?;
 
