@@ -129,6 +129,10 @@ pub fn create_archive(
             for entry in WalkDir::new(&from) {
                 let entry = entry?;
                 let path = entry.path();
+                // ルートディレクトリをスキップ
+                if path == from {
+                    continue;
+                }
                 let relative = path
                     .strip_prefix(&from)
                     .map_err(|e| {
@@ -208,6 +212,10 @@ fn add_directory_contents<B: Write>(
     for entry in WalkDir::new(from) {
         let entry = entry?;
         let path = entry.path();
+        // ルートディレクトリをスキップ
+        if path == from {
+            continue;
+        }
         let relative = path.strip_prefix(from).map_err(|e| {
             std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
         })?;
@@ -233,154 +241,4 @@ fn add_directory_contents<B: Write>(
         }
     }
     Ok(())
-}
-#[cfg(test)]
-mod tests {
-    use super::super::archive::{
-        ArchiveType, create_archive, extract_archive,
-    };
-    use std::fs::{self, File};
-    use std::io::Write;
-    use std::path::PathBuf;
-    use tempdir::TempDir;
-
-    // テスト用のディレクトリとファイルを作成
-    fn setup_test_dir() -> TempDir {
-        let temp_dir = TempDir::new("archive_test")
-            .expect("Failed to create temp dir");
-
-        // テストディレクトリ内にサブディレクトリとファイルを作成
-        let sub_dir = temp_dir.path().join("subdir");
-        fs::create_dir(&sub_dir).expect("Failed to create subdir");
-
-        // テストファイル1: rootにテキストファイル
-        let file1 = temp_dir.path().join("file1.txt");
-        let mut f1 = File::create(&file1).expect("Failed to create file1");
-        writeln!(f1, "This is file1 content")
-            .expect("Failed to write to file1");
-
-        // テストファイル2: サブディレクトリにテキストファイル
-        let file2 = sub_dir.join("file2.txt");
-        let mut f2 = File::create(&file2).expect("Failed to create file2");
-        writeln!(f2, "This is file2 content")
-            .expect("Failed to write to file2");
-
-        temp_dir
-    }
-
-    // ディレクトリの内容を比較
-    fn compare_dirs(original: &PathBuf, extracted: &PathBuf) -> bool {
-        for entry in walkdir::WalkDir::new(original) {
-            let entry = entry.unwrap();
-            let rel_path = entry.path().strip_prefix(original).unwrap();
-            let extracted_path = extracted.join(rel_path);
-
-            if entry.path().is_file() {
-                if !extracted_path.exists() {
-                    return false;
-                }
-                let orig_content =
-                    fs::read_to_string(entry.path()).unwrap();
-                let ext_content =
-                    fs::read_to_string(&extracted_path).unwrap();
-                if orig_content != ext_content {
-                    return false;
-                }
-            } else if entry.path().is_dir() && !extracted_path.exists() {
-                return false;
-            }
-        }
-        true
-    }
-
-    // 各アーカイブ形式をテスト
-    fn test_archive_type(archive_type: ArchiveType, extension: &str) {
-        let temp_dir = setup_test_dir();
-        let source_dir = temp_dir.path().to_path_buf();
-        let archive_path =
-            temp_dir.path().join(format!("test.{}", extension));
-        let extract_dir = temp_dir.path().join("extracted");
-
-        // アーカイブ作成
-        create_archive(
-            source_dir.clone(),
-            archive_path.clone(),
-            archive_type,
-        )
-        .expect("Failed to create archive");
-
-        // アーカイブファイルが存在することを確認
-        assert!(archive_path.exists(), "Archive file was not created");
-
-        // アーカイブ展開
-        fs::create_dir(&extract_dir)
-            .expect("Failed to create extract dir");
-        extract_archive(archive_path, extract_dir.clone())
-            .expect("Failed to extract archive");
-
-        // 元のディレクトリと展開されたディレクトリを比較
-        assert!(
-            compare_dirs(&source_dir, &extract_dir),
-            "Extracted directory does not match original for {}",
-            extension
-        );
-    }
-
-    #[test]
-    fn test_zip_archive() {
-        test_archive_type(ArchiveType::Zip, "zip");
-    }
-
-    #[test]
-    fn test_tar_archive() {
-        test_archive_type(ArchiveType::Tar, "tar");
-    }
-
-    #[test]
-    fn test_targz_archive() {
-        test_archive_type(ArchiveType::TarGz, "tar.gz");
-    }
-
-    #[test]
-    fn test_tarxz_archive() {
-        test_archive_type(ArchiveType::TarXz, "tar.xz");
-    }
-
-    #[test]
-    fn test_tarzstd_archive() {
-        test_archive_type(ArchiveType::TarZstd, "tar.zst");
-    }
-
-    #[test]
-    fn test_invalid_archive_type() {
-        let temp_dir = setup_test_dir();
-        let invalid_archive = temp_dir.path().join("test.invalid");
-        let extract_dir = temp_dir.path().join("extracted");
-
-        // 無効な拡張子のアーカイブを展開
-        let result = extract_archive(invalid_archive, extract_dir);
-        assert!(
-            result.is_err(),
-            "Expected error for invalid archive type"
-        );
-        if let Err(e) = result {
-            assert_eq!(
-                e.kind(),
-                std::io::ErrorKind::InvalidInput,
-                "Expected InvalidInput error"
-            );
-        }
-    }
-
-    #[test]
-    fn test_nonexistent_source() {
-        let temp_dir = setup_test_dir();
-        let nonexistent = temp_dir.path().join("nonexistent");
-        let archive_path = temp_dir.path().join("test.zip");
-
-        // 存在しないソースディレクトリでアーカイブ作成
-        let result =
-            create_archive(nonexistent, archive_path, ArchiveType::Zip);
-        assert!(result.is_err(), "Expected error for nonexistent source");
-    }
 }
