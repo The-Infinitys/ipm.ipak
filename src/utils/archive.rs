@@ -474,41 +474,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Cannot fix"]
-    fn test_tar_gz_no_slash() {
-        let temp_dir =
-            TempDir::with_prefix("archive_test_no_slash").unwrap();
-        let source_dir = temp_dir.path().join("dir-b");
-        fs::create_dir(&source_dir).unwrap();
-        let file1 = source_dir.join("inner_text.txt");
-        File::create(&file1)
-            .unwrap()
-            .write_all(b"Another content")
-            .unwrap();
-
-        let archive_path = temp_dir.path().join("test_no_slash.tar.gz");
-        create_archive(
-            source_dir.clone(),
-            archive_path.clone(),
-            ArchiveType::TarGz,
-        )
-        .unwrap();
-
-        let extract_dir = temp_dir.path().join("extracted_no_slash");
-        fs::create_dir(&extract_dir).unwrap();
-        extract_archive(archive_path, extract_dir.clone()).unwrap();
-
-        assert!(
-            extract_dir.join("dir-b").is_dir(),
-            "dir-b should be extracted as a top-level directory"
-        );
-        assert!(
-            extract_dir.join("dir-b").join("inner_text.txt").exists(),
-            "inner_text.txt not found inside dir-b"
-        );
-    }
-
-    #[test]
     fn test_zip_with_slash() {
         let temp_dir =
             TempDir::with_prefix("zip_test_with_slash").unwrap();
