@@ -8,16 +8,10 @@ build = "build.rs"
 chrono = { version = "0.4.41", features = ["serde"] }
 cmd_arg = { git = "https://github.com/The-Infinitys/rust.cmd-arg.git"}
 dialoguer = "0.11.0"
-flate2 = "1.1.2"
 ignore = "0.4.23"
-infer = "0.19.0"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = "0.9.34"
-tar = "0.4.44"
 termimad = "0.33.0"
 thiserror = "2.0.12"
 toml = "0.8.22"
-walkdir = "2.5.0"
-zip = "4.0.0"
-zstd = "0.13.3"
