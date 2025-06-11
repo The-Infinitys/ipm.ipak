@@ -21,6 +21,7 @@ pub enum ArchiveType {
     TarXz,
     TarZstd,
     Tar,
+    UnixAr,
 }
 
 impl Display for ArchiveType {
@@ -31,6 +32,7 @@ impl Display for ArchiveType {
             Self::TarXz => write!(f, "tar.xz"),
             Self::TarZstd => write!(f, "tar.zst"),
             Self::Tar => write!(f, "tar"),
+            Self::UnixAr => write!(f, "unix archive"),
         }
     }
 }
@@ -44,6 +46,7 @@ impl FromStr for ArchiveType {
             "tar.xz" | "txz" => Ok(ArchiveType::TarXz),
             "tar.zst" | "tar.zstd" | "tzst" => Ok(ArchiveType::TarZstd),
             "tar" => Ok(ArchiveType::Tar),
+            "ar" => Ok(ArchiveType::UnixAr),
             _ => Err(format!("Invalid Archive Type: {}", s)),
         }
     }
@@ -65,6 +68,7 @@ fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
         "zst" | "zstd" | "tar.zst" | "tar.zstd" => {
             Ok(ArchiveType::TarZstd)
         }
+        "deb" | "rpm" => Ok(ArchiveType::UnixAr),
         _ => Err(archive_extension.to_string()),
     }
 }
