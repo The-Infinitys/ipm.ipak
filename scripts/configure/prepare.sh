@@ -39,7 +39,7 @@ declare -a packages=(
     "zlib" "https://www.zlib.net/zlib-1.3.1.tar.gz" ""
     "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz" "--with-gmp-prefix=\$INSTALL_DIR/gmp"
     "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2" "--with-zlib --enable-libelf-by-default --disable-debuginfod"
-    "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.1.tar.gz" ""
+    "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.2.tar.gz" "" # URLを7.2に修正
     "flex" "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz" ""
     "bison" "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz" ""
 )
