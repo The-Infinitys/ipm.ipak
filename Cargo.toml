@@ -4,10 +4,6 @@ version = "0.1.0"
 edition = "2024"
 build = "build.rs"
 
-[build-dependencies]
-cc = "1.2.26"
-cmake = "0.1.54"
-
 [dependencies]
 chrono = { version = "0.4.41", features = ["serde"] }
 cmd_arg = { git = "https://github.com/The-Infinitys/rust.cmd-arg.git" }
