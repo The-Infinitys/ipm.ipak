@@ -34,6 +34,7 @@ fn exec_shellscript(
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    exec_shellscript("scripts/preconfigure.sh")?;
     exec_shellscript("scripts/build/binutils.sh")?;
     Ok(())
 }
