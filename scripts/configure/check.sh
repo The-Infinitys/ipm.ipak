@@ -12,8 +12,8 @@ echo ""
 # --- パッケージ情報定義 (install_deps_from_source.sh と同じもの) ---
 declare -a packages=(
     "gmp" "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz"
-    "mpfr" "https://www.mpfr.org/mpfr-current/mpfr-4.2.1.tar.xz"
-    "zlib" "https://www.zlib.net/zlib-1.3.1.tar.gz"
+    "mpfr" "https://www.mpfr.org/mpfr-current/mpfr-4.2.2.tar.gz"
+    "zlib" "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
     "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz"
     "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2"
     "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.2.tar.gz"

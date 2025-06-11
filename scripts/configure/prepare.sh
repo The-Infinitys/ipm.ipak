@@ -34,14 +34,14 @@ echo ""
 # --- パッケージ情報定義 ---
 # name, url, configure_options の順で配列に格納
 declare -a packages=(
-    "gmp" "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz" "--enable-cxx"
-    "mpfr" "https://www.mpfr.org/mpfr-current/mpfr-4.2.1.tar.xz" "--with-gmp=\$INSTALL_DIR/gmp"
-    "zlib" "https://www.zlib.net/zlib-1.3.1.tar.gz" ""
-    "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz" "--with-gmp-prefix=\$INSTALL_DIR/gmp"
-    "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2" "--with-zlib --enable-libelf-by-default --disable-debuginfod"
-    "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.2.tar.gz" "" # URLを7.2に修正
-    "flex" "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz" ""
-    "bison" "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz" ""
+    "gmp" "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz"
+    "mpfr" "https://www.mpfr.org/mpfr-current/mpfr-4.2.2.tar.gz"
+    "zlib" "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz"
+    "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2"
+    "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.2.tar.gz"
+    "flex" "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
+    "bison" "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz"
 )
 
 # 展開ディレクトリ情報を保存するための連想配列 (Bash 4.0以上)
