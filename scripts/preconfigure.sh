@@ -54,6 +54,10 @@ build_package() {
     echo "設定中 ($name): ./configure --prefix=$INSTALL_DIR/$name $config_options"
     ./configure --prefix="$INSTALL_DIR/$name" $config_options || { echo "エラー: $name の configure に失敗しました。"; exit 1; }
 
+    # チェック
+    echo "チェック中 ($name)..."
+    make check
+
     # コンパイル
     echo "コンパイル中 ($name)..."
     make -j$(nproc) || { echo "エラー: $name の make に失敗しました。"; exit 1; }
