@@ -6,12 +6,12 @@ use std::fmt::Display;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use tar::{Builder as TarBuilder, Header};
 use walkdir::WalkDir;
 use xz2::write::XzEncoder;
 use zip::ZipWriter;
 use zstd::stream::Encoder as ZstdEncoder;
-use std::str::FromStr;
 
 #[derive(Default)]
 pub enum ArchiveType {
@@ -54,13 +54,12 @@ fn get_archive_type(path: &Path) -> Option<ArchiveType> {
         Ok(file_format) => file_format,
         Err(_e) => return None,
     };
-    match archive_format.media_type() {
-        "application/zip" => Some(ArchiveType::Zip),
-        "application/x-tar" => Some(ArchiveType::Tar),
-        "application/gzip" | "application/x-gzip"
-        | "application/x-gtar" => Some(ArchiveType::TarGz),
-        "application/x-xz" => Some(ArchiveType::TarXz),
-        "application/zstd" | "application/x-zstd" => {
+    match archive_format.extension() {
+        "zip" => Some(ArchiveType::Zip),
+        "tar" => Some(ArchiveType::Tar),
+        "gz" | "gzip" | "tar.gz" => Some(ArchiveType::TarGz),
+        "xz" | "tar.xz" => Some(ArchiveType::TarXz),
+        "zst" | "zstd" | "tar.zst" | "tar.zstd" => {
             Some(ArchiveType::TarZstd)
         }
         _ => None,
