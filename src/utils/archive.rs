@@ -49,20 +49,23 @@ impl FromStr for ArchiveType {
     }
 }
 // ファイル拡張子からアーカイブタイプを判定
-fn get_archive_type(path: &Path) -> Option<ArchiveType> {
+fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
     let archive_format = match FileFormat::from_file(path) {
         Ok(file_format) => file_format,
-        Err(_e) => return None,
-    };
-    match archive_format.extension() {
-        "zip" => Some(ArchiveType::Zip),
-        "tar" => Some(ArchiveType::Tar),
-        "gz" | "gzip" | "tar.gz" => Some(ArchiveType::TarGz),
-        "xz" | "tar.xz" => Some(ArchiveType::TarXz),
-        "zst" | "zstd" | "tar.zst" | "tar.zstd" => {
-            Some(ArchiveType::TarZstd)
+        Err(e) => {
+            return Err(format!("Error while getting file format: {}", e));
         }
-        _ => None,
+    };
+    let archive_extension = archive_format.extension();
+    match archive_extension {
+        "zip" => Ok(ArchiveType::Zip),
+        "tar" => Ok(ArchiveType::Tar),
+        "gz" | "gzip" | "tar.gz" => Ok(ArchiveType::TarGz),
+        "xz" | "tar.xz" => Ok(ArchiveType::TarXz),
+        "zst" | "zstd" | "tar.zst" | "tar.zstd" => {
+            Ok(ArchiveType::TarZstd)
+        }
+        _ => Err(archive_extension.to_string()),
     }
 }
 
@@ -75,10 +78,10 @@ pub fn extract_archive(
         from.display(),
         to.display()
     );
-    let archive_type = get_archive_type(&from).ok_or_else(|| {
+    let archive_type = get_archive_type(&from).map_err(|e| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
-            "Unknown archive type",
+            format!("Unknown archive type: {}", e),
         )
     })?;
     let file = File::open(&from)?;
