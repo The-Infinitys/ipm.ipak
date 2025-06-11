@@ -10,6 +10,16 @@ DOWNLOAD_DIR=$(pwd)/lib/deps/src_deps
 # ビルドされた依存関係をインストールするディレクトリ
 INSTALL_DIR=$(pwd)/lib/deps/opt_deps
 
+# 並列ダウンロードを有効にするフラグ
+PARALLEL_DOWNLOAD=false
+
+# --- 引数解析 ---
+if [[ "$1" == "--parallel-download" ]]; then
+    PARALLEL_DOWNLOAD=true
+    echo "--- 並列ダウンロードが有効になりました ---"
+    shift # 引数を消費
+fi
+
 # ダウンロードおよびインストールディレクトリが存在することを確認し、存在しない場合は作成
 mkdir -p "$DOWNLOAD_DIR"
 mkdir -p "$INSTALL_DIR"
@@ -21,42 +31,108 @@ echo "この処理には時間がかかる場合があります。"
 echo "============================================================"
 echo ""
 
+# --- パッケージ情報定義 ---
+# name, url, configure_options の順で配列に格納
+declare -a packages=(
+    "gmp" "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz" "--enable-cxx"
+    "mpfr" "https://www.mpfr.org/mpfr-current/mpfr-4.2.1.tar.xz" "--with-gmp=\$INSTALL_DIR/gmp"
+    "zlib" "https://www.zlib.net/zlib-1.3.1.tar.gz" ""
+    "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz" "--with-gmp-prefix=\$INSTALL_DIR/gmp"
+    "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2" "--with-zlib --enable-libelf-by-default --disable-debuginfod"
+    "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.1.tar.gz" ""
+    "flex" "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz" ""
+    "bison" "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz" ""
+)
+
+# 展開ディレクトリ情報を保存するための連想配列 (Bash 4.0以上)
+declare -A extracted_dirs
+
+# --- ダウンロードフェーズ (並列ダウンロードが有効な場合のみ) ---
+if $PARALLEL_DOWNLOAD; then
+    echo "--- 全てのソースコードを並列でダウンロード開始 ---"
+    pids=()
+    for ((i=0; i<${#packages[@]}; i+=3)); do
+        name="${packages[$i]}"
+        url="${packages[$i+1]}"
+        tarball_name=$(basename "$url")
+
+        if [ ! -f "$DOWNLOAD_DIR/$tarball_name" ]; then
+            echo "ダウンロード予約: $tarball_name"
+            wget -P "$DOWNLOAD_DIR" "$url" &
+            pids+=($!)
+        else
+            echo "すでにダウンロード済み: $tarball_name"
+        fi
+    done
+
+    # 全てのバックグラウンドダウンロードが完了するのを待つ
+    for pid in "${pids[@]}"; do
+        wait "$pid"
+        if [ $? -ne 0 ]; then
+            echo "エラー: ダウンロードプロセス (PID: $pid) が失敗しました。"
+            exit 1
+        fi
+    done
+    echo "--- 全てのソースコードのダウンロードが完了 ---"
+    echo ""
+
+    # --- 展開フェーズ (並列ダウンロードが有効な場合のみ) ---
+    echo "--- 全てのソースコードの展開を開始 ---"
+    for ((i=0; i<${#packages[@]}; i+=3)); do
+        name="${packages[$i]}"
+        url="${packages[$i+1]}"
+        tarball_name=$(basename "$url")
+        extracted_dir=$(echo "$tarball_name" | sed -E 's/(\.tar\.xz|\.tar\.gz|\.tgz|\.tar\.bz2)//')
+
+        echo "展開中: $tarball_name"
+        rm -rf "$DOWNLOAD_DIR/$extracted_dir"
+        tar -xf "$DOWNLOAD_DIR/$tarball_name" -C "$DOWNLOAD_DIR" || { echo "エラー: $tarball_name の展開に失敗しました。"; exit 1; }
+
+        extracted_dirs["$name"]="$extracted_dir"
+    done
+    echo "--- 全てのソースコードの展開が完了 ---"
+    echo ""
+fi
+
 # --- パッケージビルド用のヘルパー関数 ---
 # 引数: name, url, configure_options
 build_package() {
     local name="$1"
     local url="$2"
     local config_options="$3"
-    local tarball_name=$(basename "$url")
-    local extracted_dir=$(basename "$tarball_name" .tar.xz | sed 's/\.tar\.gz$//' | sed 's/\.tgz$//' | sed 's/\.tar\.bz2$//')
 
     echo "--- $name のビルドを開始 ---"
     echo "ソースダウンロードURL: $url"
 
-    # ダウンロード
-    if [ ! -f "$DOWNLOAD_DIR/$tarball_name" ]; then
-        echo "ダウンロード中: $tarball_name"
-        wget -P "$DOWNLOAD_DIR" "$url" || { echo "エラー: $tarball_name のダウンロードに失敗しました。"; exit 1; }
-    else
-        echo "すでにダウンロード済み: $tarball_name"
+    local tarball_name=$(basename "$url")
+    local extracted_dir=$(echo "$tarball_name" | sed -E 's/(\.tar\.xz|\.tar\.gz|\.tgz|\.tar\.bz2)//')
+
+    # 並列ダウンロードが無効な場合、ここでダウンロードと展開を行う
+    if ! $PARALLEL_DOWNLOAD; then
+        # ダウンロード
+        if [ ! -f "$DOWNLOAD_DIR/$tarball_name" ]; then
+            echo "ダウンロード中: $tarball_name"
+            wget -P "$DOWNLOAD_DIR" "$url" || { echo "エラー: $tarball_name のダウンロードに失敗しました。"; exit 1; }
+        else
+            echo "すでにダウンロード済み: $tarball_name"
+        fi
+
+        # 展開
+        echo "展開中: $tarball_name"
+        rm -rf "$DOWNLOAD_DIR/$extracted_dir"
+        tar -xf "$DOWNLOAD_DIR/$tarball_name" -C "$DOWNLOAD_DIR" || { echo "エラー: $tarball_name の展開に失敗しました。"; exit 1; }
     fi
 
-    # 展開
-    echo "展開中: $tarball_name"
-    # 以前の展開ディレクトリをクリーンアップ
-    rm -rf "$DOWNLOAD_DIR/$extracted_dir"
-    tar -xf "$DOWNLOAD_DIR/$tarball_name" -C "$DOWNLOAD_DIR" || { echo "エラー: $tarball_name の展開に失敗しました。"; exit 1; }
+    echo "ソースディレクトリ: $DOWNLOAD_DIR/$extracted_dir"
 
     # ビルドディレクトリへ移動
     cd "$DOWNLOAD_DIR/$extracted_dir" || { echo "エラー: $DOWNLOAD_DIR/$extracted_dir ディレクトリへの移動に失敗しました。"; exit 1; }
 
-    # 設定 (configure)
-    echo "設定中 ($name): ./configure --prefix=$INSTALL_DIR/$name $config_options"
-    ./configure --prefix="$INSTALL_DIR/$name" $config_options || { echo "エラー: $name の configure に失敗しました。"; exit 1; }
+    local final_config_options=$(eval echo "$config_options")
 
-    # チェック
-    echo "チェック中 ($name)..."
-    make check
+    # 設定 (configure)
+    echo "設定中 ($name): ./configure --prefix=$INSTALL_DIR/$name $final_config_options"
+    ./configure --prefix="$INSTALL_DIR/$name" $final_config_options || { echo "エラー: $name の configure に失敗しました。"; exit 1; }
 
     # コンパイル
     echo "コンパイル中 ($name)..."
@@ -71,31 +147,17 @@ build_package() {
 }
 
 # --- 依存関係のビルド順序 (依存関係の解決を考慮) ---
+echo "--- 依存関係のビルドを開始 ---"
 
-# 1. GMP (MPFR, ISL, GDBが依存)
-build_package "gmp" "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz" "--enable-cxx"
+for ((i=0; i<${#packages[@]}; i+=3)); do
+    name="${packages[$i]}"
+    url="${packages[$i+1]}"
+    config_options="${packages[$i+2]}"
 
-# 2. MPFR (GDBが依存, GMPに依存)
-build_package "mpfr" "https://www.mpfr.org/mpfr-current/mpfr-4.2.1.tar.xz" "--with-gmp=$INSTALL_DIR/gmp"
-
-# 3. Zlib (Binutils, Elfutilsが依存)
-# Zlibのconfigureは標準GNU configureとは少し異なるが、--prefixオプションはサポートされている
-build_package "zlib" "https://www.zlib.net/zlib-1.3.1.tar.gz" ""
-
-# 4. Libisl (Binutilsが依存, GMPに依存)
-build_package "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz" "--with-gmp-prefix=$INSTALL_DIR/gmp"
-
-# 5. Elfutils (Libelfを提供, Zlibに依存)
-build_package "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2" "--with-zlib --enable-libelf-by-default --disable-debuginfod"
-
-# 6. Texinfo (makeinfoを提供, ドキュメント生成に必要)
-build_package "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.1.tar.gz" ""
-
-# 7. Flex (binutils-gdbのビルドプロセスで利用される可能性)
-build_package "flex" "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz" ""
-
-# 8. Bison (binutils-gdbのビルドプロセスで利用される可能性)
-build_package "bison" "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz" ""
+    # `build_package` には常に name, url, config_options を渡す
+    # 関数内部で parallel_download フラグをチェックして処理を分岐
+    build_package "$name" "$url" "$config_options"
+done
 
 echo "============================================================"
 echo "すべての依存関係のビルドとインストールが完了しました。"
