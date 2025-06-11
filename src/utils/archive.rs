@@ -180,6 +180,7 @@ pub fn create_archive(
     };
 
     match archive_type {
+        _ => Ok(()),
         ArchiveType::Zip => {
             let file = File::create(&to)?;
             let mut zip = ZipWriter::new(file);
