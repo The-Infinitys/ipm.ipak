@@ -33,15 +33,21 @@ echo ""
 
 # --- パッケージ情報定義 ---
 # name, url, configure_options の順で配列に格納
+# 依存関係の順序を考慮して並び替え
 declare -a packages=(
-    "gmp" "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz"
-    "mpfr" "https://www.mpfr.org/mpfr-current/mpfr-4.2.2.tar.gz"
-    "zlib" "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
-    "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz"
-    "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2"
-    "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.2.tar.gz"
-    "flex" "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
-    "bison" "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz"
+    # ビルドツール/ユーティリティ
+    "flex" "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz" ""
+    "bison" "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz" ""
+    "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.2.tar.gz" ""
+    "zlib" "https://zlib.net/fossils/zlib-1.3.1.tar.gz" "" # zlibは多くのツールで利用されるため、早めにビルド
+
+    # 数値計算ライブラリ
+    "gmp" "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz" "--disable-shared --enable-fft" # --enable-fft はオプション
+    "mpfr" "https://www.mpfr.org/mpfr-current/mpfr-4.2.2.tar.gz" "--disable-shared --with-gmp=$INSTALL_DIR/gmp"
+    "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz" "--disable-shared --with-gmp-prefix=$INSTALL_DIR/gmp --with-mpfr-prefix=$INSTALL_DIR/mpfr"
+    
+    # その他のライブラリ
+    "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2" "--with-zlib=$INSTALL_DIR/zlib"
 )
 
 # 展開ディレクトリ情報を保存するための連想配列 (Bash 4.0以上)
@@ -128,6 +134,7 @@ build_package() {
     # ビルドディレクトリへ移動
     cd "$DOWNLOAD_DIR/$extracted_dir" || { echo "エラー: $DOWNLOAD_DIR/$extracted_dir ディレクトリへの移動に失敗しました。"; exit 1; }
 
+    # config_options を評価して最終的なオプション文字列を生成
     local final_config_options=$(eval echo "$config_options")
 
     # 設定 (configure)
