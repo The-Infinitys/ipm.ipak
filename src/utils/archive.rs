@@ -1,4 +1,6 @@
 use crate::dprintln;
+use ar::Archive as ArArchive;
+use ar::Builder as ArBuilder; // Import ArBuilder
 use file_format::{self, FileFormat};
 use flate2::Compression;
 use flate2::write::GzEncoder;
@@ -11,7 +13,7 @@ use tar::{Builder as TarBuilder, Header};
 use walkdir::WalkDir;
 use xz2::write::XzEncoder;
 use zip::ZipWriter;
-use zstd::stream::Encoder as ZstdEncoder;
+use zstd::stream::Encoder as ZstdEncoder; // Import ArArchive
 
 #[derive(Default)]
 pub enum ArchiveType {
@@ -68,7 +70,7 @@ fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
         "zst" | "zstd" | "tar.zst" | "tar.zstd" => {
             Ok(ArchiveType::TarZstd)
         }
-        "deb" | "rpm" => Ok(ArchiveType::UnixAr),
+        "deb" | "rpm" | "ar" | "a" => Ok(ArchiveType::UnixAr),
         _ => Err(archive_extension.to_string()),
     }
 }
@@ -109,6 +111,26 @@ pub fn extract_archive(
             }
             Ok(())
         }
+        ArchiveType::UnixAr => {
+            let mut archive = ArArchive::new(file);
+            while let Some(entry) = archive.next_entry() {
+                let mut entry = entry?;
+                let header = entry.header();
+                let entry_name_bytes = header.identifier(); // Get the byte slice
+                let entry_name =
+                    String::from_utf8_lossy(entry_name_bytes).into_owned();
+                let outpath = to.join(entry_name);
+
+                if let Some(p) = outpath.parent() {
+                    if !p.exists() {
+                        std::fs::create_dir_all(p)?;
+                    }
+                }
+                let mut outfile = File::create(&outpath)?;
+                std::io::copy(&mut entry, &mut outfile)?;
+            }
+            Ok(())
+        }
         _ => {
             let reader = match archive_type {
                 ArchiveType::Tar => Box::new(file) as Box<dyn Read>,
@@ -124,7 +146,7 @@ pub fn extract_archive(
                     Box::new(zstd::stream::Decoder::new(file)?)
                         as Box<dyn Read>
                 }
-                _ => unreachable!(),
+                _ => unreachable!(), // UnixAr is handled above
             };
             let mut archive = tar::Archive::new(reader);
             archive.unpack(&to)?;
@@ -180,7 +202,6 @@ pub fn create_archive(
     };
 
     match archive_type {
-        _ => Ok(()),
         ArchiveType::Zip => {
             let file = File::create(&to)?;
             let mut zip = ZipWriter::new(file);
@@ -302,6 +323,83 @@ pub fn create_archive(
             let encoder = builder.into_inner()?;
             let file = encoder.finish()?;
             drop(file); // Ensure the encoder is dropped and flushes
+            Ok(())
+        }
+        ArchiveType::UnixAr => {
+            let file = File::create(&to)?;
+            let mut builder = ArBuilder::new(file);
+
+            for entry in WalkDir::new(&from) {
+                let entry = entry?;
+                let path = entry.path();
+
+                if path.is_file() {
+                    let relative_path =
+                        path.strip_prefix(&from).map_err(|e| {
+                            std::io::Error::new(
+                                std::io::ErrorKind::InvalidInput,
+                                format!(
+                                    "Failed to strip prefix for ar: {}",
+                                    e
+                                ),
+                            )
+                        })?;
+
+                    let ar_name = if has_slash {
+                        // If 'from' had a trailing slash, directly use the relative path
+                        relative_path
+                            .to_str()
+                            .ok_or_else(|| {
+                                std::io::Error::new(
+                                    std::io::ErrorKind::InvalidData,
+                                    "Non-UTF8 path for ar archive",
+                                )
+                            })?
+                            .to_string()
+                    } else {
+                        // If 'from' did not have a trailing slash, prefix with 'dir_name'
+                        // unless it's the root directory itself (which is handled by `is_file()` check)
+                        format!(
+                            "{}/{}",
+                            dir_name.unwrap(),
+                            relative_path.to_str().ok_or_else(|| {
+                                std::io::Error::new(
+                                    std::io::ErrorKind::InvalidData,
+                                    "Non-UTF8 path for ar archive",
+                                )
+                            })?
+                        )
+                    };
+
+                    let mut file_to_archive = File::open(path)?;
+                    let metadata = path.metadata()?;
+
+                    // Create an ar::Header
+                    let mut header = ar::Header::new(
+                        ar_name.into_bytes(),
+                        metadata.len(),
+                    );
+                    header.set_mtime(
+                        metadata
+                            .modified()?
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs(),
+                    );
+                    #[cfg(unix)]
+                    {
+                        use std::os::unix::fs::MetadataExt;
+                        header.set_mode(metadata.mode());
+                        header.set_uid(metadata.uid());
+                        header.set_gid(metadata.gid());
+                    }
+
+                    builder.append(&header, &mut file_to_archive)?;
+                }
+                // ar archives typically don't store empty directories directly.
+                // The directory structure is implied by the paths of the files.
+            }
+            builder.into_inner()?.flush()?; // Ensure all data is written
             Ok(())
         }
     }
@@ -562,6 +660,76 @@ mod tests {
                 .join("zip_inner_text.txt")
                 .exists(),
             "zip_inner_text.txt not found inside zip_dir_b"
+        );
+    }
+
+    #[test]
+    fn test_ar_create_and_extract_with_slash() {
+        let temp_dir =
+            TempDir::with_prefix("archive_test_ar_slash").unwrap();
+        let source_dir = temp_dir.path().join("ar-dir-a");
+        fs::create_dir(&source_dir).unwrap();
+        let file1 = source_dir.join("ar_text.txt");
+        File::create(&file1).unwrap().write_all(b"AR content").unwrap();
+
+        let archive_path = temp_dir.path().join("test.ar");
+        let source_dir_with_slash =
+            PathBuf::from(format!("{}/", source_dir.to_str().unwrap()));
+        create_archive(
+            source_dir_with_slash,
+            archive_path.clone(),
+            ArchiveType::UnixAr,
+        )
+        .unwrap();
+
+        let extract_dir = temp_dir.path().join("extracted_ar");
+        fs::create_dir(&extract_dir).unwrap();
+        extract_archive(archive_path, extract_dir.clone()).unwrap();
+
+        assert!(
+            extract_dir.join("ar_text.txt").exists(),
+            "ar_text.txt not found in root of extracted ar"
+        );
+        assert!(
+            !extract_dir.join("ar-dir-a").is_dir(),
+            "ar-dir-a should not be extracted as a top-level directory from ar"
+        );
+    }
+
+    #[test]
+    fn test_ar_create_and_extract_no_slash() {
+        let temp_dir =
+            TempDir::with_prefix("archive_test_ar_no_slash").unwrap();
+        let source_dir = temp_dir.path().join("ar-dir-b");
+        fs::create_dir(&source_dir).unwrap();
+        let file1 = source_dir.join("ar_inner_text.txt");
+        File::create(&file1)
+            .unwrap()
+            .write_all(b"Another AR content")
+            .unwrap();
+
+        let archive_path = temp_dir.path().join("test_no_slash.ar");
+        create_archive(
+            source_dir.clone(),
+            archive_path.clone(),
+            ArchiveType::UnixAr,
+        )
+        .unwrap();
+
+        let extract_dir = temp_dir.path().join("extracted_ar_no_slash");
+        fs::create_dir(&extract_dir).unwrap();
+        extract_archive(archive_path, extract_dir.clone()).unwrap();
+
+        assert!(
+            extract_dir.join("ar-dir-b").is_dir(),
+            "ar-dir-b should be extracted as a top-level directory from ar"
+        );
+        assert!(
+            extract_dir
+                .join("ar-dir-b")
+                .join("ar_inner_text.txt")
+                .exists(),
+            "ar_inner_text.txt not found inside ar-dir-b"
         );
     }
 }
