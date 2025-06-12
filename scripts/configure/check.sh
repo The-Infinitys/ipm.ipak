@@ -17,6 +17,7 @@ declare -a packages=(
     "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz"
     "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2"
     "texinfo" "https://ftp.gnu.org/gnu/texinfo/texinfo-7.2.tar.gz"
+    "libarchive" "https://www.libarchive.org/downloads/libarchive-3.7.4.tar.gz"
     "flex" "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
     "bison" "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz"
 )

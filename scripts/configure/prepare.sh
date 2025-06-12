@@ -47,7 +47,9 @@ declare -a packages=(
     "isl" "https://libisl.sourceforge.io/isl-0.26.tar.xz" "--disable-shared --with-gmp-prefix=$INSTALL_DIR/gmp --with-mpfr-prefix=$INSTALL_DIR/mpfr"
     
     # その他のライブラリ
-    "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2" "--with-zlib=$INSTALL_DIR/zlib"
+    # libarchive を elfutils の前に配置
+    "libarchive" "https://www.libarchive.org/downloads/libarchive-3.7.4.tar.gz" "" # 最新の安定版を適宜確認
+    "elfutils" "https://sourceware.org/elfutils/ftp/0.190/elfutils-0.190.tar.bz2" "--with-zlib=$INSTALL_DIR/zlib --with-libarchive=$INSTALL_DIR/libarchive"
 )
 
 # 展開ディレクトリ情報を保存するための連想配列 (Bash 4.0以上)
