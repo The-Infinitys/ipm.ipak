@@ -43,17 +43,17 @@ fn create_archive(
     for arg in args {
         match arg.opt_str.as_str() {
             "--from" => {
-                if let Some(s) = arg.opt_values.get(0) {
+                if let Some(s) = arg.opt_values.first() {
                     from_path = s;
                 }
             }
             "--to" => {
-                if let Some(s) = arg.opt_values.get(0) {
+                if let Some(s) = arg.opt_values.first() {
                     to_path = s;
                 }
             }
             "--type" => {
-                if let Some(s) = arg.opt_values.get(0) {
+                if let Some(s) = arg.opt_values.first() {
                     archive_type = s;
                 }
             }
@@ -80,12 +80,12 @@ fn exracte_archive(
     for arg in args {
         match arg.opt_str.as_str() {
             "--from" => {
-                if let Some(s) = arg.opt_values.get(0) {
+                if let Some(s) = arg.opt_values.first() {
                     from_path = s;
                 }
             }
             "--to" => {
-                if let Some(s) = arg.opt_values.get(0) {
+                if let Some(s) = arg.opt_values.first() {
                     to_path = s;
                 }
             }
