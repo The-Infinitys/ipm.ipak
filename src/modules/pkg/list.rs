@@ -1,9 +1,9 @@
 use super::super::system::path;
 use super::PackageData;
+use crate::utils::color::colorize::*;
 use crate::utils::shell;
 use chrono::{DateTime, Local};
 use cmd_arg::cmd_arg::Option;
-use crate::utils::color::colorize::*;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::fmt::{self, Display, Formatter};

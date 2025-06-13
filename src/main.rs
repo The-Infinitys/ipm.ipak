@@ -1,7 +1,7 @@
 use cmd_arg::cmd_arg::Option;
 use cmd_arg::cmd_arg::get as get_cmd_data;
 use ipak::dprintln;
-use ipak::modules::{messages, pkg, project, system};
+use ipak::modules::{messages, pkg, project, system, utils};
 
 fn main() -> Result<(), std::io::Error> {
     let command_data = get_cmd_data();
@@ -27,6 +27,7 @@ fn main() -> Result<(), std::io::Error> {
         Project,
         Package,
         Unknown,
+        Utilities,
         System,
     }
 
@@ -40,6 +41,7 @@ fn main() -> Result<(), std::io::Error> {
         "project" | "proj" | "--projec" => SubCommand::Project,
         "system" | "sys" | "--system" => SubCommand::System,
         "pkg" | "package" | "--package" => SubCommand::Package,
+        "utils" | "utilities" | "--utils" => SubCommand::Utilities,
         _ => SubCommand::Unknown,
     };
 
@@ -50,6 +52,7 @@ fn main() -> Result<(), std::io::Error> {
         SubCommand::Project => project::project(sub_opts)?,
         SubCommand::System => system::system(sub_opts)?,
         SubCommand::Package => pkg::pkg(sub_opts)?,
+        SubCommand::Utilities => utils::utils(sub_opts)?,
         SubCommand::Unknown => messages::unknown()?,
     }
 

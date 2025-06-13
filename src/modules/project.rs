@@ -138,9 +138,8 @@ fn project_run(args: Vec<&Option>) -> Result<(), std::io::Error> {
         .clone();
 
     let sub_args = &args[1..]; // スライスとして渡すことで不必要なコピーを避ける
-    run::run(&sub_cmd, sub_args.to_vec()).map_err(|e| {
-        std::io::Error::other(e.to_string())
-    })
+    run::run(&sub_cmd, sub_args.to_vec())
+        .map_err(|e| std::io::Error::other(e.to_string()))
 }
 fn project_init() -> Result<(), std::io::Error> {
     init::init()

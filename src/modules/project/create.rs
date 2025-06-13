@@ -3,8 +3,8 @@ use std::str::FromStr;
 use thiserror::Error;
 mod templates;
 use super::super::pkg::{AuthorAboutData, PackageData}; // 複数のアイテムを一行でインポート
-use crate::utils::files::file_creation;
 use crate::utils::color::colorize::*;
+use crate::utils::files::file_creation;
 use std::fmt::{self, Display, Formatter};
 /// プロジェクトテンプレートのタイプを定義します。
 #[derive(PartialEq, Eq, Default)] // Default を追加して、ProjectParams のデフォルト実装を容易にする
