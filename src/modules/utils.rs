@@ -69,7 +69,7 @@ fn create_archive(
                 format!("Unknown Archive Type: {}", e),
             )
         })?;
-    utils::archive::create_archive(from_path, to_path, archive_type)?;
+    utils::archive::create_archive(&from_path, &to_path, archive_type)?;
     Ok(())
 }
 fn exracte_archive(
@@ -94,6 +94,6 @@ fn exracte_archive(
     }
     let from_path = PathBuf::from(from_path);
     let to_path = PathBuf::from(to_path);
-    utils::archive::extract_archive(from_path, to_path)?;
+    utils::archive::extract_archive(&from_path, &to_path)?;
     Ok(())
 }

@@ -246,12 +246,8 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
 
     // create_archiveを使用してTarGzアーカイブを作成
     dprintln!("Creating tar.gz archive at {}", archive_path.display());
-    create_archive(
-        dest_base.clone(),
-        archive_path.clone(),
-        ArchiveType::Zip,
-    )
-    .map_err(|e| format!("Failed to create archive: {}", e))?;
+    create_archive(&dest_base, &archive_path, ArchiveType::Zip)
+        .map_err(|e| format!("Failed to create archive: {}", e))?;
 
     // Clean up the destination directory after compression
     fs::remove_dir_all(&dest_base).map_err(|e| {

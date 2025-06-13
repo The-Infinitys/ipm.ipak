@@ -76,8 +76,8 @@ fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
 }
 
 pub fn extract_archive(
-    from: PathBuf,
-    to: PathBuf,
+    from: &PathBuf,
+    to: &PathBuf,
 ) -> Result<(), std::io::Error> {
     dprintln!(
         "Extracting archive from: {} to: {}",
@@ -156,8 +156,8 @@ pub fn extract_archive(
 }
 
 pub fn create_archive(
-    from: PathBuf,
-    to: PathBuf,
+    from: &PathBuf,
+    to: &PathBuf,
     archive_type: ArchiveType,
 ) -> Result<(), std::io::Error> {
     dprintln!(
@@ -546,15 +546,15 @@ mod tests {
         let source_dir_with_slash =
             PathBuf::from(format!("{}/", source_dir.to_str().unwrap()));
         create_archive(
-            source_dir_with_slash,
-            archive_path.clone(),
+            &source_dir_with_slash,
+            &archive_path,
             ArchiveType::TarGz,
         )
         .unwrap();
 
         let extract_dir = temp_dir.path().join("extracted");
         fs::create_dir(&extract_dir).unwrap();
-        extract_archive(archive_path, extract_dir.clone()).unwrap();
+        extract_archive(&archive_path, &extract_dir).unwrap();
 
         assert!(
             extract_dir.join("text.txt").exists(),
@@ -581,11 +581,8 @@ mod tests {
             .unwrap();
 
         let archive_path = temp_dir.path().join("test.tar.gz");
-        let result = create_archive(
-            source_dir.clone(),
-            archive_path.clone(),
-            ArchiveType::TarGz,
-        );
+        let result =
+            create_archive(&source_dir, &archive_path, ArchiveType::TarGz);
         // This assertion checks if an error was returned.
         assert!(result.is_err(), "Expected error for long path");
         assert_eq!(
@@ -607,15 +604,15 @@ mod tests {
         let source_dir_with_slash =
             PathBuf::from(format!("{}/", source_dir.to_str().unwrap()));
         create_archive(
-            source_dir_with_slash,
-            archive_path.clone(),
+            &source_dir_with_slash,
+            &archive_path,
             ArchiveType::Zip,
         )
         .unwrap();
 
         let extract_dir = temp_dir.path().join("extracted_zip");
         fs::create_dir(&extract_dir).unwrap();
-        extract_archive(archive_path, extract_dir.clone()).unwrap();
+        extract_archive(&archive_path, &extract_dir).unwrap();
 
         assert!(
             extract_dir.join("zip_text.txt").exists(),
@@ -639,16 +636,12 @@ mod tests {
             .unwrap();
 
         let archive_path = temp_dir.path().join("test_no_slash.zip");
-        create_archive(
-            source_dir.clone(),
-            archive_path.clone(),
-            ArchiveType::Zip,
-        )
-        .unwrap();
+        create_archive(&source_dir, &archive_path, ArchiveType::Zip)
+            .unwrap();
 
         let extract_dir = temp_dir.path().join("extracted_zip_no_slash");
         fs::create_dir(&extract_dir).unwrap();
-        extract_archive(archive_path, extract_dir.clone()).unwrap();
+        extract_archive(&archive_path, &extract_dir).unwrap();
 
         assert!(
             extract_dir.join("zip_dir_b").is_dir(),
@@ -676,15 +669,15 @@ mod tests {
         let source_dir_with_slash =
             PathBuf::from(format!("{}/", source_dir.to_str().unwrap()));
         create_archive(
-            source_dir_with_slash,
-            archive_path.clone(),
+            &source_dir_with_slash,
+            &archive_path,
             ArchiveType::UnixAr,
         )
         .unwrap();
 
         let extract_dir = temp_dir.path().join("extracted_ar");
         fs::create_dir(&extract_dir).unwrap();
-        extract_archive(archive_path, extract_dir.clone()).unwrap();
+        extract_archive(&archive_path, &extract_dir).unwrap();
 
         assert!(
             extract_dir.join("ar_text.txt").exists(),
@@ -710,15 +703,15 @@ mod tests {
 
         let archive_path = temp_dir.path().join("test_no_slash.ar");
         create_archive(
-            source_dir.clone(),
-            archive_path.clone(),
+            &source_dir,
+            &archive_path,
             ArchiveType::UnixAr,
         )
         .unwrap();
 
         let extract_dir = temp_dir.path().join("extracted_ar_no_slash");
         fs::create_dir(&extract_dir).unwrap();
-        extract_archive(archive_path, extract_dir.clone()).unwrap();
+        extract_archive(&archive_path, &extract_dir).unwrap();
 
         assert!(
             extract_dir.join("ar-dir-b").is_dir(),

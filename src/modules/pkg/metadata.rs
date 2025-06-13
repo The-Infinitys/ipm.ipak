@@ -55,7 +55,7 @@ pub fn metadata(args: Vec<&Option>) -> Result<(), std::io::Error> {
         pkg_archive_in_cache.display(),
         cache_path.display()
     );
-    extract_archive(pkg_archive_in_cache.clone(), cache_path.clone())?;
+    extract_archive(&pkg_archive_in_cache, &cache_path)?;
 
     fs::remove_file(&pkg_archive_in_cache)?;
 
