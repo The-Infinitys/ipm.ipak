@@ -702,12 +702,8 @@ mod tests {
             .unwrap();
 
         let archive_path = temp_dir.path().join("test_no_slash.ar");
-        create_archive(
-            &source_dir,
-            &archive_path,
-            ArchiveType::UnixAr,
-        )
-        .unwrap();
+        create_archive(&source_dir, &archive_path, ArchiveType::UnixAr)
+            .unwrap();
 
         let extract_dir = temp_dir.path().join("extracted_ar_no_slash");
         fs::create_dir(&extract_dir).unwrap();
