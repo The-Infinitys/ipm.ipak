@@ -84,13 +84,13 @@ pub fn extract_archive(
         from.display(),
         to.display()
     );
-    let archive_type = get_archive_type(&from).map_err(|e| {
+    let archive_type = get_archive_type(from).map_err(|e| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             format!("Unknown archive type: {}", e),
         )
     })?;
-    let file = File::open(&from)?;
+    let file = File::open(from)?;
     match archive_type {
         ArchiveType::Zip => {
             let mut archive = zip::ZipArchive::new(file)?;
@@ -149,7 +149,7 @@ pub fn extract_archive(
                 _ => unreachable!(), // UnixAr is handled above
             };
             let mut archive = tar::Archive::new(reader);
-            archive.unpack(&to)?;
+            archive.unpack(to)?;
             Ok(())
         }
     }
@@ -203,12 +203,12 @@ pub fn create_archive(
 
     match archive_type {
         ArchiveType::Zip => {
-            let file = File::create(&to)?;
+            let file = File::create(to)?;
             let mut zip = ZipWriter::new(file);
-            for entry in WalkDir::new(&from) {
+            for entry in WalkDir::new(from) {
                 let entry = entry?;
                 let path = entry.path();
-                let relative = path.strip_prefix(&from).map_err(|e| {
+                let relative = path.strip_prefix(from).map_err(|e| {
                     std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
                         e.to_string(), // Error should be converted to String
@@ -273,11 +273,11 @@ pub fn create_archive(
             Ok(())
         }
         ArchiveType::Tar => {
-            let file = File::create(&to)?;
+            let file = File::create(to)?;
             let mut builder = TarBuilder::new(file);
             add_directory_contents(
                 &mut builder,
-                &from,
+                from,
                 has_slash,
                 dir_name,
             )?;
@@ -285,12 +285,12 @@ pub fn create_archive(
             Ok(())
         }
         ArchiveType::TarGz => {
-            let file = File::create(&to)?;
+            let file = File::create(to)?;
             let encoder = GzEncoder::new(file, Compression::default());
             let mut builder = TarBuilder::new(encoder);
             add_directory_contents(
                 &mut builder,
-                &from,
+                from,
                 has_slash,
                 dir_name,
             )?;
@@ -298,12 +298,12 @@ pub fn create_archive(
             Ok(())
         }
         ArchiveType::TarXz => {
-            let file = File::create(&to)?;
+            let file = File::create(to)?;
             let encoder = XzEncoder::new(file, 6);
             let mut builder = TarBuilder::new(encoder);
             add_directory_contents(
                 &mut builder,
-                &from,
+                from,
                 has_slash,
                 dir_name,
             )?;
@@ -311,12 +311,12 @@ pub fn create_archive(
             Ok(())
         }
         ArchiveType::TarZstd => {
-            let file = File::create(&to)?;
+            let file = File::create(to)?;
             let encoder = ZstdEncoder::new(file, 0)?;
             let mut builder = TarBuilder::new(encoder);
             add_directory_contents(
                 &mut builder,
-                &from,
+                from,
                 has_slash,
                 dir_name,
             )?;
@@ -326,16 +326,16 @@ pub fn create_archive(
             Ok(())
         }
         ArchiveType::UnixAr => {
-            let file = File::create(&to)?;
+            let file = File::create(to)?;
             let mut builder = ArBuilder::new(file);
 
-            for entry in WalkDir::new(&from) {
+            for entry in WalkDir::new(from) {
                 let entry = entry?;
                 let path = entry.path();
 
                 if path.is_file() {
                     let relative_path =
-                        path.strip_prefix(&from).map_err(|e| {
+                        path.strip_prefix(from).map_err(|e| {
                             std::io::Error::new(
                                 std::io::ErrorKind::InvalidInput,
                                 format!(
