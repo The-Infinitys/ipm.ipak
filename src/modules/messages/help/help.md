@@ -12,3 +12,4 @@ Available HelpType:
 - project
 - manual
 - system
+- utils

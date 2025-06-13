@@ -99,6 +99,7 @@ pub fn help(args: Vec<&Option>) -> Result<(), std::io::Error> {
             "project" => HelpType::Project,
             "system" => HelpType::System,
             "package" => HelpType::Package,
+            "utils" => HelpType::Utils,
             _ => HelpType::Help,
         }
     };
@@ -116,6 +117,8 @@ enum HelpType {
     Project,
     Package,
     System,
+    /// Utility commands help.
+    Utils,
 }
 
 /// 指定されたヘルプメッセージの種類に対応するテキストを取得します。
@@ -138,6 +141,7 @@ fn get_help_msg(help_type: HelpType) -> String {
         HelpType::Project => include_str!("./messages/help/project.md"),
         HelpType::Package => include_str!("./messages/help/package.md"),
         HelpType::System => include_str!("./messages/help/system.md"),
+        HelpType::Utils => include_str!("./messages/help/utils.md"),
     })
 }
 /// 指定されたヘルプメッセージの種類に対応するテキストを標準出力に表示します。

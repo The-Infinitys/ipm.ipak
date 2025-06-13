@@ -49,6 +49,14 @@
   ローカルまたはグローバル設定を構成します。  
   使用例: `{name} system configure [--local|--global]`
 
+### utils - ユーリティコマンド
+- **archive**
+  アーカイブユーリティを使用します。
+  - **create**: アーカイブを作成します。
+    使用例: `{name} utils archive create --from <path/to/target> --to <path/to/create> --type <tar|zstd|...>`
+  - **extract**: アーカイブを展開します。
+    使用例: `{name} utils archive extract --from <path/to/target> --to <path/to/extract>`
+
 ### package (pkg) - パッケージ管理
 - **list**  
   インストール済みパッケージを表示します。  
