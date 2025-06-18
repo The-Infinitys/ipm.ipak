@@ -224,7 +224,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     let dest_base: PathBuf = source_base
         .join("ipak")
         .join("package")
-        .join(format!("{}-{}", package_name, version));
+        .join(format!("{}-{}/", package_name, version));
     let skip_prefix: PathBuf = PathBuf::from("ipak").join("package");
 
     // Call walk_and_copy to perform the file copying

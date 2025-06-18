@@ -4,12 +4,13 @@ use super::depend;
 use crate::dprintln;
 use crate::modules::project;
 use crate::modules::system::path;
-use crate::utils::archive::extract_archive; // archive.rsからインポート
+use crate::utils::archive::extract_archive;
 use chrono::Local;
 use cmd_arg::cmd_arg::{Option, OptionType};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use tempfile::tempdir; // 追加
 
 pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
     let mut target_path_str = String::new();
@@ -33,89 +34,41 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
         return Err(std::io::Error::from(std::io::ErrorKind::NotFound));
     }
 
-    let cache_path = path::local::cache_path();
+    // 一時ディレクトリを作成
+    let temp_dir = tempdir()?;
+    dprintln!("Created temp directory at {}", temp_dir.path().display());
 
-    if cache_path.is_file() {
-        fs::remove_file(&cache_path)?;
-    }
-    if cache_path.is_dir() && cache_path.read_dir()?.next().is_some() {
-        fs::remove_dir_all(&cache_path)?;
-    }
-    if !cache_path.is_dir() {
-        fs::create_dir_all(&cache_path)?;
-    }
-
-    let pkg_archive_in_cache =
-        cache_path.join(target_path.file_name().ok_or_else(|| {
+    let pkg_archive_in_temp = temp_dir.path().join(
+        target_path.file_name().ok_or_else(|| {
             std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "Target path has no filename",
             )
-        })?);
-    fs::copy(&target_path, &pkg_archive_in_cache)?;
-
-    dprintln!(
-        "Created cache for {} at {}",
-        target_path.display(),
-        pkg_archive_in_cache.display()
+        })?,
     );
 
-    // アーカイブを展開（tarコマンドの代わりにextract_archiveを使用）
+    fs::copy(&target_path, &pkg_archive_in_temp)?;
     dprintln!(
-        "Trying to extract: from {}, to {}",
-        pkg_archive_in_cache.display(),
-        cache_path.display()
+        "Copied package to temp directory: {}",
+        pkg_archive_in_temp.display()
     );
-    extract_archive(&pkg_archive_in_cache, &cache_path)?;
 
-    fs::remove_file(&pkg_archive_in_cache)?;
+    // アーカイブを展開
+    dprintln!(
+        "Extracting archive from {} to {}",
+        pkg_archive_in_temp.display(),
+        temp_dir.path().display()
+    );
+    extract_archive(&pkg_archive_in_temp, &temp_dir.path().to_path_buf())?;
+    fs::remove_file(&pkg_archive_in_temp)?;
 
-    let pkg_filename_str = pkg_archive_in_cache
-        .file_name()
-        .ok_or_else(|| {
-            std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "Invalid package archive path (no filename component)",
-            )
-        })?
-        .to_str()
-        .ok_or_else(|| {
-            std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "Invalid package file name (non-UTF8)",
-            )
-        })?;
-
-    let parts: Vec<&str> = pkg_filename_str.split('.').collect();
-    let extracted_dir_name = if parts.is_empty() {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "Package filename resulted in empty parts",
-        ));
-    } else if parts.len() == 1 {
-        parts[0].to_string()
-    } else {
-        parts[0..parts.len() - 1].join(".")
-    };
-
-    let extracted_pkg_dir_in_cache = cache_path.join(&extracted_dir_name);
-
+    // パッケージデータの処理
     let install_process_result = {
         let original_cwd = env::current_dir()?;
-        if !extracted_pkg_dir_in_cache.is_dir() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                format!(
-                    "Extracted package directory not found: {}. Expected after extracting {}.",
-                    extracted_pkg_dir_in_cache.display(),
-                    pkg_filename_str
-                ),
-            ));
-        }
-        env::set_current_dir(&extracted_pkg_dir_in_cache)?;
+        env::set_current_dir(temp_dir.path())?;
         dprintln!(
             "Changed current directory to {}",
-            extracted_pkg_dir_in_cache.display()
+            temp_dir.path().display()
         );
 
         let result = installation_process(install_mode);
@@ -128,8 +81,6 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
         result
     };
     let pkg_data = install_process_result?;
-
-    let source_dir_to_move = extracted_pkg_dir_in_cache;
 
     let final_destination_base_dir: PathBuf = match install_mode {
         ExecMode::Local => path::local::packages_dirpath(),
@@ -148,19 +99,11 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
     };
 
     fs::create_dir_all(&final_destination_base_dir)?;
-    dprintln!(
-        "Ensured final destination base directory exists: {}",
-        final_destination_base_dir.display()
-    );
     let pkg_name = pkg_data.about.package.name.clone();
     let final_pkg_destination_path =
         final_destination_base_dir.join(&pkg_name);
 
     if final_pkg_destination_path.exists() {
-        dprintln!(
-            "Removing existing item at final destination: {}",
-            final_pkg_destination_path.display()
-        );
         if final_pkg_destination_path.is_dir() {
             fs::remove_dir_all(&final_pkg_destination_path)?;
         } else {
@@ -168,10 +111,22 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
 
-    fs::rename(&source_dir_to_move, &final_pkg_destination_path)?;
+    // 展開されたファイルを直接コピー
+    fs::create_dir_all(&final_pkg_destination_path)?;
+    for entry in fs::read_dir(temp_dir.path())? {
+        let entry = entry?;
+        let target_path =
+            final_pkg_destination_path.join(entry.file_name());
+        if entry.path().is_dir() {
+            fs::create_dir_all(&target_path)?;
+            copy_dir_all(&entry.path(), &target_path)?;
+        } else {
+            fs::copy(&entry.path(), &target_path)?;
+        }
+    }
+
     dprintln!(
-        "Successfully moved package from {} to {}",
-        source_dir_to_move.display(),
+        "Successfully installed package to {}",
         final_pkg_destination_path.display()
     );
 
@@ -192,6 +147,23 @@ pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
         }
     }
 
+    Ok(())
+}
+
+// ディレクトリ全体をコピーするヘルパー関数
+fn copy_dir_all(src: &PathBuf, dst: &PathBuf) -> std::io::Result<()> {
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        let target = dst.join(entry.file_name());
+
+        if ty.is_dir() {
+            fs::create_dir_all(&target)?;
+            copy_dir_all(&entry.path(), &target)?;
+        } else {
+            fs::copy(entry.path(), target)?;
+        }
+    }
     Ok(())
 }
 
