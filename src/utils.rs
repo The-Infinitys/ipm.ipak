@@ -9,3 +9,5 @@ pub fn generate_email_address() -> String {
     let domain = "local";
     format!("{}@{}.{}", username, hostname, domain)
 }
+
+pub mod error;
