@@ -2,11 +2,11 @@ use crate::modules::project::ProjectTemplateType;
 use crate::modules::project::package::PackageTarget;
 use crate::{modules::project::ExecShell, utils::archive::ArchiveType};
 use clap::{Parser, Subcommand};
-use std::path::PathBuf; // Import ExecShell
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(name = "ipak")] // Assuming the name of your application is 'ipak'
+#[command(author, version, about = "A command-line tool for easy project creation, building, and installation. / プロジェクトの作成、ビルド、インストールを簡単に行えるツール。", long_about = None)]
+#[command(name = "ipak")]
 pub struct Args {
     #[command(subcommand)]
     pub command: Commands,
@@ -14,96 +14,96 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Display the manual.
+    /// Displays the manual. / マニュアルを表示します。
     Manual,
-    /// Manage projects.
+    /// Manage projects. / プロジェクトを管理します。
     #[command(subcommand)]
     Project(ProjectCommands),
-    /// Configure system settings.
+    /// Configure system settings. / システム設定を構成します。
     #[command(subcommand)]
     System(SystemCommands),
-    /// Utility commands.
+    /// Utility commands. / ユーティリティコマンド。
     #[command(subcommand)]
     Utils(UtilsCommands),
-    /// Manage packages.
+    /// Manage packages. / パッケージを管理します。
     #[command(subcommand)]
     Pkg(PkgCommands),
 }
 
 #[derive(Subcommand, Debug)]
 pub enum ProjectCommands {
-    /// Create a new project.
+    /// Create a new project. / 新しいプロジェクトを作成します。
     Create {
-        /// Name of the project.
+        /// Name of the project. / プロジェクトの名前。
         #[arg(long = "project-name")]
         project_name: String,
-        /// Template to use (default or rust).
+        /// Template to use (e.g., default, rust). / 使用するテンプレート (例: default, rust)。
         #[arg(long)]
         template: Option<ProjectTemplateType>,
-        /// Author name for the project.
+        /// Author name for the project. / プロジェクトの著者名。
         #[arg(long)]
         author_name: Option<String>,
-        /// Author email for the project.
+        /// Author email for the project. / プロジェクトの著者メール。
         #[arg(long)]
         author_email: Option<String>,
     },
-    /// Build the project.
+    /// Build the project. / プロジェクトをビルドします。
     Build {
-        /// Build in release mode.
+        /// Build in release mode. / リリースモードでビルドします。
         #[arg(long)]
         release: bool,
-        /// Shell to use (bash or zsh).
+        /// Shell to use (e.g., bash, zsh). / 使用するシェル (例: bash, zsh)。
         #[arg(long)]
-        shell: Option<ExecShell>, // Changed to ExecShell
+        shell: Option<ExecShell>,
     },
-    /// Install the project.
+    /// Install the project. / プロジェクトをインストールします。
     Install {
-        /// Install globally.
+        /// Install globally. / グローバルにインストールします。
         #[arg(long)]
         global: bool,
-        /// Shell to use (bash or zsh).
+        /// Shell to use (e.g., bash, zsh). / 使用するシェル (例: bash, zsh)。
         #[arg(long)]
-        shell: Option<ExecShell>, // Changed to ExecShell
+        shell: Option<ExecShell>,
     },
-    /// Remove the project.
+    /// Remove the project. / プロジェクトを削除します。
     Remove {
-        /// Remove locally.
+        /// Remove locally. / ローカルで削除します。
         #[arg(long)]
         local: bool,
-        /// Remove globally.
+        /// Remove globally. / グローバルで削除します。
         #[arg(long)]
         global: bool,
-        /// Shell to use (bash or zsh).
+        /// Shell to use (e.g., bash, zsh). / 使用するシェル (例: bash, zsh)。
         #[arg(long)]
-        shell: Option<ExecShell>, // Changed to ExecShell
+        shell: Option<ExecShell>,
     },
-    /// Completely remove the project and associated data.
+    /// Completely remove the project and associated data. / プロジェクトと関連データを完全に削除します。
     Purge {
-        /// Purge locally.
+        /// Purge locally. / ローカルで完全に削除します。
         #[arg(long)]
         local: bool,
-        /// Purge globally.
+        /// Purge globally. / グローバルで完全に削除します。
         #[arg(long)]
         global: bool,
-        /// Shell to use (bash or zsh).
+        /// Shell to use (e.g., bash, zsh). / 使用するシェル (例: bash, zsh)。
         #[arg(long)]
-        shell: Option<ExecShell>, // Changed to ExecShell
+        shell: Option<ExecShell>,
     },
-    /// Package the project.
+    /// Package the project. / プロジェクトをパッケージ化します。
     Package {
-        /// Target for packaging (e.g., "tar", "zip").
+        /// Target for packaging (e.g., "tar", "zip"). / パッケージ化のターゲット (例: "tar", "zip")。
         #[arg(long)]
         target: Option<PackageTarget>,
     },
-    /// Display project metadata.
+    /// Display project metadata. / プロジェクトのメタデータを表示します。
     Metadata,
-    /// Init project.
+    /// Initialize a project. / プロジェクトを初期化します。
     Init,
-    /// Run an arbitrary command within the project.
+    /// Run an arbitrary command within the project. / プロジェクト内で任意のコマンドを実行します。
     Run {
-        /// Shell to run,
+        /// Shell to run. / 実行するシェル。
         shell: Option<ExecShell>,
-        /// Command to run.
+        /// Command to run. / 実行するコマンド。
         command: String,
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
@@ -112,12 +112,12 @@ pub enum ProjectCommands {
 
 #[derive(Subcommand, Debug)]
 pub enum SystemCommands {
-    /// Configure local or global settings.
+    /// Configure local or global settings. / ローカルまたはグローバル設定を構成します。
     Configure {
-        /// Configure local settings.
+        /// Configure local settings. / ローカル設定を構成します。
         #[arg(long)]
         local: bool,
-        /// Configure global settings.
+        /// Configure global settings. / グローバル設定を構成します。
         #[arg(long)]
         global: bool,
     },
@@ -125,31 +125,31 @@ pub enum SystemCommands {
 
 #[derive(Subcommand, Debug)]
 pub enum UtilsCommands {
-    /// Archive utilities.
+    /// Archive utilities. / アーカイブユーティリティ。
     #[command(subcommand)]
     Archive(ArchiveCommands),
 }
 
 #[derive(Subcommand, Debug)]
 pub enum ArchiveCommands {
-    /// Create an archive.
+    /// Create an archive. / アーカイブを作成します。
     Create {
-        /// Path to the target to archive.
+        /// Path to the target to archive. / アーカイブするターゲットへのパス。
         #[arg(long)]
         from: PathBuf,
-        /// Path to create the archive.
+        /// Path to create the archive. / アーカイブを作成するパス。
         #[arg(long)]
         to: PathBuf,
-        /// Type of archive (tar, zstd, ...).
-        #[arg(long)]
+        /// Type of archive (e.g., tar, zstd). / アーカイブの種類 (例: tar, zstd)。
+        #[arg(long, value_name = "TYPE")]
         archive_type: ArchiveType,
     },
-    /// Extract an archive.
+    /// Extract an archive. / アーカイブを展開します。
     Extract {
-        /// Path to the archive to extract.
+        /// Path to the archive to extract. / 展開するアーカイブへのパス。
         #[arg(long)]
         from: PathBuf,
-        /// Path to extract the archive to.
+        /// Path to extract the archive to. / アーカイブを展開するパス。
         #[arg(long)]
         to: PathBuf,
     },
@@ -157,53 +157,54 @@ pub enum ArchiveCommands {
 
 #[derive(Subcommand, Debug)]
 pub enum PkgCommands {
-    /// List installed packages.
+    /// List installed packages. / インストール済みパッケージを一覧表示します。
     List {
-        /// List local packages.
+        /// List local packages. / ローカルパッケージを一覧表示します。
         #[arg(long)]
         local: bool,
-        /// List global packages.
+        /// List global packages. / グローバルパッケージを一覧表示します。
         #[arg(long)]
         global: bool,
     },
-    /// Install a package.
+    /// Install a package. / パッケージをインストールします。
     Install {
-        /// Path to the package file.
+        /// Path to the package file. / パッケージファイルへのパス。
         #[arg()]
         file_path: PathBuf,
-        /// Install locally.
+        /// Install locally. / ローカルにインストールします。
         #[arg(long)]
         local: bool,
-        /// Install globally.
+        /// Install globally. / グローバルにインストールします。
         #[arg(long)]
         global: bool,
     },
-    /// Remove a package (only binaries are removed, configuration files remain).
+    /// Remove a package (binaries only, config files are kept). / パッケージを削除します。バイナリのみが削除され、設定ファイルは残ったままになります。
     Remove {
-        /// Name of the package to remove.
+        /// Name of the package to remove. / 削除するパッケージの名前。
         #[arg()]
         package_name: String,
-        /// Remove locally.
+        /// Remove locally. / ローカルで削除します。
         #[arg(long)]
         local: bool,
-        /// Remove globally.
+        /// Remove globally. / グローバルで削除します。
         #[arg(long)]
         global: bool,
     },
-    /// Purge a package (completely removed, including configuration files).
+    /// Purge a package (completely removed, including config files). / パッケージを削除します。設定ファイルも含めて完全に削除されます。
     Purge {
-        /// Name of the package to purge.
+        /// Name of the package to purge. / 完全に削除するパッケージの名前。
         #[arg()]
         package_name: String,
-        /// Purge locally.
+        /// Purge locally. / ローカルで完全に削除します。
         #[arg(long)]
         local: bool,
-        /// Purge globally.
+        /// Purge globally. / グローバルで完全に削除します。
         #[arg(long)]
         global: bool,
     },
+    /// Display package metadata. / パッケージのメタデータを表示します。
     MetaData {
-        /// Nmae of the package to get metadata.
+        /// Path to the package to get metadata from. / メタデータを取得するパッケージへのパス。
         #[arg()]
         package_path: PathBuf,
     },
