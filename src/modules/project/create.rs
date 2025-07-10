@@ -1,13 +1,14 @@
 use std::io;
 use std::str::FromStr;
 use thiserror::Error;
-mod templates;
+pub mod templates;
 use super::super::pkg::{AuthorAboutData, PackageData}; // 複数のアイテムを一行でインポート
 use crate::utils::color::colorize::*;
 use crate::utils::files::file_creation;
+use clap;
 use std::fmt::{self, Display, Formatter};
 /// プロジェクトテンプレートのタイプを定義します。
-#[derive(PartialEq, Eq, Default)] // Default を追加して、ProjectParams のデフォルト実装を容易にする
+#[derive(PartialEq, Eq, Default, clap::ValueEnum, Clone, Copy)]
 pub enum ProjectTemplateType {
     #[default]
     // Default トレイトの実装でデフォルトを Default に設定
@@ -17,7 +18,11 @@ pub enum ProjectTemplateType {
     Dotnet,
     CLang,
 }
-
+impl fmt::Debug for ProjectTemplateType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
 impl FromStr for ProjectTemplateType {
     type Err = String;
 

@@ -4,13 +4,14 @@ use super::super::project::ExecMode;
 use super::depend;
 use crate::dprintln;
 use crate::modules::system::path;
-use cmd_arg::cmd_arg::{Option, OptionType};
+use crate::utils::error::Error;
 use std::env;
 use std::path::PathBuf;
 
-pub fn remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
-    let (target_pkg_name, uninstall_mode) = parse_arguments(args)?;
-
+pub fn remove(
+    target_pkg_name: String,
+    uninstall_mode: ExecMode,
+) -> Result<(), Error> {
     let final_pkg_destination_path = match uninstall_mode {
         ExecMode::Local => {
             path::local::packages_dirpath().join(&target_pkg_name)
@@ -37,7 +38,7 @@ pub fn remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
             "Package not found at: {}",
             final_pkg_destination_path.display()
         );
-        return Err(std::io::Error::from(std::io::ErrorKind::NotFound));
+        return Err(std::io::ErrorKind::NotFound.into());
     }
 
     uninstall_package(
@@ -50,39 +51,6 @@ pub fn remove(args: Vec<&Option>) -> Result<(), std::io::Error> {
     remove_package_from_list(&target_pkg_name, uninstall_mode)?;
 
     Ok(())
-}
-
-fn parse_arguments(
-    args: Vec<&Option>,
-) -> Result<(String, ExecMode), std::io::Error> {
-    let mut target_pkg_name = None;
-    let mut uninstall_mode = ExecMode::default();
-
-    for arg in args {
-        match arg.opt_type {
-            OptionType::Simple => {
-                target_pkg_name = Some(arg.opt_str.clone());
-            }
-            OptionType::LongOpt => match arg.opt_str.as_str() {
-                "--local" => uninstall_mode = ExecMode::Local,
-                "--global" => uninstall_mode = ExecMode::Global,
-                _ => continue,
-            },
-            _ => continue,
-        }
-    }
-
-    let target_pkg_name = match target_pkg_name {
-        Some(pkg_name) => pkg_name,
-        None => {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "Could not found package name",
-            ));
-        }
-    };
-
-    Ok((target_pkg_name, uninstall_mode))
 }
 
 fn uninstall_package(

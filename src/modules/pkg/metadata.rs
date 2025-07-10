@@ -2,24 +2,23 @@ use super::super::pkg;
 use crate::dprintln;
 use crate::modules::project;
 use crate::utils::archive::extract_archive;
-use cmd_arg::cmd_arg::{Option, OptionType};
+use crate::utils::error::Error;
 use std::env;
 use std::fs;
+use std::path::PathBuf;
 use tempfile::tempdir; // 追加
-
-pub fn metadata(args: Vec<&Option>) -> Result<(), std::io::Error> {
-    let mut target_path_str = String::new();
-    for arg in args {
-        match arg.opt_type {
-            OptionType::Simple => target_path_str = arg.opt_str.to_owned(),
-            _ => continue,
-        }
-    }
-    let target_path = env::current_dir()?.join(&target_path_str);
+pub fn metadata(target_path: PathBuf) -> Result<(), Error> {
+    let target_path = env::current_dir()?.join(&target_path);
 
     if !target_path.is_file() {
-        eprintln!("Couldn't find target file: {}", target_path.display());
-        return Err(std::io::Error::from(std::io::ErrorKind::NotFound));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!(
+                "Couldn't find target file: {}",
+                target_path.display()
+            ),
+        )
+        .into());
     }
 
     // 一時ディレクトリを作成
@@ -27,14 +26,12 @@ pub fn metadata(args: Vec<&Option>) -> Result<(), std::io::Error> {
     dprintln!("Created temp directory at {}", temp_dir.path().display());
 
     let pkg_archive_in_temp = temp_dir.path().join(
-        target_path
-            .file_name()
-            .ok_or_else(|| {
-                std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    "Target path has no filename",
-                )
-            })?
+        target_path.file_name().ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Target path has no filename",
+            )
+        })?,
     );
 
     fs::copy(&target_path, &pkg_archive_in_temp)?;
@@ -63,7 +60,10 @@ pub fn metadata(args: Vec<&Option>) -> Result<(), std::io::Error> {
         let result = metadata_process();
 
         env::set_current_dir(&original_cwd)?;
-        dprintln!("Restored current directory to {}", original_cwd.display());
+        dprintln!(
+            "Restored current directory to {}",
+            original_cwd.display()
+        );
         result
     };
     let pkg_data = metadata_process_result?;

@@ -20,8 +20,34 @@ impl fmt::Display for ErrorKind {
         }
     }
 }
+impl From<&str> for Error {
+    fn from(value: &str) -> Self {
+        Error::other(value.into())
+    }
+}
+impl From<String> for Error {
+    fn from(value: String) -> Self {
+        Error::other(value)
+    }
+}
+impl From<io::ErrorKind> for Error {
+    fn from(value: io::ErrorKind) -> Self {
+        Error::new(ErrorKind::Io(value), "".into())
+    }
+}
+impl From<io::Error> for Error {
+    fn from(value: io::Error) -> Self {
+        Error::new(ErrorKind::Io(value.kind()), value.to_string())
+    }
+}
 
 impl Error {
+    pub fn other(message: String) -> Self {
+        Self { kind: ErrorKind::Other, message }
+    }
+    pub fn new(kind: ErrorKind, message: String) -> Self {
+        Self { kind, message }
+    }
     fn display_for(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.message.is_empty() {
             write!(f, "  {}", self.kind.to_string().cyan().bold())?;

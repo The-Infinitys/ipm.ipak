@@ -17,7 +17,7 @@ pub struct PackageOptions {
 }
 
 /// Represents the different packaging targets.
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, clap::ValueEnum)]
 pub enum PackageTarget {
     /// Builds from source.
     SourceBuild,

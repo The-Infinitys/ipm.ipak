@@ -2,26 +2,16 @@ use super::metadata::{self, metadata};
 use crate::modules::project::ExecShell;
 use crate::modules::version::Version;
 use crate::utils::color::colorize::*;
-use cmd_arg::cmd_arg;
 use std::process::Command;
-use std::str::FromStr;
 
-pub fn run(name: &str, args: Vec<&cmd_arg::Option>) -> Result<(), String> {
+pub fn run(
+    shell: Option<ExecShell>,
+    name: &str,
+    args: Vec<String>,
+) -> Result<(), String> {
     let name = name.to_ascii_lowercase();
     println!("{}: {}", "Run".bold().green(), name.bold().cyan());
-    let mut exec_shell: ExecShell = ExecShell::default();
-    for arg in args {
-        match arg.opt_str.as_str() {
-            "--shell" => {
-                if !arg.opt_values.is_empty() {
-                    exec_shell = ExecShell::from_str(
-                        arg.opt_values.first().unwrap(),
-                    )?;
-                }
-            }
-            _ => continue,
-        }
-    }
+    let exec_shell = shell.unwrap_or_default();
     let target_dir = metadata::get_dir();
     let target_dir = match target_dir {
         Ok(path) => path,
@@ -40,11 +30,14 @@ pub fn run(name: &str, args: Vec<&cmd_arg::Option>) -> Result<(), String> {
         target_dir: &std::path::Path,
         project_name: &str,
         project_version: &Version,
+        args: Vec<String>,
     ) {
         cmd.current_dir(target_dir)
             .env("IPAK_PROJECT_NAME", project_name)
             .env("IPAK_PROJECT_VERSION", project_version.to_string())
-            .arg(format!("ipak/scripts/{}.sh", name));
+            .arg(format!("ipak/scripts/{}.sh", name))
+            .arg("--")
+            .args(args);
     }
 
     let mut exec_process = exec_shell.generate();
@@ -54,6 +47,7 @@ pub fn run(name: &str, args: Vec<&cmd_arg::Option>) -> Result<(), String> {
         &target_dir,
         &project_metadata.about.package.name,
         &project_metadata.about.package.version,
+        args,
     );
 
     // Execute the exec process and handle the result

@@ -5,33 +5,22 @@ use crate::dprintln;
 use crate::modules::project;
 use crate::modules::system::path;
 use crate::utils::archive::extract_archive;
+use crate::utils::error::Error;
 use chrono::Local;
-use cmd_arg::cmd_arg::{Option, OptionType};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::tempdir; // 追加
 
-pub fn install(args: Vec<&Option>) -> Result<(), std::io::Error> {
-    let mut target_path_str = String::new();
-    let mut install_mode = ExecMode::default();
-    for arg in args {
-        match arg.opt_type {
-            OptionType::Simple => target_path_str = arg.opt_str.to_owned(),
-            OptionType::LongOpt => match arg.opt_str.as_str() {
-                "--local" => install_mode = ExecMode::Local,
-                "--global" => install_mode = ExecMode::Global,
-                _ => continue,
-            },
-            _ => continue,
-        }
-    }
-    let install_mode = install_mode;
-    let target_path = env::current_dir()?.join(&target_path_str);
+pub fn install(
+    file_path: PathBuf,
+    install_mode: ExecMode,
+) -> Result<(), Error> {
+    let target_path = env::current_dir()?.join(&file_path);
 
     if !target_path.is_file() {
         eprintln!("Couldn't find target file: {}", target_path.display());
-        return Err(std::io::Error::from(std::io::ErrorKind::NotFound));
+        return Err(Error::from(std::io::ErrorKind::NotFound));
     }
 
     // 一時ディレクトリを作成

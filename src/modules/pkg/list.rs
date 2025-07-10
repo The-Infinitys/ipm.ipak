@@ -1,9 +1,9 @@
 use super::super::system::path;
 use super::PackageData;
+use crate::modules::project::ExecMode;
 use crate::utils::color::colorize::*;
-use crate::utils::shell;
+use crate::utils::error::Error;
 use chrono::{DateTime, Local};
-use cmd_arg::cmd_arg::Option;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::fmt::{self, Display, Formatter};
@@ -152,28 +152,15 @@ impl Display for InstalledPackageData {
 ///
 /// # 戻り値
 /// リスト表示が成功した場合は `Ok(())` を、エラーが発生した場合は `std::io::Error` を返します。
-pub fn list(args: Vec<&Option>) -> Result<(), std::io::Error> {
-    // デフォルトのリストターゲットは、現在のユーザーがスーパーユーザーでない場合ローカル
-    let mut list_local = !shell::is_superuser();
-
-    // 引数を解析してリストターゲットを決定
-    for arg in args {
-        match arg.opt_str.as_str() {
-            "--local" | "-l" => list_local = true,
-            "--global" | "-g" => list_local = false,
-            _ => {
-                eprintln!(
-                    "{} Unknown option '{}'. Ignoring.",
-                    "Warning:".yellow().bold(),
-                    arg.opt_str
-                );
-            }
+pub fn list(mode: ExecMode) -> Result<(), Error> {
+    let packages_list_data = match mode {
+        ExecMode::Local => {
+            get_local().map_err(|e| -> Error { e.into() })?
         }
-    }
-
-    let packages_list_data =
-        if list_local { get_local()? } else { get_global()? };
-
+        ExecMode::Global => {
+            get_global().map_err(|e| -> Error { e.into() })?
+        }
+    };
     println!("{}", packages_list_data);
     Ok(())
 }

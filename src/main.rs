@@ -1,60 +1,18 @@
-use cmd_arg::cmd_arg::Option;
-use cmd_arg::cmd_arg::get as get_cmd_data;
-use ipak::dprintln;
+use clap::Parser;
 use ipak::modules::{messages, pkg, project, system, utils};
+use ipak::utils::args::{Args, Commands};
+use ipak::utils::error::Error;
 
-fn main() -> Result<(), std::io::Error> {
-    let command_data = get_cmd_data();
-    dprintln!("{}", command_data);
-    let opts = command_data.opts;
+fn main() -> Result<(), Error> {
+    let args = Args::parse();
 
-    // 引数がない場合は早期リターン
-    if opts.is_empty() {
-        messages::welcome();
-        return Err(std::io::Error::from(
-            std::io::ErrorKind::InvalidInput,
-        ));
-    }
-
-    let command = &opts[0];
-    let sub_opts: Vec<&Option> = opts[1..].iter().collect();
-
-    // SubCommand enumの定義はそのまま
-    enum SubCommand {
-        Help,
-        Manual,
-        Version,
-        Project,
-        Package,
-        Unknown,
-        Utilities,
-        System,
-    }
-
-    let opt_str = command.opt_str.as_str();
-
-    // OptionTypeに関わらず、opt_strで直接マッチング
-    let sub_command: SubCommand = match opt_str {
-        "--help" | "-h" | "help" => SubCommand::Help,
-        "--manual" | "-m" | "manual" | "man" => SubCommand::Manual,
-        "--version" | "-v" | "version" => SubCommand::Version,
-        "project" | "proj" | "--projec" => SubCommand::Project,
-        "system" | "sys" | "--system" => SubCommand::System,
-        "pkg" | "package" | "--package" => SubCommand::Package,
-        "utils" | "utilities" | "--utils" => SubCommand::Utilities,
-        _ => SubCommand::Unknown,
+    match args.command {
+        Commands::Version => messages::version()?,
+        Commands::Manual => messages::manual()?,
+        Commands::Project(args) => project::project(args)?,
+        Commands::System(args) => system::system(args)?,
+        Commands::Pkg(args) => pkg::pkg(args)?,
+        Commands::Utils(args) => utils::utils(args)?,
     };
-
-    match sub_command {
-        SubCommand::Help => messages::help(sub_opts)?,
-        SubCommand::Version => messages::version()?,
-        SubCommand::Manual => messages::manual()?,
-        SubCommand::Project => project::project(sub_opts)?,
-        SubCommand::System => system::system(sub_opts)?,
-        SubCommand::Package => pkg::pkg(sub_opts)?,
-        SubCommand::Utilities => utils::utils(sub_opts)?,
-        SubCommand::Unknown => messages::unknown()?,
-    }
-
     Ok(()) // main関数がResultを返すため、成功を示すOkを返す
 }

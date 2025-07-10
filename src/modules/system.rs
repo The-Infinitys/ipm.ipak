@@ -1,17 +1,20 @@
 mod configure;
 pub mod path;
-use super::messages;
-use cmd_arg::cmd_arg::Option;
-use std::io::Error;
-pub fn system(args: Vec<&Option>) -> Result<(), Error> {
-    if args.is_empty() {
-        return messages::unknown();
+use crate::utils::{args::SystemCommands, error::Error};
+pub fn system(args: SystemCommands) -> Result<(), Error> {
+    match args {
+        SystemCommands::Configure { local, global } => {
+            configure::configure({
+                if local && !global {
+                    Some(true)
+                } else if global && !local {
+                    Some(false)
+                } else {
+                    None
+                }
+            })
+            .map_err(|e| -> Error { e.into() })?
+        }
     }
-
-    let sub_cmd = args.first().unwrap().to_owned();
-    let sub_args: Vec<&Option> = args[1..].to_vec();
-    match sub_cmd.opt_str.as_str() {
-        "configure" => configure::configure(sub_args),
-        _ => messages::unknown(),
-    }
+    Ok(())
 }

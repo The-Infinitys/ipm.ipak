@@ -1,18 +1,18 @@
-use super::messages;
 use super::version::{Version, VersionRange};
+use crate::utils::args::PkgCommands;
 use crate::utils::color::colorize::*;
+use crate::utils::error::Error;
 use crate::utils::{
     generate_email_address, shell::markdown, shell::username,
 };
-use cmd_arg::cmd_arg::Option;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 pub mod depend;
-mod install;
+pub mod install;
 pub mod list;
-mod metadata;
-mod purge;
-mod remove;
+pub mod metadata;
+pub mod purge;
+pub mod remove;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum Mode {
     Local,
@@ -576,19 +576,22 @@ mod tests {
     }
 }
 
-pub fn pkg(args: Vec<&Option>) -> Result<(), std::io::Error> {
-    if args.is_empty() {
-        return messages::unknown();
-    }
-
-    let sub_cmd = args.first().unwrap().to_owned();
-    let sub_args: Vec<&Option> = args[1..].to_vec();
-    match sub_cmd.opt_str.as_str() {
-        "install" | "-i" | "--install" => install::install(sub_args),
-        "remove" | "-r" | "--remove" => remove::remove(sub_args),
-        "purge" | "-p" | "--purge" => purge::purge(sub_args),
-        "list" | "-l" | "--list" => list::list(sub_args),
-        "metadata" | "info" => metadata::metadata(sub_args),
-        _ => messages::unknown(),
+pub fn pkg(args: PkgCommands) -> Result<(), Error> {
+    match args {
+        PkgCommands::Install { file_path, local, global } => {
+            install::install(file_path, (local, global).into())
+        }
+        PkgCommands::Remove { package_name, local, global } => {
+            remove::remove(package_name, (local, global).into())
+        }
+        PkgCommands::Purge { package_name, local, global } => {
+            purge::purge(package_name, (local, global).into())
+        }
+        PkgCommands::List { local, global } => {
+            list::list((local, global).into())
+        }
+        PkgCommands::MetaData { package_path } => {
+            metadata::metadata(package_path)
+        }
     }
 }

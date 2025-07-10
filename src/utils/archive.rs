@@ -1,6 +1,7 @@
 use crate::dprintln;
 use ar::Archive as ArArchive;
 use ar::Builder as ArBuilder; // Import ArBuilder
+use clap;
 use file_format::{self, FileFormat};
 use flate2::Compression;
 use flate2::write::GzEncoder;
@@ -15,7 +16,7 @@ use xz2::write::XzEncoder;
 use zip::ZipWriter;
 use zstd::stream::Encoder as ZstdEncoder; // Import ArArchive
 
-#[derive(Default)]
+#[derive(Default, clap::ValueEnum, Clone, Copy)]
 pub enum ArchiveType {
     Zip,
     #[default]
@@ -27,6 +28,18 @@ pub enum ArchiveType {
 }
 
 impl Display for ArchiveType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Zip => write!(f, "zip"),
+            Self::TarGz => write!(f, "tar.gz"),
+            Self::TarXz => write!(f, "tar.xz"),
+            Self::TarZstd => write!(f, "tar.zst"),
+            Self::Tar => write!(f, "tar"),
+            Self::UnixAr => write!(f, "unix archive"),
+        }
+    }
+}
+impl std::fmt::Debug for ArchiveType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Zip => write!(f, "zip"),
