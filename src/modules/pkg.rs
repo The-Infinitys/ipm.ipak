@@ -420,6 +420,26 @@ impl RelationData {
     }
 }
 
+pub fn pkg(args: PkgCommands) -> Result<(), Error> {
+    match args {
+        PkgCommands::Install { file_path, local, global } => {
+            install::install(file_path, (local, global).into())
+        }
+        PkgCommands::Remove { package_name, local, global } => {
+            remove::remove(package_name, (local, global).into())
+        }
+        PkgCommands::Purge { package_name, local, global } => {
+            purge::purge(package_name, (local, global).into())
+        }
+        PkgCommands::List { local, global } => {
+            list::list((local, global).into())
+        }
+        PkgCommands::MetaData { package_path } => {
+            metadata::metadata(package_path)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -573,25 +593,5 @@ mod tests {
         println!("Local: {}", Mode::Local);
         println!("Global: {}", Mode::Global);
         println!("Any: {}", Mode::Any);
-    }
-}
-
-pub fn pkg(args: PkgCommands) -> Result<(), Error> {
-    match args {
-        PkgCommands::Install { file_path, local, global } => {
-            install::install(file_path, (local, global).into())
-        }
-        PkgCommands::Remove { package_name, local, global } => {
-            remove::remove(package_name, (local, global).into())
-        }
-        PkgCommands::Purge { package_name, local, global } => {
-            purge::purge(package_name, (local, global).into())
-        }
-        PkgCommands::List { local, global } => {
-            list::list((local, global).into())
-        }
-        PkgCommands::MetaData { package_path } => {
-            metadata::metadata(package_path)
-        }
     }
 }

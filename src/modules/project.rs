@@ -262,9 +262,9 @@ fn project_create(
         project_name,
         project_template: template.unwrap_or_default(),
         author: AuthorAboutData {
-            name: author_name.unwrap_or_else(|| username()),
+            name: author_name.unwrap_or_else(username),
             email: author_email
-                .unwrap_or_else(|| generate_email_address()),
+                .unwrap_or_else(generate_email_address),
         },
     };
     println!("{}", params); // Debugging/User info

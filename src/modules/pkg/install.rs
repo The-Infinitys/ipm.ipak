@@ -110,7 +110,7 @@ pub fn install(
             fs::create_dir_all(&target_path)?;
             copy_dir_all(&entry.path(), &target_path)?;
         } else {
-            fs::copy(&entry.path(), &target_path)?;
+            fs::copy(entry.path(), &target_path)?;
         }
     }
 
