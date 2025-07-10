@@ -46,4 +46,43 @@ pub mod ipak {
             archive::extract_archive(from, to).map_err(|e| Error::from(e))
         }
     }
+
+    pub mod packages {
+        use super::Error;
+        // use crate::modules::pkg;
+        use std::path::PathBuf;
+        /// 指定したパスのパッケージをすべてインストールする (依存関係を考慮)
+        pub fn install_packages(
+            _target: Vec<&PathBuf>,
+        ) -> Result<(), Error> {
+            Ok(())
+        }
+        /// 指定した名称のパッケージをすべて削除する (依存関係を考慮)
+        pub fn remove_packages(_target: Vec<&str>) -> Result<(), Error> {
+            Ok(())
+        }
+        /// 指定したパッケージを設定ごと削除する (依存関係を考慮)
+        pub fn purge_packages(_target: Vec<&str>) -> Result<(), Error> {
+            Ok(())
+        }
+    }
+    pub mod args {
+        use super::Error;
+        pub use crate::utils::args::*;
+
+        pub trait CommandExecution {
+            fn exec(self) -> Result<(), Error>;
+        }
+        impl CommandExecution for Commands {
+            fn exec(self) -> Result<(), Error> {
+                use crate::modules::{pkg, project, system, utils};
+                match self {
+                    Self::Project(args) => project::project(args),
+                    Self::System(args) => system::system(args),
+                    Self::Pkg(args) => pkg::pkg(args),
+                    Self::Utils(args) => utils::utils(args),
+                }
+            }
+        }
+    }
 }

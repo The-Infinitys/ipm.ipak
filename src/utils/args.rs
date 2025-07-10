@@ -17,8 +17,6 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Displays the manual. / マニュアルを表示します。
-    Manual,
     /// Manage projects. / プロジェクトを管理します。
     #[command(subcommand)]
     Project(ProjectCommands),
@@ -32,7 +30,6 @@ pub enum Commands {
     #[command(subcommand)]
     Pkg(PkgCommands),
 }
-
 #[derive(Subcommand, Debug)]
 pub enum ProjectCommands {
     /// Create a new project. / 新しいプロジェクトを作成します。
