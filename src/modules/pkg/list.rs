@@ -1,3 +1,6 @@
+//! このモジュールは、インストールされているパッケージのリストを管理します。
+//! ローカルおよびグローバルなパッケージリストの読み込み、書き込み、追加、削除、表示機能を提供します。
+
 use super::super::system::path;
 use super::PackageData;
 use crate::modules::project::ExecMode;
@@ -11,13 +14,18 @@ use std::fs;
 use std::io;
 use std::path::PathBuf;
 
+/// パッケージリストのデータを表す構造体です。
 #[derive(Serialize, Deserialize)]
 pub struct PackageListData {
+    /// 最終更新日時。
     pub last_modified: DateTime<Local>,
+    /// インストールされているパッケージのリスト。
     pub installed_packages: Vec<InstalledPackageData>,
 }
 
 impl Default for PackageListData {
+    /// デフォルトの`PackageListData`インスタンスを返します。
+    /// 最終更新日時は現在時刻、インストール済みパッケージリストは空になります。
     fn default() -> Self {
         Self {
             last_modified: Local::now(),
@@ -26,13 +34,26 @@ impl Default for PackageListData {
     }
 }
 
+/// インストールされている個々のパッケージのデータを表す構造体です。
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct InstalledPackageData {
+    /// パッケージの基本情報。
     pub info: PackageData,
+    /// 最終更新日時。
     pub last_modified: DateTime<Local>,
 }
 
 impl PackageListData {
+    /// 指定されたファイルパスから`PackageListData`を読み込みます。
+    ///
+    /// ファイルが存在しない場合は、デフォルトの空のリストを返します。
+    ///
+    /// # Arguments
+    /// * `list_filepath` - パッケージリストファイルへのパス。
+    ///
+    /// # Returns
+    /// `Ok(PackageListData)` 読み込まれたパッケージリストデータ。
+    /// `Err(io::Error)` ファイルの読み込みまたはパースに失敗した場合。
     fn from_filepath(
         list_filepath: &PathBuf,
     ) -> Result<PackageListData, io::Error> {
@@ -68,6 +89,7 @@ impl PackageListData {
 }
 
 impl Display for PackageListData {
+    /// `PackageListData`を整形して表示します。
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
@@ -88,6 +110,7 @@ impl Display for PackageListData {
 }
 
 impl Display for InstalledPackageData {
+    /// `InstalledPackageData`を整形して表示します。
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
@@ -126,6 +149,14 @@ impl Display for InstalledPackageData {
     }
 }
 
+/// 指定されたモードに基づいてインストール済みパッケージを一覧表示します。
+///
+/// # Arguments
+/// * `mode` - 実行モード（ローカルまたはグローバル）。
+///
+/// # Returns
+/// `Ok(())` パッケージリストが正常に表示された場合。
+/// `Err(Error)` パッケージリストの取得または表示中にエラーが発生した場合。
 pub fn list(mode: ExecMode) -> Result<(), Error> {
     let packages_list_data = match mode {
         ExecMode::Local => {
@@ -139,16 +170,34 @@ pub fn list(mode: ExecMode) -> Result<(), Error> {
     Ok(())
 }
 
+/// ローカルのインストール済みパッケージリストを取得します。
+///
+/// # Returns
+/// `Ok(PackageListData)` ローカルパッケージリストデータ。
+/// `Err(std::io::Error)` ファイルの読み込みまたはパースに失敗した場合。
 pub fn get_local() -> Result<PackageListData, std::io::Error> {
     let local_filepath = path::local::packageslist_filepath();
     PackageListData::from_filepath(&local_filepath)
 }
 
+/// グローバルのインストール済みパッケージリストを取得します。
+///
+/// # Returns
+/// `Ok(PackageListData)` グローバルパッケージリストデータ。
+/// `Err(std::io::Error)` ファイルの読み込みまたはパースに失敗した場合。
 pub fn get_global() -> Result<PackageListData, std::io::Error> {
     let global_filepath = path::global::packageslist_filepath();
     PackageListData::from_filepath(&global_filepath)
 }
 
+/// ローカルのパッケージリストにデータを適用し、ファイルに保存します。
+///
+/// # Arguments
+/// * `data` - 適用する`PackageListData`。
+///
+/// # Returns
+/// `Ok(())` データが正常に適用され、保存された場合。
+/// `Err(std::io::Error)` ファイルの書き込みまたはシリアライズに失敗した場合。
 pub fn apply_local(
     mut data: PackageListData,
 ) -> Result<(), std::io::Error> {
@@ -194,6 +243,14 @@ pub fn apply_local(
     Ok(())
 }
 
+/// グローバルのパッケージリストにデータを適用し、ファイルに保存します。
+///
+/// # Arguments
+/// * `data` - 適用する`PackageListData`。
+///
+/// # Returns
+/// `Ok(())` データが正常に適用され、保存された場合。
+/// `Err(std::io::Error)` ファイルの書き込みまたはシリアライズに失敗した場合。
 pub fn apply_global(
     mut data: PackageListData,
 ) -> Result<(), std::io::Error> {
@@ -239,6 +296,16 @@ pub fn apply_global(
     Ok(())
 }
 
+/// ローカルのパッケージリストに新しいパッケージを追加します。
+///
+/// 同じ名前のパッケージが既に存在する場合は、そのデータを更新します。
+///
+/// # Arguments
+/// * `new_pkg` - 追加する`InstalledPackageData`。
+///
+/// # Returns
+/// `Ok(())` パッケージが正常に追加または更新された場合。
+/// `Err(io::Error)` パッケージリストの読み込み、書き込み、または更新中にエラーが発生した場合。
 pub fn add_pkg_local(
     new_pkg: InstalledPackageData,
 ) -> Result<(), io::Error> {
@@ -270,6 +337,17 @@ pub fn add_pkg_local(
     apply_local(data)?;
     Ok(())
 }
+
+/// グローバルのパッケージリストに新しいパッケージを追加します。
+///
+/// 同じ名前のパッケージが既に存在する場合は、そのデータを更新します。
+///
+/// # Arguments
+/// * `new_pkg` - 追加する`InstalledPackageData`。
+///
+/// # Returns
+/// `Ok(())` パッケージが正常に追加または更新された場合。
+/// `Err(io::Error)` パッケージリストの読み込み、書き込み、または更新中にエラーが発生した場合。
 pub fn add_pkg_global(
     new_pkg: InstalledPackageData,
 ) -> Result<(), io::Error> {
@@ -302,6 +380,15 @@ pub fn add_pkg_global(
     Ok(())
 }
 
+/// ローカルのパッケージリストから指定されたパッケージを削除します。
+///
+/// # Arguments
+/// * `package_name` - 削除するパッケージの名前。
+///
+/// # Returns
+/// `Ok(true)` パッケージが正常に削除された場合。
+/// `Ok(false)` パッケージが見つからなかった場合。
+/// `Err(io::Error)` パッケージリストの読み込み、書き込み、または更新中にエラーが発生した場合。
 pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
     let mut data = get_local()?;
     let initial_len = data.installed_packages.len();
@@ -321,6 +408,15 @@ pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
     }
 }
 
+/// グローバルのパッケージリストから指定されたパッケージを削除します。
+///
+/// # Arguments
+/// * `package_name` - 削除するパッケージの名前。
+///
+/// # Returns
+/// `Ok(true)` パッケージが正常に削除された場合。
+/// `Ok(false)` パッケージが見つからなかった場合。
+/// `Err(io::Error)` パッケージリストの読み込み、書き込み、または更新中にエラーが発生した場合。
 pub fn del_pkg_global(package_name: &str) -> Result<bool, io::Error> {
     let mut data = get_global()?;
     let initial_len = data.installed_packages.len();

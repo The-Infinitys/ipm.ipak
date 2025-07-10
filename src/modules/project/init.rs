@@ -1,3 +1,6 @@
+//! このモジュールは、既存のプロジェクトを`ipak`プロジェクトとして初期化する機能を提供します。
+//! プロジェクトの言語を検出し、それに応じた`ipak`スクリプトと設定ファイルを生成します。
+
 use super::super::version::Version;
 use super::metadata;
 use crate::dprintln;
@@ -7,6 +10,8 @@ use std::fmt;
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
+
+/// 検出されたパッケージの言語を表す列挙型です。
 enum PackageLanguage {
     Python,
     Rust,
@@ -15,6 +20,7 @@ enum PackageLanguage {
 }
 
 impl fmt::Display for PackageLanguage {
+    /// `PackageLanguage`を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PackageLanguage::Python => write!(f, "python"),
@@ -25,11 +31,24 @@ impl fmt::Display for PackageLanguage {
     }
 }
 
+/// セットアップするファイルとその内容を定義する構造体です。
 struct SetUpItem {
+    /// ファイルのパス。
     path: String,
+    /// ファイルに書き込む内容。
     content: String,
 }
 
+/// テンプレートファイルを生成します。
+///
+/// 指定された`SetUpItem`のリストに基づいて、ファイルを作成し内容を書き込みます。
+///
+/// # Arguments
+/// * `setup_list` - 作成するファイルと内容のリスト。
+///
+/// # Returns
+/// `Ok(())` 成功した場合。
+/// `Err(std::io::Error)` ファイル作成中にエラーが発生した場合。
 fn setup_template_files(
     setup_list: Vec<SetUpItem>,
 ) -> Result<(), std::io::Error> {
@@ -48,6 +67,15 @@ fn setup_template_files(
     Ok(())
 }
 
+/// 既存のプロジェクトを`ipak`プロジェクトとして初期化します。
+///
+/// 現在のディレクトリをスキャンし、`Cargo.toml`, `pyproject.toml`, `.csproj`ファイルなどから
+/// プロジェクトの言語を検出します。検出された言語に基づいて、`ipak/project.yaml`を更新し、
+/// 適切な`ipak`スクリプト（ビルド、インストール、削除、パージ）と設定ファイルを生成します。
+///
+/// # Returns
+/// `Ok(())` 初期化が正常に完了した場合。
+/// `Err(std::io::Error)` ファイル操作、メタデータ処理、または言語検出中にエラーが発生した場合。
 pub fn init() -> Result<(), std::io::Error> {
     let mut pkg_metadata = metadata::from_current().unwrap_or_default();
     let target_dir = env::current_dir()?;
@@ -311,6 +339,17 @@ pub fn init() -> Result<(), std::io::Error> {
     Ok(())
 }
 
+/// 指定されたディレクトリ内で`.csproj`ファイルを再帰的に検索します。
+///
+/// 特定のディレクトリ（`target`, `node_modules`, `bin`, `obj`）は検索から除外されます。
+///
+/// # Arguments
+/// * `dir` - 検索を開始するディレクトリ。
+///
+/// # Returns
+/// `Ok(Some(PathBuf))` `.csproj`ファイルが見つかった場合、そのパス。
+/// `Ok(None)` `.csproj`ファイルが見つからなかった場合。
+/// `Err(std::io::Error)` ディレクトリの読み取り中にエラーが発生した場合。
 fn find_csproj_file_recursive(
     dir: &Path,
 ) -> Result<Option<std::path::PathBuf>, std::io::Error> {
@@ -338,6 +377,15 @@ fn find_csproj_file_recursive(
     Ok(None)
 }
 
+/// `Cargo.toml`ファイルからパッケージ名とバージョンをパースします。
+///
+/// # Arguments
+/// * `path` - `Cargo.toml`ファイルへのパス。
+///
+/// # Returns
+/// `Ok(Some((name, version)))` パッケージ名とバージョンが見つかった場合。
+/// `Ok(None)` パッケージ名またはバージョンが見つからなかった場合。
+/// `Err(std::io::Error)` ファイルの読み取りまたはTOMLのパースに失敗した場合。
 fn parse_cargo_toml(
     path: &Path,
 ) -> Result<Option<(String, String)>, std::io::Error> {
@@ -361,6 +409,15 @@ fn parse_cargo_toml(
     Ok(None)
 }
 
+/// `pyproject.toml`ファイルからプロジェクト名とバージョンをパースします。
+///
+/// # Arguments
+/// * `path` - `pyproject.toml`ファイルへのパス。
+///
+/// # Returns
+/// `Ok(Some((name, version)))` プロジェクト名とバージョンが見つかった場合。
+/// `Ok(None)` プロジェクト名またはバージョンが見つからなかった場合。
+/// `Err(std::io::Error)` ファイルの読み取りまたはTOMLのパースに失敗した場合。
 fn parse_pyproject_toml(
     path: &Path,
 ) -> Result<Option<(String, String)>, std::io::Error> {
@@ -384,6 +441,17 @@ fn parse_pyproject_toml(
     Ok(None)
 }
 
+/// `.csproj`ファイルからアセンブリ名とバージョンをパースします。
+///
+/// XMLを直接パースするのではなく、タグの文字列検索によって情報を抽出します。
+///
+/// # Arguments
+/// * `path` - `.csproj`ファイルへのパス。
+///
+/// # Returns
+/// `Ok(Some((name, version)))` アセンブリ名とバージョンが見つかった場合。
+/// `Ok(None)` アセンブリ名またはバージョンが見つからなかった場合。
+/// `Err(std::io::Error)` ファイルの読み取りに失敗した場合。
 fn parse_csproj(
     path: &Path,
 ) -> Result<Option<(String, String)>, std::io::Error> {

@@ -1,3 +1,6 @@
+//! このモジュールは、`ipak`パッケージの完全な削除（パージ）に関連する機能を提供します。
+//! パッケージのアンインストール、パッケージリストからの削除、依存関係のチェックなどを扱います。
+
 use super::super::pkg;
 use super::super::project;
 use super::super::project::ExecMode;
@@ -8,6 +11,18 @@ use crate::utils::error::Error;
 use std::env;
 use std::path::PathBuf;
 
+/// 指定されたパッケージをシステムから完全に削除（パージ）します。
+///
+/// アンインストールモード（ローカルまたはグローバル）に基づいて、パッケージの場所を特定し、
+/// アンインストールプロセスを実行し、パッケージリストからエントリを削除します。
+///
+/// # Arguments
+/// * `target_pkg_name` - パージするパッケージの名前。
+/// * `uninstall_mode` - アンインストールモード（`ExecMode::Local`または`ExecMode::Global`）。
+///
+/// # Returns
+/// `Ok(())` パッケージが正常にパージされた場合。
+/// `Err(Error)` パッケージが見つからない、またはアンインストール中にエラーが発生した場合。
 pub fn purge(
     target_pkg_name: String,
     uninstall_mode: ExecMode,
@@ -52,6 +67,19 @@ pub fn purge(
     Ok(())
 }
 
+/// パッケージのアンインストールプロセスを実行します。
+///
+/// 指定されたパッケージのディレクトリに移動し、アンインストールスクリプトを実行します。
+/// 実行後、元の作業ディレクトリに戻ります。
+///
+/// # Arguments
+/// * `pkg_name` - アンインストールするパッケージの名前。
+/// * `uninstall_mode` - アンインストールモード。
+/// * `final_pkg_destination_path` - パッケージがインストールされているパス。
+///
+/// # Returns
+/// `Ok(())` アンインストールプロセスが正常に完了した場合。
+/// `Err(std::io::Error)` ディレクトリの変更、またはアンインストールスクリプトの実行中にエラーが発生した場合。
 fn uninstall_package(
     pkg_name: &str,
     uninstall_mode: ExecMode,
@@ -84,6 +112,15 @@ fn uninstall_package(
     result
 }
 
+/// パッケージをローカルまたはグローバルリストから削除します。
+///
+/// # Arguments
+/// * `pkg_name` - 削除するパッケージの名前。
+/// * `uninstall_mode` - アンインストールモード。
+///
+/// # Returns
+/// `Ok(())` パッケージがリストから正常に削除された場合。
+/// `Err(std::io::Error)` リストからの削除中にエラーが発生した場合。
 fn remove_package_from_list(
     pkg_name: &str,
     uninstall_mode: ExecMode,
@@ -101,6 +138,18 @@ fn remove_package_from_list(
     Ok(())
 }
 
+/// パッケージのアンインストールプロセスを実行します。
+///
+/// 依存関係グラフをチェックし、パッケージが削除可能であれば、
+/// プロジェクトの削除スクリプトを実行します。
+///
+/// # Arguments
+/// * `pkg_name` - アンインストールするパッケージの名前。
+/// * `uninstall_mode` - アンインストールモード。
+///
+/// # Returns
+/// `Ok(())` アンインストールプロセスが正常に完了した場合。
+/// `Err(std::io::Error)` 依存関係の競合、または削除スクリプトの実行中にエラーが発生した場合。
 fn uninstall_process(
     pkg_name: &str,
     uninstall_mode: ExecMode,

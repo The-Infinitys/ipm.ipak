@@ -1,3 +1,7 @@
+//! このモジュールは、`ipak`プロジェクトの管理に関連する機能を提供します。
+//! プロジェクトの作成、ビルド、インストール、削除、パージ、実行、メタデータ表示など、
+//! プロジェクトライフサイクル全体をカバーするコマンドを定義します。
+
 use crate::modules::project::build::BuildMode;
 use crate::modules::project::package::PackageTarget;
 use crate::utils::error::Error;
@@ -27,25 +31,42 @@ use create::ProjectParams;
 pub use create::ProjectTemplateType;
 use std::fmt::{self, Display};
 use std::process::Command;
-#[derive(PartialEq, Eq, Clone, Copy)]
+
+/// 実行モード（ローカルまたはグローバル）を定義する列挙型です。
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum ExecMode {
+    /// ローカルモードでの実行。
     Local,
+    /// グローバルモードでの実行。
     Global,
 }
+
 impl From<(bool, bool)> for ExecMode {
+    /// `(local: bool, global: bool)`タプルから`ExecMode`を変換します。
+    ///
+    /// `local`が`true`で`global`が`false`の場合、`Local`を返します。
+    /// `global`が`true`で`local`が`false`の場合、`Global`を返します。
+    /// それ以外の場合（両方`true`、両方`false`など）は、現在のユーザーがスーパーユーザーであれば`Global`、
+    /// そうでなければ`Local`を返します。
     fn from(value: (bool, bool)) -> Self {
         let (local, global) = value;
         if local && !global {
-            Some(true)
+            ExecMode::Local
         } else if global && !local {
-            Some(false)
+            ExecMode::Global
         } else {
-            None
+            ExecMode::from(None)
         }
-        .into()
     }
 }
+
 impl From<Option<bool>> for ExecMode {
+    /// `Option<bool>`から`ExecMode`を変換します。
+    ///
+    /// `Some(true)`の場合、`Local`を返します。
+    /// `Some(false)`の場合、`Global`を返します。
+    /// `None`の場合、現在のユーザーがスーパーユーザーであれば`Global`、
+    /// そうでなければ`Local`を返します。
     fn from(value: Option<bool>) -> Self {
         match value {
             Some(is_local) => {
@@ -65,7 +86,9 @@ impl From<Option<bool>> for ExecMode {
         }
     }
 }
+
 impl Display for ExecMode {
+    /// `ExecMode`を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ExecMode::Local => write!(f, "local"),
@@ -75,23 +98,33 @@ impl Display for ExecMode {
         }
     }
 }
+
 impl Default for ExecMode {
+    /// デフォルトの`ExecMode`を返します。
+    ///
+    /// 現在のユーザーがスーパーユーザーであれば`Global`、そうでなければ`Local`を返します。
     fn default() -> Self {
         if shell::is_superuser() { Self::Global } else { Self::Local }
     }
 }
 
-#[derive(Default, clap::ValueEnum, Clone, Copy)]
+/// 実行に使用するシェルを定義する列挙型です。
+#[derive(Default, clap::ValueEnum, Clone, Copy, Debug)]
 pub enum ExecShell {
+    /// 制限付きBashシェル。
     RBash,
     #[default]
+    /// Bashシェル。
     Bash,
+    /// Zshシェル。
     Zsh,
+    /// Cshシェル。
     Csh,
 }
 
 impl FromStr for ExecShell {
     type Err = String;
+    /// 文字列から`ExecShell`をパースします。
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_ascii_lowercase().as_str() {
             "bash" => Ok(Self::Bash),
@@ -104,6 +137,10 @@ impl FromStr for ExecShell {
 }
 
 impl ExecShell {
+    /// 実行可能な`Command`オブジェクトを生成します。
+    ///
+    /// # Returns
+    /// 実行可能な`Command`オブジェクト。
     pub fn generate(&self) -> Command {
         match self {
             Self::RBash => {
@@ -119,6 +156,7 @@ impl ExecShell {
 }
 
 impl Display for ExecShell {
+    /// `ExecShell`を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ExecShell::RBash => {
@@ -131,19 +169,16 @@ impl Display for ExecShell {
     }
 }
 
-impl fmt::Debug for ExecShell {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ExecShell::RBash => {
-                write!(f, "restricted bash")
-            }
-            ExecShell::Bash => write!(f, "bash"),
-            ExecShell::Zsh => write!(f, "zsh"),
-            ExecShell::Csh => write!(f, "csh"),
-        }
-    }
-}
-
+/// プロジェクト関連のコマンドを処理します。
+///
+/// `ProjectCommands`列挙型に基づいて、適切なプロジェクト管理関数にディスパッチします。
+///
+/// # Arguments
+/// * `args` - 処理するプロジェクトコマンド。
+///
+/// # Returns
+/// `Ok(())` 成功した場合。
+/// `Err(Error)` エラーが発生した場合。
 pub fn project(args: ProjectCommands) -> Result<(), Error> {
     match args {
         ProjectCommands::Create {
@@ -184,9 +219,28 @@ fn project_run(
 ) -> Result<(), Error> {
     run::run(shell, &command, args).map_err(|e| -> Error { e.into() })
 }
+
+/// プロジェクトを初期化します。
+///
+/// `init`モジュールの`init`関数を呼び出します。
+///
+/// # Returns
+/// `Ok(())` 初期化が正常に完了した場合。
+/// `Err(Error)` 初期化中にエラーが発生した場合。
 fn project_init() -> Result<(), Error> {
     init::init().map_err(|e| -> Error { e.into() })
 }
+
+/// プロジェクトをパッケージ化します。
+///
+/// `package`モジュールの`package`関数を呼び出します。
+///
+/// # Arguments
+/// * `target` - パッケージ化のターゲット（オプション）。
+///
+/// # Returns
+/// `Ok(())` パッケージ化が正常に完了した場合。
+/// `Err(Error)` パッケージ化中にエラーが発生した場合。
 fn project_package(target: Option<PackageTarget>) -> Result<(), Error> {
     let package_options =
         package::PackageOptions { target: target.unwrap_or_default() };
@@ -194,6 +248,17 @@ fn project_package(target: Option<PackageTarget>) -> Result<(), Error> {
     package::package(package_options).map_err(|e| -> Error { e.into() })
 }
 
+/// プロジェクトをビルドします。
+///
+/// `build`モジュールの`build`関数を呼び出します。
+///
+/// # Arguments
+/// * `release` - リリースモードでビルドするかどうか。
+/// * `shell` - ビルドに使用するシェル（オプション）。
+///
+/// # Returns
+/// `Ok(())` ビルドが正常に完了した場合。
+/// `Err(Error)` ビルド中にエラーが発生した場合。
 fn project_build(
     release: bool,
     shell: Option<ExecShell>,
@@ -209,6 +274,17 @@ fn project_build(
     build::build(build_options).map_err(|e| -> Error { e.into() })
 }
 
+/// プロジェクトをインストールします。
+///
+/// `install`モジュールの`install`関数を呼び出します。
+///
+/// # Arguments
+/// * `global` - グローバルにインストールするかどうか。
+/// * `shell` - インストールに使用するシェル（オプション）。
+///
+/// # Returns
+/// `Ok(())` インストールが正常に完了した場合。
+/// `Err(Error)` インストール中にエラーが発生した場合。
 fn project_install(
     global: bool,
     shell: Option<ExecShell>,
@@ -224,6 +300,17 @@ fn project_install(
     install::install(install_options).map_err(|e| -> Error { e.into() })
 }
 
+/// プロジェクトを削除します。
+///
+/// `remove`モジュールの`remove`関数を呼び出します。
+///
+/// # Arguments
+/// * `remove_mode` - 削除モード。
+/// * `shell` - 削除に使用するシェル（オプション）。
+///
+/// # Returns
+/// `Ok(())` 削除が正常に完了した場合。
+/// `Err(Error)` 削除中にエラーが発生した場合。
 fn project_remove(
     remove_mode: ExecMode,
     shell: Option<ExecShell>,
@@ -235,6 +322,17 @@ fn project_remove(
     remove::remove(remove_options).map_err(|e| -> Error { e.into() })
 }
 
+/// プロジェクトを完全に削除（パージ）します。
+///
+/// `purge`モジュールの`purge`関数を呼び出します。
+///
+/// # Arguments
+/// * `purge_mode` - パージモード。
+/// * `shell` - パージに使用するシェル（オプション）。
+///
+/// # Returns
+/// `Ok(())` パージが正常に完了した場合。
+/// `Err(Error)` パージ中にエラーが発生した場合。
 fn project_purge(
     purge_mode: ExecMode,
     shell: Option<ExecShell>,
@@ -246,10 +344,30 @@ fn project_purge(
     purge::purge(purge_options).map_err(|e| -> Error { e.into() })
 }
 
+/// プロジェクトのメタデータを表示します。
+///
+/// `metadata`モジュールの`show_metadata`関数を呼び出します。
+///
+/// # Returns
+/// `Ok(())` メタデータが正常に表示された場合。
+/// `Err(Error)` メタデータの表示中にエラーが発生した場合。
 fn project_metadata() -> Result<(), Error> {
     metadata::show_metadata().map_err(|e| -> Error { e.into() })
 }
 
+/// 新しいプロジェクトを作成します。
+///
+/// `create`モジュールの`create`関数を呼び出します。
+///
+/// # Arguments
+/// * `project_name` - プロジェクトの名前。
+/// * `template` - 使用するテンプレート（オプション）。
+/// * `author_name` - 著者名（オプション）。
+/// * `author_email` - 著者メール（オプション）。
+///
+/// # Returns
+/// `Ok(())` プロジェクトが正常に作成された場合。
+/// `Err(Error)` プロジェクト作成中にエラーが発生した場合。
 fn project_create(
     project_name: String,
     template: Option<ProjectTemplateType>,

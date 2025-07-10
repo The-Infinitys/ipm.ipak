@@ -193,9 +193,9 @@ pub fn pager(target_string: String) {
 ///
 /// # Returns
 /// 整形された文字列
-pub fn markdown(md_text: String) -> String {
+pub fn markdown(md_text: &str) -> String {
     let mut skin = MadSkin::default();
     skin.bold.set_fg(gray(20));
     skin.strikeout = CompoundStyle::new(Some(Red), None, Bold.into());
-    format!("{}", skin.term_text(&md_text))
+    format!("{}", skin.term_text(md_text))
 }

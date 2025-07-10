@@ -1,3 +1,6 @@
+//! このモジュールは、プロジェクトのビルドに関連する機能を提供します。
+//! プロジェクトのメタデータと指定されたビルドモードに基づいて、プロジェクトをビルドします。
+
 use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::dprintln;
@@ -6,13 +9,17 @@ use crate::utils::color::colorize::*;
 use std::fmt::{self, Display};
 use std::process::Command;
 
+/// プロジェクトビルドのオプションを定義する構造体です。
 #[derive(Default)]
 pub struct BuildOptions {
+    /// ビルドモード（リリースまたはデバッグ）。
     pub build_mode: BuildMode,
+    /// ビルドに使用するシェル。
     pub build_shell: ExecShell,
 }
 
 impl Display for BuildOptions {
+    /// `BuildOptions`を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let lines = [
             format!("{}{}", "Build Options".cyan().bold(), ":"),
@@ -36,14 +43,18 @@ impl Display for BuildOptions {
     }
 }
 
+/// ビルドモードを定義する列挙型です。
 #[derive(Default)]
 pub enum BuildMode {
+    /// リリースモードでのビルド。
     Release,
     #[default]
+    /// デバッグモードでのビルド。
     Debug,
 }
 
 impl Display for BuildMode {
+    /// `BuildMode`を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BuildMode::Release => {
@@ -56,18 +67,21 @@ impl Display for BuildMode {
     }
 }
 
+/// プロジェクトをビルドします。
+///
+/// 指定されたビルドオプションに基づいて、プロジェクトをビルドします。
+/// ビルドは`ipak/scripts/build.sh`スクリプトを通じて実行されます。
+///
+/// # Arguments
+/// * `opts` - ビルドオプションを含む`BuildOptions`構造体。
+///
+/// # Returns
+/// `Ok(())` ビルドが正常に完了した場合。
+/// `Err(String)` ビルド中にエラーが発生した場合。
 pub fn build(opts: BuildOptions) -> Result<(), String> {
     dprintln!("{}", &opts);
-    let target_dir = metadata::get_dir();
-    let target_dir = match target_dir {
-        Ok(path) => path,
-        Err(e) => {
-            let msg = format!("Error: {}", e);
-            eprintln!("{}", msg);
-            return Err(msg);
-        }
-    };
-    let project_metadata = metadata().unwrap();
+    let target_dir = metadata::get_dir().map_err(|e| format!("Error: {}", e))?;
+    let project_metadata = metadata().map_err(|e| format!("Error: {}", e))?;
 
     fn setup_execshell(
         cmd: &mut Command,

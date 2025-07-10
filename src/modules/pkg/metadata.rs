@@ -1,3 +1,6 @@
+//! このモジュールは、`ipak`パッケージのメタデータ表示に関連する機能を提供します。
+//! パッケージアーカイブからメタデータを抽出し、表示します。
+
 use super::super::pkg;
 use crate::dprintln;
 use crate::modules::project;
@@ -7,6 +10,18 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::tempdir;
+
+/// 指定されたパッケージアーカイブからメタデータを抽出し、表示します。
+///
+/// パッケージアーカイブを一時ディレクトリにコピーし、展開した後、
+/// その中の`ipak/project.yaml`からメタデータを読み込み、標準出力に表示します。
+///
+/// # Arguments
+/// * `target_path` - メタデータを取得するパッケージアーカイブへのパス。
+///
+/// # Returns
+/// `Ok(())` メタデータが正常に表示された場合。
+/// `Err(Error)` ファイルが見つからない、アーカイブの展開、またはメタデータの読み込みに失敗した場合。
 pub fn metadata(target_path: PathBuf) -> Result<(), Error> {
     let target_path = env::current_dir()?.join(&target_path);
 
@@ -69,7 +84,13 @@ pub fn metadata(target_path: PathBuf) -> Result<(), Error> {
     Ok(())
 }
 
+/// 現在のディレクトリの`ipak`プロジェクトメタデータを読み込みます。
+///
+/// この関数は、主に一時ディレクトリに展開されたパッケージのメタデータを読み込むために使用されます。
+///
+/// # Returns
+/// `Ok(pkg::PackageData)` 読み込まれたパッケージメタデータ。
+/// `Err(std::io::Error)` メタデータの読み込みに失敗した場合。
 fn metadata_process() -> Result<pkg::PackageData, std::io::Error> {
-    project::metadata::metadata().map_err(std::io::Error::other)?;
     project::metadata::metadata()
 }

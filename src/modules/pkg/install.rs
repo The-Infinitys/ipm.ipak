@@ -1,3 +1,6 @@
+//! このモジュールは、`ipak`パッケージのインストールに関連する機能を提供します。
+//! パッケージアーカイブの展開、ファイルの配置、パッケージリストの更新などを扱います。
+
 use super::super::pkg;
 use super::super::project::ExecMode;
 use super::depend;
@@ -13,6 +16,18 @@ use std::path::Path;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
+/// 指定されたパッケージアーカイブをシステムにインストールします。
+///
+/// パッケージアーカイブを一時ディレクトリに展開し、指定されたインストールモード（ローカルまたはグローバル）
+/// に基づいて適切な場所にファイルを配置します。その後、パッケージリストを更新します。
+///
+/// # Arguments
+/// * `file_path` - インストールするパッケージアーカイブへのパス。
+/// * `install_mode` - インストールモード（`ExecMode::Local`または`ExecMode::Global`）。
+///
+/// # Returns
+/// `Ok(())` パッケージが正常にインストールされた場合。
+/// `Err(Error)` ファイルが見つからない、アーカイブの展開、ファイルの配置、またはパッケージリストの更新中にエラーが発生した場合。
 pub fn install(
     file_path: PathBuf,
     install_mode: ExecMode,
@@ -135,6 +150,15 @@ pub fn install(
     Ok(())
 }
 
+/// ディレクトリの内容を再帰的にコピーします。
+///
+/// # Arguments
+/// * `src` - コピー元のディレクトリパス。
+/// * `dst` - コピー先のディレクトリパス。
+///
+/// # Returns
+/// `Ok(())` コピーが正常に完了した場合。
+/// `Err(std::io::Error)` コピー中にエラーが発生した場合。
 fn copy_dir_all(src: &PathBuf, dst: &Path) -> std::io::Result<()> {
     for entry in fs::read_dir(src)? {
         let entry = entry?;
@@ -151,6 +175,17 @@ fn copy_dir_all(src: &PathBuf, dst: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
+/// パッケージのインストールプロセスを実行します。
+///
+/// 依存関係グラフをチェックし、パッケージがインストール可能であれば、
+/// プロジェクトのインストールスクリプトを実行し、パッケージのメタデータを返します。
+///
+/// # Arguments
+/// * `install_mode` - インストールモード。
+///
+/// # Returns
+/// `Ok(pkg::PackageData)` インストールされたパッケージのメタデータ。
+/// `Err(std::io::Error)` 依存関係の競合、またはインストールスクリプトの実行中にエラーが発生した場合。
 fn installation_process(
     install_mode: ExecMode,
 ) -> Result<pkg::PackageData, std::io::Error> {
@@ -161,8 +196,8 @@ fn installation_process(
     let depend_graph = depend::DependencyGraph::from_installed_packages(
         &installed_packages,
     );
-    let package_data = project::metadata::metadata()?;
-    match depend_graph.is_packages_installable(vec![package_data]) {
+    let package_data = project::metadata::metadata()?; // Call once
+    match depend_graph.is_packages_installable(vec![package_data.clone()]) {
         Ok(()) => {
             let opts = project::install::InstallOptions {
                 install_mode,
@@ -170,7 +205,7 @@ fn installation_process(
             };
             project::install::install(opts)
                 .map_err(std::io::Error::other)?;
-            Ok(project::metadata::metadata()?)
+            Ok(package_data)
         }
         Err(e) => {
             eprintln!("You cannot install this package.\n{}", e);
