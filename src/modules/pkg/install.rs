@@ -9,6 +9,7 @@ use crate::utils::error::Error;
 use chrono::Local;
 use std::env;
 use std::fs;
+use std::path::Path;
 use std::path::PathBuf;
 use tempfile::tempdir; // 追加
 
@@ -140,7 +141,7 @@ pub fn install(
 }
 
 // ディレクトリ全体をコピーするヘルパー関数
-fn copy_dir_all(src: &PathBuf, dst: &PathBuf) -> std::io::Result<()> {
+fn copy_dir_all(src: &PathBuf, dst: &Path) -> std::io::Result<()> {
     for entry in fs::read_dir(src)? {
         let entry = entry?;
         let ty = entry.file_type()?;
