@@ -1,7 +1,7 @@
 use super::super::version::Version;
 use super::metadata;
 use crate::dprintln;
-use crate::utils::files::file_creation; // Added for creating template files
+use crate::utils::files::file_creation; 
 use std::env;
 use std::fmt;
 use std::fs;
@@ -11,7 +11,7 @@ enum PackageLanguage {
     Python,
     Rust,
     DotNet,
-    Other, // Added Other as a default
+    Other, 
 }
 
 impl fmt::Display for PackageLanguage {
@@ -20,18 +20,18 @@ impl fmt::Display for PackageLanguage {
             PackageLanguage::Python => write!(f, "python"),
             PackageLanguage::Rust => write!(f, "rust"),
             PackageLanguage::DotNet => write!(f, "dotnet"),
-            PackageLanguage::Other => write!(f, "other"), // Handle Other case
+            PackageLanguage::Other => write!(f, "other"), 
         }
     }
 }
 
-// Structure to hold template file path and content, similar to create::templates.rs
+
 struct SetUpItem {
     path: String,
     content: String,
 }
 
-// Helper function to create files from a list of SetUpItems
+
 fn setup_template_files(
     setup_list: Vec<SetUpItem>,
 ) -> Result<(), std::io::Error> {
@@ -61,8 +61,8 @@ pub fn init() -> Result<(), std::io::Error> {
         dprintln!("Initialized project metadata.");
     }
 
-    let mut pkg_lang = PackageLanguage::Other; // Initialize with Other
-    let mut lang_file_path_str = String::new(); // Store the path as a String
+    let mut pkg_lang = PackageLanguage::Other; 
+    let mut lang_file_path_str = String::new(); 
 
     if target_dir.join("Cargo.toml").exists() {
         pkg_lang = PackageLanguage::Rust;
@@ -75,7 +75,7 @@ pub fn init() -> Result<(), std::io::Error> {
             .to_string_lossy()
             .into_owned();
     } else {
-        // Check for .csproj files recursively
+        
         let dotnet_result = find_csproj_file_recursive(&target_dir)?;
         if let Some(csproj_path) = dotnet_result {
             pkg_lang = PackageLanguage::DotNet;
@@ -86,7 +86,7 @@ pub fn init() -> Result<(), std::io::Error> {
 
     dprintln!("Detected package language: {}", pkg_lang);
 
-    // Populate name and version based on detected package language
+    
     match pkg_lang {
         PackageLanguage::Rust => {
             if !lang_file_path_str.is_empty() {
@@ -271,7 +271,7 @@ pub fn init() -> Result<(), std::io::Error> {
             setup_template_files(setup_list)
         }
         PackageLanguage::Other => {
-            // Default scripts
+            
             let setup_list = vec![
                 SetUpItem {
                     path: "ipak/scripts/build.sh".to_string(),
@@ -303,20 +303,20 @@ pub fn init() -> Result<(), std::io::Error> {
                 },
                 SetUpItem {
                     path: "ipak/scripts/README.md".to_string(),
-                    content: script_readme_content, // No clone needed for last use
+                    content: script_readme_content, 
                 },
             ];
             setup_template_files(setup_list)
         }
     };
 
-    script_setup_result?; // Propagate any errors from script setup
+    script_setup_result?; 
 
     dprintln!("ipak init process completed successfully.");
     Ok(())
 }
 
-/// Helper function to recursively find .csproj files
+
 fn find_csproj_file_recursive(
     dir: &Path,
 ) -> Result<Option<std::path::PathBuf>, std::io::Error> {
@@ -328,7 +328,7 @@ fn find_csproj_file_recursive(
                 return Ok(Some(path));
             }
         } else if path.is_dir() {
-            // Avoid recursing into common dependency directories
+            
             if path.file_name().is_some_and(|name| {
                 name == "target"
                     || name == "node_modules"
@@ -345,7 +345,7 @@ fn find_csproj_file_recursive(
     Ok(None)
 }
 
-// Helper function to parse Cargo.toml for name and version
+
 fn parse_cargo_toml(
     path: &Path,
 ) -> Result<Option<(String, String)>, std::io::Error> {
@@ -369,7 +369,7 @@ fn parse_cargo_toml(
     Ok(None)
 }
 
-// Helper function to parse pyproject.toml for name and version
+
 fn parse_pyproject_toml(
     path: &Path,
 ) -> Result<Option<(String, String)>, std::io::Error> {
@@ -393,13 +393,13 @@ fn parse_pyproject_toml(
     Ok(None)
 }
 
-// Helper function to parse .csproj for AssemblyName and Version
+
 fn parse_csproj(
     path: &Path,
 ) -> Result<Option<(String, String)>, std::io::Error> {
     let content = fs::read_to_string(path)?;
-    // A very basic XML parsing for AssemblyName and Version
-    // This could be improved with a proper XML parsing library for robustness
+    
+    
     let name_tag_start = "<AssemblyName>";
     let name_tag_end = "</AssemblyName>";
     let version_tag_start = "<Version>";

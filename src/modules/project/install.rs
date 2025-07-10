@@ -47,7 +47,7 @@ pub fn install(opts: InstallOptions) -> Result<(), String> {
     };
     let project_metadata = metadata().unwrap();
 
-    // Configure install shell
+    
     fn setup_execshell(
         cmd: &mut Command,
         target_dir: &std::path::Path,
@@ -71,7 +71,7 @@ pub fn install(opts: InstallOptions) -> Result<(), String> {
         &opts.install_mode,
     );
 
-    // Execute the install process and handle the result
+    
     let status = install_process.status().map_err(|e| {
         format!("Failed to execute install process: {}", e)
     })?;

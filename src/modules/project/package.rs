@@ -1,6 +1,6 @@
 use super::metadata;
 use crate::dprintln;
-use crate::utils::archive::{ArchiveType, create_archive}; // archive.rsからインポート
+use crate::utils::archive::{ArchiveType, create_archive}; 
 use crate::utils::color::colorize::*;
 use ignore::gitignore::GitignoreBuilder;
 use serde_yaml;
@@ -9,22 +9,22 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-/// Defines the options for the packaging process.
+
 #[derive(Debug, Default)]
 pub struct PackageOptions {
-    /// The target type for the package (e.g., source build, normal, minimal).
+    
     pub target: PackageTarget,
 }
 
-/// Represents the different packaging targets.
+
 #[derive(Debug, Clone, Copy, Default, clap::ValueEnum)]
 pub enum PackageTarget {
-    /// Builds from source.
+    
     SourceBuild,
-    /// Standard package.
+    
     #[default]
     Normal,
-    /// Minimal package.
+    
     Min,
 }
 
@@ -59,7 +59,7 @@ impl Display for PackageOptions {
     }
 }
 
-/// Structure to deserialize project-ignore.yaml
+
 #[derive(serde::Deserialize)]
 struct ProjectIgnore {
     #[serde(rename = "source-build")]
@@ -68,8 +68,8 @@ struct ProjectIgnore {
     min: Vec<String>,
 }
 
-/// Function to recursively walk and copy files from source to destination,
-/// while respecting the ignore list and skipping specified prefixes.
+
+
 fn walk_and_copy(
     source_base: &Path,
     dest_base: &Path,
@@ -141,11 +141,11 @@ fn walk_and_copy(
     inner(source_base, source_base, dest_base, gitignore, skip_prefix)
 }
 
-/// Initiates the packaging process based on the provided options.
+
 pub fn package(opts: PackageOptions) -> Result<(), String> {
     dprintln!("Starting packaging process with options: {}", &opts);
 
-    // Get project directory
+    
     let target_dir = metadata::get_dir().map_err(|e| {
         format!(
             "Error: Couldn't find Ipak Directory. Make sure you are in an ipak project. Details: {:?}", 
@@ -154,7 +154,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     })?;
     dprintln!("Project directory: {}", target_dir.display());
 
-    // Load project metadata
+    
     let project_metadata = metadata::metadata().map_err(|e| {
         format!("Error: Failed to read project metadata: {:?}", e)
     })?;
@@ -164,7 +164,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         project_metadata.about.package.version
     );
 
-    // Load project-ignore.yaml
+    
     let ignore_file = target_dir.join("ipak").join("project-ignore.yaml");
     let ignore_config: ProjectIgnore = if ignore_file.exists() {
         let file = fs::File::open(&ignore_file).map_err(|e| {
@@ -181,7 +181,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         ProjectIgnore { source_build: vec![], normal: vec![], min: vec![] }
     };
 
-    // Select ignore list based on PackageTarget
+    
     let ignore_list: Vec<String> = match opts.target {
         PackageTarget::SourceBuild => ignore_config.source_build,
         PackageTarget::Normal => {
@@ -204,7 +204,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     );
     dprintln!("Target Directory: {}", target_dir.display());
 
-    // Build Gitignore from the ignore list
+    
     let mut builder = GitignoreBuilder::new(&target_dir);
     for pattern in &ignore_list {
         if let Err(e) = builder.add_line(None, pattern.as_str()) {
@@ -217,7 +217,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         .map_err(|e| format!("Failed to build gitignore: {}", e))?;
     dprintln!("Gitignore built: {}", gitignore.len());
 
-    // Define source base, destination base, and skip prefix
+    
     let source_base = &target_dir;
     let package_name = &project_metadata.about.package.name;
     let version = &project_metadata.about.package.version;
@@ -227,35 +227,35 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         .join(format!("{}-{}/", package_name, version));
     let skip_prefix: PathBuf = PathBuf::from("ipak").join("package");
 
-    // Call walk_and_copy to perform the file copying
+    
     walk_and_copy(source_base, &dest_base, &gitignore, &skip_prefix)?;
 
-    // Compress the destination directory into a tar.gz archive
+    
     let archive_path: PathBuf = source_base
         .join("ipak")
         .join("package")
-        .join(format!("{}-{}.ipak", package_name, version)); // .ipakを.tar.gzに変更
-    // 注: .ipakを保持したい場合、拡張子を"{}-{}.ipak"に変更し、ArchiveType::TarGzを明示的に使用
+        .join(format!("{}-{}.ipak", package_name, version)); 
+    
 
-    // Ensure the parent directory of the archive exists
+    
     if let Some(parent) = archive_path.parent() {
         fs::create_dir_all(parent).map_err(|e| {
             format!("Failed to create directories for {:?}: {}", parent, e)
         })?;
     }
 
-    // create_archiveを使用してTarGzアーカイブを作成
+    
     dprintln!("Creating tar.gz archive at {}", archive_path.display());
     create_archive(&dest_base, &archive_path, ArchiveType::Zip)
         .map_err(|e| format!("Failed to create archive: {}", e))?;
 
-    // Clean up the destination directory after compression
+    
     fs::remove_dir_all(&dest_base).map_err(|e| {
         format!("Failed to remove directory {:?}: {}", dest_base, e)
     })?;
     dprintln!("Removed temporary directory {}", dest_base.display());
 
-    // Verify the archive exists
+    
     if !archive_path.exists() {
         return Err(format!(
             "Archive file {} was not created",

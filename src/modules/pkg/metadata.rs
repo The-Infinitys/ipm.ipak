@@ -6,7 +6,7 @@ use crate::utils::error::Error;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
-use tempfile::tempdir; // 追加
+use tempfile::tempdir; 
 pub fn metadata(target_path: PathBuf) -> Result<(), Error> {
     let target_path = env::current_dir()?.join(&target_path);
 
@@ -21,7 +21,7 @@ pub fn metadata(target_path: PathBuf) -> Result<(), Error> {
         .into());
     }
 
-    // 一時ディレクトリを作成
+    
     let temp_dir = tempdir()?;
     dprintln!("Created temp directory at {}", temp_dir.path().display());
 
@@ -40,7 +40,7 @@ pub fn metadata(target_path: PathBuf) -> Result<(), Error> {
         pkg_archive_in_temp.display()
     );
 
-    // アーカイブを展開
+    
     dprintln!(
         "Extracting archive from {} to {}",
         pkg_archive_in_temp.display(),

@@ -8,9 +8,9 @@ use crate::utils::{
     shell::{self, username},
 };
 use build::BuildOptions;
-use install::InstallOptions; // Import InstallOptions
-use purge::PurgeOptions; // Import PurgeOptions
-use remove::RemoveOptions; // Import RemoveOptions
+use install::InstallOptions; 
+use purge::PurgeOptions; 
+use remove::RemoveOptions; 
 use std::{env, fs, str::FromStr};
 mod build;
 mod create;
@@ -33,7 +33,7 @@ pub enum ExecMode {
     Global,
 }
 impl From<(bool, bool)> for ExecMode {
-    // (local: bool, global: bool)
+    
     fn from(value: (bool, bool)) -> Self {
         let (local, global) = value;
         if local && !global {
@@ -106,7 +106,7 @@ impl FromStr for ExecShell {
 
 impl ExecShell {
     pub fn generate(&self) -> Command {
-        // `pub` を追加して外部からも利用可能に
+        
         match self {
             Self::RBash => {
                 let mut cmd = Command::new("bash");
@@ -267,7 +267,7 @@ fn project_create(
                 .unwrap_or_else(generate_email_address),
         },
     };
-    println!("{}", params); // Debugging/User info
+    println!("{}", params); 
 
     fs::create_dir(&params.project_name)
         .map_err(|err| -> Error { err.into() })?;

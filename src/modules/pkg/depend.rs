@@ -6,7 +6,7 @@ use crate::utils::shell;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-/// Represents errors that can occur when checking if packages are installable.
+
 #[derive(Debug)]
 pub enum InstallError {
     MissingDependencies {
@@ -73,13 +73,13 @@ impl fmt::Display for InstallError {
 
 impl std::error::Error for InstallError {}
 
-/// Represents errors that can occur when checking if packages are removable.
+
 #[derive(Debug)]
 pub enum RemoveError {
-    /// Indicates that a package cannot be removed because other packages depend on it.
+    
     DependencyOfOtherPackages {
         package: String,
-        /// List of packages that depend on the package to be removed.
+        
         dependent_packages: Vec<String>,
     },
 }
@@ -103,19 +103,19 @@ impl fmt::Display for RemoveError {
 
 impl std::error::Error for RemoveError {}
 
-/// Represents a dependency graph of packages, including real and virtual packages.
+
 #[derive(Clone)]
 pub struct DependencyGraph {
-    /// Maps package names (real or virtual) to their available versions.
+    
     available_packages: HashMap<String, HashSet<Version>>,
-    /// Maps real package names to their versions.
+    
     real_packages: HashMap<String, HashSet<Version>>,
-    /// Stores the raw data of installed packages to check dependencies.
+    
     installed_package_data: Vec<InstalledPackageData>,
 }
 
 impl DependencyGraph {
-    /// Constructs a new DependencyGraph from installed packages.
+    
     pub fn from_installed_packages(
         installed_packages: &PackageListData,
     ) -> Self {
@@ -128,19 +128,19 @@ impl DependencyGraph {
             let name = package.info.about.package.name.clone();
             let version = package.info.about.package.version.clone();
 
-            // Add to real packages
+            
             real_packages
                 .entry(name.clone())
                 .or_insert_with(HashSet::new)
                 .insert(version.clone());
 
-            // Add to available packages (real)
+            
             available_packages
                 .entry(name)
                 .or_insert_with(HashSet::new)
                 .insert(version.clone());
 
-            // Add virtual packages to available packages
+            
             for virtual_pkg in &package.info.relation.virtuals {
                 let v_name = virtual_pkg.name.clone();
                 let v_version = virtual_pkg.version.clone();
@@ -158,7 +158,7 @@ impl DependencyGraph {
         }
     }
 
-    /// Creates a temporary graph including additional packages for dependency resolution.
+    
     fn with_additional_packages(
         &self,
         additional_packages: &[PackageData],
@@ -169,21 +169,21 @@ impl DependencyGraph {
             let name = package.about.package.name.clone();
             let version = package.about.package.version.clone();
 
-            // Add to real packages
+            
             new_graph
                 .real_packages
                 .entry(name.clone())
                 .or_default()
                 .insert(version.clone());
 
-            // Add to available packages (real)
+            
             new_graph
                 .available_packages
                 .entry(name)
                 .or_default()
                 .insert(version.clone());
 
-            // Add virtual packages
+            
             for virtual_pkg in &package.relation.virtuals {
                 let v_name = virtual_pkg.name.clone();
                 let v_version = virtual_pkg.version.clone();
@@ -193,17 +193,17 @@ impl DependencyGraph {
                     .or_default()
                     .insert(v_version);
             }
-            // Temporarily add to installed_package_data for checking
+            
             new_graph.installed_package_data.push(InstalledPackageData {
                 info: package.clone(),
-                last_modified: chrono::Local::now(), // Dummy value for temporary graph
+                last_modified: chrono::Local::now(), 
             });
         }
 
         new_graph
     }
 
-    /// Creates a temporary graph excluding specified packages for dependency resolution.
+    
     fn without_packages(&self, packages_to_remove: &[&str]) -> Self {
         let mut new_graph = DependencyGraph {
             available_packages: HashMap::new(),
@@ -243,14 +243,14 @@ impl DependencyGraph {
         new_graph
     }
 
-    /// Checks if a single dependency is satisfied by available packages.
+    
     pub fn is_dependency_satisfied(&self, dep: &PackageRange) -> bool {
         self.available_packages.get(&dep.name).is_some_and(|versions| {
             versions.iter().any(|v| dep.range.compare(v))
         })
     }
 
-    /// Checks if all dependencies of a package are satisfied.
+    
     pub fn are_dependencies_satisfied(
         &self,
         package: &PackageData,
@@ -260,7 +260,7 @@ impl DependencyGraph {
         })
     }
 
-    /// Returns groups of dependencies that are not satisfied.
+    
     pub fn get_missing_dependencies(
         &self,
         package: &PackageData,
@@ -276,7 +276,7 @@ impl DependencyGraph {
             .collect()
     }
 
-    /// Checks if a package has conflicts with installed packages.
+    
     pub fn has_conflicts(
         &self,
         package: &PackageData,
@@ -297,7 +297,7 @@ impl DependencyGraph {
         if conflicts.is_empty() { None } else { Some(conflicts) }
     }
 
-    /// Checks if a package conflicts with any of the provided packages.
+    
     pub fn has_conflicts_with_packages(
         &self,
         package: &PackageData,
@@ -314,7 +314,7 @@ impl DependencyGraph {
                 return Some(other_name.clone());
             }
 
-            // Check reverse conflicts (other package conflicts with this one)
+            
             if other.relation.conflicts.iter().any(|conflict| {
                 conflict.name == package.about.package.name
                     && conflict
@@ -327,16 +327,16 @@ impl DependencyGraph {
         None
     }
 
-    /// Checks if a set of packages can be installed together.
+    
     pub fn is_packages_installable(
         &self,
         installing_packages: Vec<PackageData>,
     ) -> Result<(), InstallError> {
-        // Create a temporary graph including the installing packages
+        
         let temp_graph =
             self.with_additional_packages(&installing_packages);
 
-        // Check system commands for all packages
+        
         for package in &installing_packages {
             let missing_cmds = get_missing_depend_cmds(&package.relation);
             if !missing_cmds.is_empty() {
@@ -347,11 +347,11 @@ impl DependencyGraph {
             }
         }
 
-        // Check dependencies and conflicts for each package
+        
         for (i, package) in installing_packages.iter().enumerate() {
             let pkg_name = package.about.package.name.clone();
 
-            // Check dependencies (using temp_graph to include other installing packages)
+            
             let missing_deps =
                 temp_graph.get_missing_dependencies(package);
             if !missing_deps.is_empty() {
@@ -361,7 +361,7 @@ impl DependencyGraph {
                 });
             }
 
-            // Check conflicts with installed packages
+            
             if let Some(conflicts) = self.has_conflicts(package) {
                 return Err(InstallError::ConflictsWithInstalled {
                     package: pkg_name,
@@ -369,7 +369,7 @@ impl DependencyGraph {
                 });
             }
 
-            // Check conflicts with other installing packages
+            
             let other_packages = installing_packages
                 .iter()
                 .enumerate()
@@ -389,45 +389,45 @@ impl DependencyGraph {
         Ok(())
     }
 
-    /// Checks if a set of packages can be removed.
-    /// It verifies that no *other* currently installed package depends on any of the packages being removed.
-    ///
-    /// # Arguments
-    /// * `packages_to_remove_names` - A slice of string slices, where each inner string slice is the name of a package to be removed.
-    ///
-    /// # Returns
-    /// `Ok(())` if all packages can be removed without breaking other installed packages' dependencies.
-    /// `Err(RemoveError::DependencyOfOtherPackages)` if any installed package depends on a package being removed.
+    
+    
+    
+    
+    
+    
+    
+    
+    
     pub fn is_packages_removable(
         &self,
         packages_to_remove_names: &[&str],
     ) -> Result<(), RemoveError> {
-        // Create a temporary graph that *excludes* the packages to be removed
+        
         let temp_graph = self.without_packages(packages_to_remove_names);
 
-        // Iterate through all currently installed packages (in the original graph)
-        // and check if their dependencies are still satisfied in the temporary graph.
+        
+        
         for installed_pkg_data in &self.installed_package_data {
             let current_pkg_name =
                 &installed_pkg_data.info.about.package.name;
 
-            // Skip checking the packages that are themselves being removed
+            
             if packages_to_remove_names
                 .contains(&current_pkg_name.as_str())
             {
                 continue;
             }
 
-            // If this installed package's dependencies are NOT satisfied in the temp_graph,
-            // it means one of the packages to be removed is a dependency of this package.
+            
+            
             if !temp_graph
                 .are_dependencies_satisfied(&installed_pkg_data.info)
             {
                 let dependent_packages = vec![current_pkg_name.clone()];
-                // We could enhance this to find *which* of the removed packages
-                // is the missing dependency, but for simplicity, just report the dependent.
+                
+                
                 return Err(RemoveError::DependencyOfOtherPackages {
-                    package: packages_to_remove_names.join(", "), // Join removed packages for message
+                    package: packages_to_remove_names.join(", "), 
                     dependent_packages,
                 });
             }
@@ -437,12 +437,12 @@ impl DependencyGraph {
     }
 }
 
-/// Checks if all required system commands are available.
+
 pub fn are_depend_cmds_available(relation: &RelationData) -> bool {
     relation.depend_cmds.iter().all(|cmd| shell::is_cmd_available(cmd))
 }
 
-/// Returns a list of missing required system commands.
+
 pub fn get_missing_depend_cmds(relation: &RelationData) -> Vec<String> {
     relation
         .depend_cmds
@@ -566,12 +566,12 @@ mod tests {
             DependencyGraph::from_installed_packages(&installed_packages);
         assert!(graph.are_dependencies_satisfied(&package));
 
-        // Missing dependency
+        
         let mut package2 = package.clone();
         package2.relation.depend[0][0].name = "dep2".to_string();
         assert!(!graph.are_dependencies_satisfied(&package2));
 
-        // Virtual package
+        
         let mut package3 = PackageData::default();
         package3.relation.depend = vec![vec![PackageRange {
             name: "virtual-pkg".to_string(),
@@ -670,10 +670,10 @@ mod tests {
             &PackageListData::default(),
         );
 
-        // Test case 1: Empty package list is installable
+        
         assert!(graph.is_packages_installable(vec![]).is_ok());
 
-        // Test case 2: Single package with no dependencies or conflicts
+        
         let pkg1 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -687,7 +687,7 @@ mod tests {
         };
         assert!(graph.is_packages_installable(vec![pkg1.clone()]).is_ok());
 
-        // Test case 3: Two packages, one depends on the other
+        
         let pkg2 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -712,7 +712,7 @@ mod tests {
                 .is_ok()
         );
 
-        // Test case 4: Two packages with mutual conflict
+        
         let pkg3 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -756,7 +756,7 @@ mod tests {
             Err(InstallError::ConflictsWithOtherPackages { .. })
         ));
 
-        // Test case 5: Package with missing system command
+        
         let pkg5 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -778,7 +778,7 @@ mod tests {
             Err(InstallError::MissingSystemCommands { .. })
         ));
 
-        // Test case 6: Package with missing dependency
+        
         let pkg6 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -803,7 +803,7 @@ mod tests {
             Err(InstallError::MissingDependencies { .. })
         ));
 
-        // Test case 7: Package conflicting with installed package
+        
         let mut installed_packages = PackageListData::default();
         installed_packages.installed_packages =
             vec![InstalledPackageData {
@@ -849,8 +849,8 @@ mod tests {
 
     #[test]
     fn test_is_packages_removable_no_dependents() {
-        // Scenario: Two packages installed, A and B. A depends on nothing. B depends on nothing.
-        // Try to remove A. Should be successful.
+        
+        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -887,7 +887,7 @@ mod tests {
         let graph =
             DependencyGraph::from_installed_packages(&installed_packages);
 
-        // Attempt to remove pkgA
+        
         let result = graph.is_packages_removable(&["pkgA"]);
         assert!(
             result.is_ok(),
@@ -898,9 +898,9 @@ mod tests {
 
     #[test]
     fn test_is_packages_removable_with_dependent() {
-        // Scenario: Three packages installed: A, B, C.
-        // C depends on A.
-        // Try to remove A. Should fail because C depends on A.
+        
+        
+        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -959,7 +959,7 @@ mod tests {
         let graph =
             DependencyGraph::from_installed_packages(&installed_packages);
 
-        // Attempt to remove pkgA
+        
         let result = graph.is_packages_removable(&["pkgA"]);
         assert!(matches!(
             result,
@@ -979,8 +979,8 @@ mod tests {
 
     #[test]
     fn test_is_packages_removable_multiple_packages_with_dependent() {
-        // Scenario: PkgA, PkgB, PkgC installed. PkgC depends on PkgA. PkgD depends on PkgB.
-        // Try to remove PkgA and PkgB.
+        
+        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -1061,7 +1061,7 @@ mod tests {
         let graph =
             DependencyGraph::from_installed_packages(&installed_packages);
 
-        // Attempt to remove pkgA and pkgB
+        
         let result = graph.is_packages_removable(&["pkgA", "pkgB"]);
         assert!(matches!(
             result,
@@ -1079,14 +1079,14 @@ mod tests {
                 dependent_packages.contains(&"pkgC".to_string())
                     || dependent_packages.contains(&"pkgD".to_string())
             );
-            // The exact dependent package reported might vary depending on iteration order,
-            // but at least one should be present.
+            
+            
         }
     }
 
     #[test]
     fn test_is_packages_removable_self_contained() {
-        // Scenario: A depends on B. Try to remove both A and B. Should be successful.
+        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -1130,7 +1130,7 @@ mod tests {
         let graph =
             DependencyGraph::from_installed_packages(&installed_packages);
 
-        // Attempt to remove both pkgA and pkgB
+        
         let result = graph.is_packages_removable(&["pkgA", "pkgB"]);
         assert!(
             result.is_ok(),
@@ -1141,8 +1141,8 @@ mod tests {
 
     #[test]
     fn test_is_packages_removable_virtual_dependency() {
-        // Scenario: PkgA provides VirtDep. PkgB depends on VirtDep.
-        // Try to remove PkgA. Should fail because PkgB depends on VirtDep, which PkgA provides.
+        
+        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {

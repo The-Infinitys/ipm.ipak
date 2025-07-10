@@ -47,7 +47,7 @@ pub fn purge(
         &final_pkg_destination_path,
     )?;
 
-    // Remove package information from the list
+    
     remove_package_from_list(&target_pkg_name, uninstall_mode)?;
 
     Ok(())
@@ -115,7 +115,7 @@ fn uninstall_process(
         &installed_packages,
     );
 
-    // Check if the package can be removed without breaking dependencies
+    
     match depend_graph.is_packages_removable(&[pkg_name]) {
         Ok(()) => {
             let opts = project::purge::PurgeOptions {

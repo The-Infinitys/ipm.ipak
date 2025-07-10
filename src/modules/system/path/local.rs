@@ -1,10 +1,10 @@
 use crate::utils::shell;
 use std::env;
-use std::path::PathBuf; // PathBufを追加
+use std::path::PathBuf; 
 fn home_path() -> PathBuf {
     let home_path_str = env::var("HOME").unwrap_or_else(|_| {
-        // unwrap_or_elseを使用
-        // HOME環境変数が設定されていない場合
+        
+        
         eprintln!("Error: HOME environment variable not set. Attempting to use username.");
         let username = shell::username();
         format!("/home/{}", username)

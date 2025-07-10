@@ -13,5 +13,5 @@ fn main() -> Result<(), Error> {
         Commands::Pkg(args) => pkg::pkg(args)?,
         Commands::Utils(args) => utils::utils(args)?,
     };
-    Ok(()) // main関数がResultを返すため、成功を示すOkを返す
+    Ok(()) 
 }

@@ -23,7 +23,7 @@ pub fn run(
     };
     let project_metadata = metadata().unwrap();
 
-    // Configure exec shell
+    
     fn setup_execshell(
         cmd: &mut Command,
         name: &str,
@@ -50,7 +50,7 @@ pub fn run(
         args,
     );
 
-    // Execute the exec process and handle the result
+    
     let status = exec_process
         .status()
         .map_err(|e| format!("Failed to execute exec process: {}", e))?;

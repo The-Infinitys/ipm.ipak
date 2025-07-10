@@ -1,19 +1,19 @@
 use crate::dprintln;
 use crate::{modules::pkg::PackageData, utils::files::is_file_exists};
-use std::{env, io, path::PathBuf}; // io::Error をインポート
+use std::{env, io, path::PathBuf}; 
 
-/// 現在のディレクトリまたは親ディレクトリから `project.yaml` を含むプロジェクトのルートディレクトリを探します。
-///
-/// # 戻り値
-/// `project.yaml` が見つかった場合はそのディレクトリの `PathBuf` を `Ok` で返します。
-/// 見つからなかった場合は `io::Error` を `Err` で返します。
+
+
+
+
+
 pub fn get_dir() -> Result<PathBuf, io::Error> {
-    let mut current_path = env::current_dir()?; // Result を直接扱う
+    let mut current_path = env::current_dir()?; 
     loop {
         let metadata_path = current_path.join("ipak/project.yaml");
-        dprintln!("{}", metadata_path.display()); // .to_str().unwrap() を避ける
+        dprintln!("{}", metadata_path.display()); 
         if is_file_exists(metadata_path.to_str().ok_or_else(|| {
-            // .to_str() の失敗を考慮
+            
             io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "Invalid path characters",
@@ -26,9 +26,9 @@ pub fn get_dir() -> Result<PathBuf, io::Error> {
                 current_path.display()
             );
             if let Some(parent) = current_path.parent() {
-                current_path = parent.to_owned(); // 親ディレクトリに移動
+                current_path = parent.to_owned(); 
             } else {
-                // ルートディレクトリに到達し、project.yaml が見つからなかった場合
+                
                 return Err(io::Error::new(
                     io::ErrorKind::NotFound,
                     "project.yaml not found in current or parent directories",
@@ -38,22 +38,22 @@ pub fn get_dir() -> Result<PathBuf, io::Error> {
     }
 }
 
-/// プロジェクトの `project.yaml` ファイルへのパスを取得します。
-///
-/// # 戻り値
-/// `project.yaml` への `PathBuf` を `Ok` で返します。
-/// ファイルが見つからない場合は `io::Error` を `Err` で返します。
+
+
+
+
+
 pub fn get_path() -> Result<PathBuf, io::Error> {
     get_dir().map(|dir| dir.join("ipak/project.yaml"))
 }
 
-/// `project.yaml` ファイルを読み込み、`PackageData` 構造体にパースします。
-///
-/// # 戻り値
-/// パースされた `PackageData` を `Ok` で返します。
-/// ファイルの読み込みやパースに失敗した場合は `io::Error` を `Err` で返します。
+
+
+
+
+
 pub fn metadata() -> Result<PackageData, io::Error> {
-    let metadata_path = get_path()?; // get_path() のエラーを伝播
+    let metadata_path = get_path()?; 
     let read_data =
         std::fs::read_to_string(&metadata_path).map_err(|e| {
             io::Error::new(
@@ -74,42 +74,42 @@ pub fn metadata() -> Result<PackageData, io::Error> {
     })
 }
 
-/// プロジェクトのメタデータを読み込み、標準出力に表示します。
-///
-/// # 戻り値
-/// メタデータの表示に成功した場合は `Ok(())` を返します。
-/// メタデータの取得や表示に失敗した場合は `io::Error` を `Err` で返します。
+
+
+
+
+
 pub fn show_metadata() -> Result<(), io::Error> {
-    // from_current を呼び出して PackageData を取得し、それを表示する
+    
     let package_data = from_current()?;
     println!("{}", package_data);
     Ok(())
 }
 
-/// `PackageData` 構造体を `project.yaml` ファイルにシリアライズして書き込みます。
-/// ファイルが存在しない場合は新しく作成し、存在する場合は上書きします。
-///
-/// # 引数
-/// * `package_data` - 書き込む `PackageData` 構造体への参照。
-///
-/// # 戻り値
-/// 書き込みに成功した場合は `Ok(())` を返します。
-/// ファイルのパス取得、ディレクトリ作成、シリアライズ、またはファイル書き込みに失敗した場合は
-/// `io::Error` を `Err` で返します。
-pub fn write(package_data: &PackageData) -> Result<(), io::Error> {
-    let metadata_path = get_path()?; // project.yaml へのパスを取得
 
-    // 親ディレクトリが存在しない場合は作成します。
-    // `std::fs::write` はファイルが存在しない場合に作成しますが、その前にディレクトリが必要です。
+
+
+
+
+
+
+
+
+
+pub fn write(package_data: &PackageData) -> Result<(), io::Error> {
+    let metadata_path = get_path()?; 
+
+    
+    
     let parent_dir = metadata_path.parent().ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
             "Could not determine parent directory for project.yaml",
         )
     })?;
-    std::fs::create_dir_all(parent_dir)?; // ディレクトリが存在しない場合は作成
+    std::fs::create_dir_all(parent_dir)?; 
 
-    // PackageData を YAML 文字列にシリアライズ
+    
     let yaml_string =
         serde_yaml::to_string(package_data).map_err(|e| {
             io::Error::new(
@@ -118,8 +118,8 @@ pub fn write(package_data: &PackageData) -> Result<(), io::Error> {
             )
         })?;
 
-    // YAML 文字列を project.yaml ファイルに書き込み
-    // std::fs::write はファイルが存在しない場合に作成します。
+    
+    
     std::fs::write(&metadata_path, yaml_string).map_err(|e| {
         io::Error::new(
             e.kind(),
@@ -138,18 +138,18 @@ pub fn write(package_data: &PackageData) -> Result<(), io::Error> {
     Ok(())
 }
 
-/// カレントディレクトリにある `ipak/project.yaml` ファイルのメタデータを読み込みます。
-///
-/// # 戻り値
-/// パースされた `PackageData` を `Ok` で返します。
-/// ファイルが見つからない、読み込みに失敗する、またはパースに失敗する場合は `io::Error` を `Err` で返します。
+
+
+
+
+
 pub fn from_current() -> Result<PackageData, io::Error> {
     let current_dir = env::current_dir()?;
     let metadata_path = current_dir.join("ipak/project.yaml");
 
     dprintln!("Attempting to read from: {}", metadata_path.display());
 
-    // ファイルの存在チェック（オプション：エラーメッセージをより具体的にするため）
+    
     if !is_file_exists(metadata_path.to_str().ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -165,7 +165,7 @@ pub fn from_current() -> Result<PackageData, io::Error> {
         ));
     }
 
-    // ファイルを読み込む
+    
     let read_data =
         std::fs::read_to_string(&metadata_path).map_err(|e| {
             io::Error::new(
@@ -178,7 +178,7 @@ pub fn from_current() -> Result<PackageData, io::Error> {
             )
         })?;
 
-    // YAML を PackageData にパースする
+    
     serde_yaml::from_str::<PackageData>(&read_data).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
@@ -187,22 +187,22 @@ pub fn from_current() -> Result<PackageData, io::Error> {
     })
 }
 
-/// 指定された `PackageData` をカレントディレクトリの `ipak/project.yaml` に書き込みます。
-///
-/// この関数は、`project.yaml` がカレントディレクトリに存在するかどうかを明示的に確認し、
-/// 存在しない場合は新しく作成し、存在する場合は上書きします。
-///
-/// # 引数
-/// * `package_data` - `project.yaml` に書き込む `PackageData` 構造体への参照。
-///
-/// # 戻り値
-/// 書き込みが成功した場合は `Ok(())` を返します。
-/// ディレクトリの作成、シリアライズ、またはファイル書き込みに失敗した場合は `io::Error` を `Err` で返します。
+
+
+
+
+
+
+
+
+
+
+
 pub fn to_current(package_data: &PackageData) -> Result<(), io::Error> {
     let current_dir = env::current_dir()?;
     let metadata_path = current_dir.join("ipak/project.yaml");
 
-    // 親ディレクトリ (ipak/) が存在しない場合は作成します。
+    
     let parent_dir = metadata_path.parent().ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -213,7 +213,7 @@ pub fn to_current(package_data: &PackageData) -> Result<(), io::Error> {
 
     dprintln!("Attempting to write to: {}", metadata_path.display());
 
-    // PackageData を YAML 文字列にシリアライズ
+    
     let yaml_string =
         serde_yaml::to_string(package_data).map_err(|e| {
             io::Error::new(
@@ -222,8 +222,8 @@ pub fn to_current(package_data: &PackageData) -> Result<(), io::Error> {
             )
         })?;
 
-    // YAML 文字列を project.yaml ファイルに書き込みます。
-    // std::fs::write はファイルが存在しない場合に新しく作成し、存在する場合は上書きします。
+    
+    
     std::fs::write(&metadata_path, yaml_string).map_err(|e| {
         io::Error::new(
             e.kind(),

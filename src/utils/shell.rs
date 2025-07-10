@@ -5,7 +5,7 @@ use std::path::Path;
 use std::process::Stdio;
 use std::process::{Command, Output};
 use termimad::crossterm::style::{Attribute::*, Color::*};
-use termimad::*; // `termimad`は、ターミナルでのテキスト表示を扱うライブラリです。
+use termimad::*; 
 
 pub fn is_cmd_available(cmd: &str) -> bool {
     let path_env = env::var("PATH");
@@ -71,7 +71,7 @@ pub fn is_superuser() -> bool {
 }
 pub fn pager(target_string: String) {
     let pager_command_str =
-        std::env::var("PAGER").unwrap_or_else(|_| "less".to_string()); // Default to "less"
+        std::env::var("PAGER").unwrap_or_else(|_| "less".to_string()); 
 
     let pager_name = {
         let path = std::path::Path::new(&pager_command_str);
@@ -83,48 +83,48 @@ pub fn pager(target_string: String) {
 
     let mut command = Command::new(&pager_command_str);
 
-    // Apply arguments based on the detected pager
+    
     let mut _args_applied = false;
     match pager_name.as_str() {
         "less" => {
             command
-                .arg("-R") // Raw control characters (for colored output)
-                .arg("-F") // Quit if output fits on one screen
-                .arg("-X") // Don't clear the screen when less quits
-                .arg("-K") // Exit less directly without prompting if a signal is received
-                .arg("-"); // Read input from stdin
+                .arg("-R") 
+                .arg("-F") 
+                .arg("-X") 
+                .arg("-K") 
+                .arg("-"); 
             _args_applied = true;
         }
         "more" => {
-            // 'more' typically doesn't need specific arguments for piping stdin,
-            // but '-R' for raw output (colors) can sometimes be useful if supported.
-            // However, it's less consistently supported than in 'less'.
-            // For simplicity, we'll just pipe stdin without extra args for 'more' by default.
-            // If you want to add an arg like -R for more, you could:
-            // command.arg("-R");
-            _args_applied = true; // Mark as handled even if no specific args were added
+            
+            
+            
+            
+            
+            
+            _args_applied = true; 
         }
-        // Add more pagers here if needed, e.g., "bat"
-        // "bat" => {
-        //     command.arg("-P"); // --plain, equivalent to piping for bat
-        //     args_applied = true;
-        // }
+        
+        
+        
+        
+        
         _ => {
-            // For unknown pagers, we'll try with no specific arguments first.
-            // No arguments added here, so args_applied remains false.
+            
+            
         }
     }
 
-    // Try to spawn the pager with the chosen arguments
+    
     let mut child_result = command.stdin(Stdio::piped()).spawn();
 
-    // If initial spawn fails (e.g., specific args not supported), try again without args
+    
     if let Err(ref e) = child_result {
         eprintln!(
             "Warning: Pager '{}' failed to start with specific arguments ({}). Retrying without arguments.",
             pager_command_str, e
         );
-        command = Command::new(&pager_command_str); // Recreate command without specific args
+        command = Command::new(&pager_command_str); 
         child_result = command.stdin(Stdio::piped()).spawn();
     }
 
@@ -135,7 +135,7 @@ pub fn pager(target_string: String) {
                 "Error: Pager '{}' failed to start ({}). Printing directly to stdout.",
                 pager_command_str, e
             );
-            // Fallback: print directly if pager cannot be started
+            
             io::stdout()
                 .write_all(target_string.as_bytes())
                 .expect("Failed to write to stdout");
@@ -143,14 +143,14 @@ pub fn pager(target_string: String) {
         }
     };
 
-    // Write the target_string to the pager's stdin
+    
     if let Some(mut stdin) = child.stdin.take() {
         if let Err(e) = stdin.write_all(target_string.as_bytes()) {
             eprintln!(
                 "Error: Failed to write to pager '{}' stdin ({}). Printing directly to stdout.",
                 pager_command_str, e
             );
-            // Fallback: print directly if writing to stdin fails
+            
             io::stdout()
                 .write_all(target_string.as_bytes())
                 .expect("Failed to write to stdout");
@@ -161,21 +161,21 @@ pub fn pager(target_string: String) {
             "Error: Failed to open pager '{}' stdin. Printing directly to stdout.",
             pager_command_str
         );
-        // Fallback: print directly if stdin is not available
+        
         io::stdout()
             .write_all(target_string.as_bytes())
             .expect("Failed to write to stdout");
         return;
     }
 
-    // Wait for the pager process to finish
+    
     let output = child
         .wait_with_output()
         .expect("failed to wait for pager process");
 
     if !output.status.success() {
-        // Pager exited with a non-zero status. This can happen if the user quits early.
-        // Only print stderr if there's actual error output from the pager.
+        
+        
         if !output.stderr.is_empty() {
             eprintln!(
                 "Pager '{}' exited with error: {}",
@@ -188,9 +188,9 @@ pub fn pager(target_string: String) {
 
 pub fn markdown(md_text: String) -> String {
     let mut skin = MadSkin::default();
-    // let's decide bold is in light gray
+    
     skin.bold.set_fg(gray(20));
-    // let's make strikeout not striked out but red, with no specific background, and bold
+    
     skin.strikeout = CompoundStyle::new(Some(Red), None, Bold.into());
     format!("{}", skin.term_text(&md_text))
 }

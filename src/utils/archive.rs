@@ -1,6 +1,6 @@
 use crate::dprintln;
 use ar::Archive as ArArchive;
-use ar::Builder as ArBuilder; // Import ArBuilder
+use ar::Builder as ArBuilder; 
 use clap;
 use file_format::{self, FileFormat};
 use flate2::Compression;
@@ -14,7 +14,7 @@ use tar::{Builder as TarBuilder, Header};
 use walkdir::WalkDir;
 use xz2::write::XzEncoder;
 use zip::ZipWriter;
-use zstd::stream::Encoder as ZstdEncoder; // Import ArArchive
+use zstd::stream::Encoder as ZstdEncoder; 
 
 #[derive(Default, clap::ValueEnum, Clone, Copy)]
 pub enum ArchiveType {
@@ -66,7 +66,7 @@ impl FromStr for ArchiveType {
         }
     }
 }
-// ファイル拡張子からアーカイブタイプを判定
+
 fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
     let archive_format = match FileFormat::from_file(path) {
         Ok(file_format) => file_format,
@@ -129,7 +129,7 @@ pub fn extract_archive(
             while let Some(entry) = archive.next_entry() {
                 let mut entry = entry?;
                 let header = entry.header();
-                let entry_name_bytes = header.identifier(); // Get the byte slice
+                let entry_name_bytes = header.identifier(); 
                 let entry_name =
                     String::from_utf8_lossy(entry_name_bytes).into_owned();
                 let outpath = to.join(entry_name);
@@ -159,7 +159,7 @@ pub fn extract_archive(
                     Box::new(zstd::stream::Decoder::new(file)?)
                         as Box<dyn Read>
                 }
-                _ => unreachable!(), // UnixAr is handled above
+                _ => unreachable!(), 
             };
             let mut archive = tar::Archive::new(reader);
             archive.unpack(to)?;
@@ -180,7 +180,7 @@ pub fn create_archive(
         archive_type
     );
 
-    // 末尾スラッシュの有無をチェック
+    
     let has_slash = from
         .to_str()
         .ok_or_else(|| {
@@ -192,7 +192,7 @@ pub fn create_archive(
         .ends_with('/')
         || from.to_str().unwrap().ends_with('\\');
 
-    // ディレクトリ名の取得（スラッシュなしの場合に使用）
+    
     let dir_name = if !has_slash {
         Some(
             from.file_name()
@@ -224,12 +224,12 @@ pub fn create_archive(
                 let relative = path.strip_prefix(from).map_err(|e| {
                     std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
-                        e.to_string(), // Error should be converted to String
+                        e.to_string(), 
                     )
                 })?;
-                // パスを構築
+                
                 let name = if has_slash {
-                    // スラッシュあり: 中身を直接アーカイブ
+                    
                     relative
                         .to_str()
                         .ok_or_else(|| {
@@ -240,7 +240,7 @@ pub fn create_archive(
                         })?
                         .replace('\\', "/")
                 } else {
-                    // スラッシュなし: ディレクトリ名をプレフィックスに
+                    
                     if relative == Path::new("") {
                         dir_name.unwrap().to_string()
                     } else {
@@ -269,15 +269,15 @@ pub fn create_archive(
                     zip.start_file(&name, options)?;
                     std::io::copy(&mut f, &mut zip)?;
                 } else if path.is_dir() {
-                    // If 'from' had a trailing slash (has_slash = true), and
-                    // this 'path' is the 'from' directory itself (relative == Path::new("")),
-                    // we do NOT add an entry for 'from' itself. We only add its *contents*.
+                    
+                    
+                    
                     if has_slash && relative == Path::new("") {
-                        continue; // Skip adding the root directory entry when has_slash is true
+                        continue; 
                     }
-                    // For any other directory (subdirectories or root when no slash), add it.
+                    
                     zip.add_directory::<&str, zip::write::ExtendedFileOptions>(
-                        &format!("{}/", name), // Use 'name' as calculated, which should be correct for subdirs or root (no slash)
+                        &format!("{}/", name), 
                         zip::write::FileOptions::default(),
                     )?;
                 }
@@ -335,7 +335,7 @@ pub fn create_archive(
             )?;
             let encoder = builder.into_inner()?;
             let file = encoder.finish()?;
-            drop(file); // Ensure the encoder is dropped and flushes
+            drop(file); 
             Ok(())
         }
         ArchiveType::UnixAr => {
@@ -359,7 +359,7 @@ pub fn create_archive(
                         })?;
 
                     let ar_name = if has_slash {
-                        // If 'from' had a trailing slash, directly use the relative path
+                        
                         relative_path
                             .to_str()
                             .ok_or_else(|| {
@@ -370,8 +370,8 @@ pub fn create_archive(
                             })?
                             .to_string()
                     } else {
-                        // If 'from' did not have a trailing slash, prefix with 'dir_name'
-                        // unless it's the root directory itself (which is handled by `is_file()` check)
+                        
+                        
                         format!(
                             "{}/{}",
                             dir_name.unwrap(),
@@ -387,7 +387,7 @@ pub fn create_archive(
                     let mut file_to_archive = File::open(path)?;
                     let metadata = path.metadata()?;
 
-                    // Create an ar::Header
+                    
                     let mut header = ar::Header::new(
                         ar_name.into_bytes(),
                         metadata.len(),
@@ -409,26 +409,26 @@ pub fn create_archive(
 
                     builder.append(&header, &mut file_to_archive)?;
                 }
-                // ar archives typically don't store empty directories directly.
-                // The directory structure is implied by the paths of the files.
+                
+                
             }
-            builder.into_inner()?.flush()?; // Ensure all data is written
+            builder.into_inner()?.flush()?; 
             Ok(())
         }
     }
 }
 
-// ディレクトリの内容をtarアーカイブに追加（ディレクトリ名をオプションで使用）
+
 fn add_directory_contents<B: Write>(
     builder: &mut TarBuilder<B>,
     from: &Path,
-    has_slash: bool, // has_slash パラメータを追加
+    has_slash: bool, 
     dir_name: Option<&str>,
 ) -> Result<(), std::io::Error> {
     for entry in WalkDir::new(from) {
         let entry = entry?;
         let path = entry.path();
-        let metadata = path.metadata()?; // Get metadata once
+        let metadata = path.metadata()?; 
 
         let relative = path.strip_prefix(from).map_err(|e| {
             std::io::Error::new(
@@ -436,13 +436,13 @@ fn add_directory_contents<B: Write>(
                 format!("Failed to strip prefix: {}", e),
             )
         })?;
-        // パスを構築
+        
         let name = if has_slash {
-            // スラッシュあり: 中身を直接アーカイブ
+            
             if relative == Path::new("") {
-                // `from` パス自体の場合、空文字列を返し、後でスキップされるようにする。
-                // Tarアーカイブでコンテンツを直接ルートに入れる場合は、
-                // このエントリー自体はスキップするべき。
+                
+                
+                
                 "".to_string()
             } else {
                 relative
@@ -456,7 +456,7 @@ fn add_directory_contents<B: Write>(
                     .replace('\\', "/")
             }
         } else {
-            // スラッシュなし: ディレクトリ名をプレフィックスに
+            
             if relative == Path::new("") {
                 dir_name.unwrap().to_string()
             } else {
@@ -476,17 +476,17 @@ fn add_directory_contents<B: Write>(
             }
         };
 
-        // name が空文字列の場合はスキップ
-        // これは has_slash = true で from 自体 (relative == Path::new("")) を処理する際に発生する。
-        // その場合、from の中身だけをアーカイブに追加し、from 自体のエントリは作成しない。
+        
+        
+        
         if name.is_empty() {
             continue;
         }
 
-        // --- Streamlined Tar Header Creation ---
-        // For both files and directories, we'll try to use append_path_with_name
-        // and then potentially modify the header's entry type if it's a directory.
-        // This leverages the tar crate's robust internal header generation for paths.
+        
+        
+        
+        
         if name.len() > 100 {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
@@ -499,17 +499,17 @@ fn add_directory_contents<B: Write>(
         if path.is_file() {
             builder.append_path_with_name(path, &entry_path_for_append)?;
         } else if path.is_dir() {
-            // For directories, we'll first append it as if it were a file,
-            // but then we'll need to set its type to Directory.
-            // This is a bit of a workaround to leverage append_path_with_name's
-            // robust metadata handling.
-            // Note: append_path_with_name internally creates a Header and writes it.
-            // We cannot directly modify it *after* it's written.
-            // So, we go back to manual header creation for directories on non-Unix
-            // but with the absolute minimal setup to satisfy checksum.
+            
+            
+            
+            
+            
+            
+            
+            
 
-            // The 'name' already handles the correct prefix/no-prefix logic.
-            // Ensure trailing slash for directory names in the tar archive.
+            
+            
             let mut dir_entry_name = name;
             if !dir_entry_name.ends_with('/') {
                 dir_entry_name.push('/');
@@ -518,20 +518,20 @@ fn add_directory_contents<B: Write>(
             let mut header = Header::new_ustar();
             header.set_path(&dir_entry_name)?;
             header.set_entry_type(tar::EntryType::Directory);
-            header.set_size(0); // Directories have size 0
+            header.set_size(0); 
 
-            // On Unix, use set_metadata for full permissions, uid, gid, mtime.
-            // On non-Unix, rely on new_ustar defaults + basic settings.
-            // The key is to *not* try to map non-Unix metadata to tar fields
-            // that might cause numeric field errors.
+            
+            
+            
+            
             #[cfg(unix)]
             {
                 header.set_metadata(&metadata);
             }
-            // For non-Unix, we will rely on Header::new_ustar() to set
-            // default numeric fields (mode, uid, gid, mtime etc.) to valid
-            // octal zero representations, which should pass checksum validation.
-            // We specifically avoid overriding these as they were the source of errors.
+            
+            
+            
+            
 
             builder.append(&header, &mut std::io::empty())?;
         }
@@ -586,7 +586,7 @@ mod tests {
         let source_dir = temp_dir.path().join("dir-a");
         fs::create_dir(&source_dir).unwrap();
         let long_file = source_dir.join(
-            "a".repeat(150), // 100バイトを超えるパス
+            "a".repeat(150), 
         );
         File::create(&long_file)
             .unwrap()
@@ -596,7 +596,7 @@ mod tests {
         let archive_path = temp_dir.path().join("test.tar.gz");
         let result =
             create_archive(&source_dir, &archive_path, ArchiveType::TarGz);
-        // This assertion checks if an error was returned.
+        
         assert!(result.is_err(), "Expected error for long path");
         assert_eq!(
             result.unwrap_err().kind(),

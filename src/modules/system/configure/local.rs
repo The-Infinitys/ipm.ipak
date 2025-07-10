@@ -23,7 +23,7 @@ pub fn configure() -> Result<(), Error> {
     })?;
     let home_dir = Path::new(&home_dir);
 
-    // Create .ipak/bin directory if it doesn't exist
+    
     let ipak_bin_dir = home_dir.join(".ipak/bin");
     std::fs::create_dir_all(&ipak_bin_dir).map_err(|e| {
         Error::other(format!(
@@ -32,7 +32,7 @@ pub fn configure() -> Result<(), Error> {
         ))
     })?;
 
-    // Process the configure list
+    
     for configure_data in configure_list {
         let creation_result = file_creation(
             home_dir.join(configure_data[0]).to_str().unwrap(),

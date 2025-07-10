@@ -11,7 +11,7 @@ use std::fs;
 use std::io;
 use std::path::PathBuf;
 
-/// インストールされているパッケージリストのメタデータを表します。
+
 #[derive(Serialize, Deserialize)]
 pub struct PackageListData {
     pub last_modified: DateTime<Local>,
@@ -27,7 +27,7 @@ impl Default for PackageListData {
     }
 }
 
-/// 個々のインストール済みパッケージの詳細情報を表します。
+
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct InstalledPackageData {
     pub info: PackageData,
@@ -35,16 +35,16 @@ pub struct InstalledPackageData {
 }
 
 impl PackageListData {
-    /// 指定されたパスからパッケージリストデータを読み込みます。
-    ///
-    /// ファイルが存在しない場合は、空の `PackageListData` を返します。
-    ///
-    /// # 引数
-    /// * `list_filepath` - 読み込むパッケージリストファイルのパス。
-    ///
-    /// # 戻り値
-    /// 読み込みとパースが成功した場合は `PackageListData` を、
-    /// それ以外のI/Oエラーやパースエラーが発生した場合は `io::Error` を返します。
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     fn from_filepath(
         list_filepath: &PathBuf,
     ) -> Result<PackageListData, io::Error> {
@@ -52,7 +52,7 @@ impl PackageListData {
             Ok(s) => s,
             Err(e) => {
                 if e.kind() == io::ErrorKind::NotFound {
-                    // ファイルが存在しない場合は空のリストを返す
+                    
                     return Ok(PackageListData::default());
                 } else {
                     return Err(io::Error::new(
@@ -81,7 +81,7 @@ impl PackageListData {
 }
 
 impl Display for PackageListData {
-    /// `PackageListData` を整形して表示します。
+    
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
@@ -102,7 +102,7 @@ impl Display for PackageListData {
 }
 
 impl Display for InstalledPackageData {
-    /// `InstalledPackageData` を整形して表示します。
+    
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
@@ -141,17 +141,17 @@ impl Display for InstalledPackageData {
     }
 }
 
-/// インストールされているパッケージのリストを表示します。
-///
-/// この関数は、`--local` または `--global` オプションに基づいて、
-/// ローカルまたはグローバルなパッケージリストを読み込み、表示します。
-/// デフォルトでは、現在のユーザーがスーパーユーザーでない限りローカルリストを表示します。
-///
-/// # 引数
-/// * `args` - コマンドライン引数のリスト。
-///
-/// # 戻り値
-/// リスト表示が成功した場合は `Ok(())` を、エラーが発生した場合は `std::io::Error` を返します。
+
+
+
+
+
+
+
+
+
+
+
 pub fn list(mode: ExecMode) -> Result<(), Error> {
     let packages_list_data = match mode {
         ExecMode::Local => {
@@ -165,49 +165,49 @@ pub fn list(mode: ExecMode) -> Result<(), Error> {
     Ok(())
 }
 
-/// ローカルスコープのパッケージリストデータを取得します。
-///
-/// `~/.local/share/<your_app_name>/packages.yml` からパッケージリストを読み込みます。
-/// ファイルが存在しない場合は、空の `PackageListData` を返します。
-///
-/// # 戻り値
-/// 読み込みとパースが成功した場合は `PackageListData` を、失敗した場合は `io::Error` を返します。
+
+
+
+
+
+
+
 pub fn get_local() -> Result<PackageListData, std::io::Error> {
     let local_filepath = path::local::packageslist_filepath();
     PackageListData::from_filepath(&local_filepath)
 }
 
-/// グローバルスコープのパッケージリストデータを取得します。
-///
-/// `/usr/local/share/<your_app_name>/packages.yml` からパッケージリストを読み込みます。
-/// ファイルが存在しない場合は、空の `PackageListData` を返します。
-///
-/// # 戻り値
-/// 読み込みとパースが成功した場合は `PackageListData` を、失敗した場合は `io::Error` を返します。
+
+
+
+
+
+
+
 pub fn get_global() -> Result<PackageListData, std::io::Error> {
     let global_filepath = path::global::packageslist_filepath();
     PackageListData::from_filepath(&global_filepath)
 }
 
-// --- ここから新しい関数 ---
 
-/// ローカルスコープのパッケージリストデータを保存します。
-///
-/// 指定された `PackageListData` をYAML形式でシリアライズし、
-/// `~/.local/share/<your_app_name>/packages.yml` に書き込みます。
-/// 書き込む直前に `last_modified` タイムスタンプが更新されます。
-///
-/// # 引数
-/// * `data` - 保存するパッケージリストデータ。
-///
-/// # 戻り値
-/// 保存が成功した場合は `Ok(())` を、失敗した場合は `io::Error` を返します。
+
+
+
+
+
+
+
+
+
+
+
+
 pub fn apply_local(
     mut data: PackageListData,
 ) -> Result<(), std::io::Error> {
     let local_filepath = path::local::packageslist_filepath();
 
-    // 親ディレクトリが存在しない場合に備えて作成
+    
     if let Some(parent_dir) = local_filepath.parent() {
         fs::create_dir_all(parent_dir).map_err(|e| {
             io::Error::new(
@@ -221,10 +221,10 @@ pub fn apply_local(
         })?;
     }
 
-    // 最終更新日時を現在に設定
+    
     data.last_modified = Local::now();
 
-    // PackageListData をYAML文字列にシリアライズ
+    
     let yaml_string = serde_yaml::to_string(&data).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
@@ -236,7 +236,7 @@ pub fn apply_local(
         )
     })?;
 
-    // ファイルに書き込み
+    
     fs::write(&local_filepath, yaml_string).map_err(|e| {
         io::Error::new(
             e.kind(),
@@ -251,23 +251,23 @@ pub fn apply_local(
     Ok(())
 }
 
-/// グローバルスコープのパッケージリストデータを保存します。
-///
-/// 指定された `PackageListData` をYAML形式でシリアライズし、
-/// `/usr/local/share/<your_app_name>/packages.yml` に書き込みます。
-/// 書き込む直前に `last_modified` タイムスタンプが更新されます。
-///
-/// # 引数
-/// * `data` - 保存するパッケージリストデータ。
-///
-/// # 戻り値
-/// 保存が成功した場合は `Ok(())` を、失敗した場合は `io::Error` を返します。
+
+
+
+
+
+
+
+
+
+
+
 pub fn apply_global(
     mut data: PackageListData,
 ) -> Result<(), std::io::Error> {
     let global_filepath = path::global::packageslist_filepath();
 
-    // 親ディレクトリが存在しない場合に備えて作成
+    
     if let Some(parent_dir) = global_filepath.parent() {
         fs::create_dir_all(parent_dir).map_err(|e| {
             io::Error::new(
@@ -281,10 +281,10 @@ pub fn apply_global(
         })?;
     }
 
-    // 最終更新日時を現在に設定
+    
     data.last_modified = Local::now();
 
-    // PackageListData をYAML文字列にシリアライズ
+    
     let yaml_string = serde_yaml::to_string(&data).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
@@ -296,7 +296,7 @@ pub fn apply_global(
         )
     })?;
 
-    // ファイルに書き込み
+    
     fs::write(&global_filepath, yaml_string).map_err(|e| {
         io::Error::new(
             e.kind(),
@@ -320,12 +320,12 @@ pub fn add_pkg_local(
         if data.installed_packages[i].info.about.package.name
             == new_pkg.info.about.package.name
         {
-            // 既存のデータを上書き
+            
             data.installed_packages[i] = new_pkg.clone();
             found = true;
             eprintln!(
                 "{} Package '{}' already exists locally. Updating its data.",
-                "Info:".blue().bold(), // 情報メッセージに変更
+                "Info:".blue().bold(), 
                 data.installed_packages[i].info.about.package.name
             );
             break;
@@ -333,7 +333,7 @@ pub fn add_pkg_local(
     }
 
     if !found {
-        // 存在しない場合は新しく追加
+        
         data.installed_packages.push(new_pkg);
         eprintln!(
             "{} Package added to local list.",
@@ -353,12 +353,12 @@ pub fn add_pkg_global(
         if data.installed_packages[i].info.about.package.name
             == new_pkg.info.about.package.name
         {
-            // 既存のデータを上書き
+            
             data.installed_packages[i] = new_pkg.clone();
             found = true;
             eprintln!(
                 "{} Package '{}' already exists globally. Updating its data.",
-                "Info:".blue().bold(), // 情報メッセージに変更
+                "Info:".blue().bold(), 
                 data.installed_packages[i].info.about.package.name
             );
             break;
@@ -366,7 +366,7 @@ pub fn add_pkg_global(
     }
 
     if !found {
-        // 存在しない場合は新しく追加
+        
         data.installed_packages.push(new_pkg);
         eprintln!(
             "{} Package added to global list.",
@@ -377,17 +377,17 @@ pub fn add_pkg_global(
     apply_global(data)?;
     Ok(())
 }
-/// ローカルスコープのパッケージリストから指定された名前のパッケージを削除します。
-///
-/// パッケージがリストから削除された場合、ローカルのパッケージリストファイル
-/// (`~/.local/share/<your_app_name>/packages.yml`) を更新します。
-///
-/// # 引数
-/// * `package_name` - 削除するパッケージの名前。
-///
-/// # 戻り値
-/// 削除が成功した場合は `Ok(true)` を、パッケージが見つからなかった場合は `Ok(false)` を、
-/// エラーが発生した場合は `io::Error` を返します。
+
+
+
+
+
+
+
+
+
+
+
 pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
     let mut data = get_local()?;
     let initial_len = data.installed_packages.len();
@@ -395,7 +395,7 @@ pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
         .retain(|pkg| pkg.info.about.package.name != package_name);
 
     if data.installed_packages.len() < initial_len {
-        // パッケージが削除された場合のみ保存
+        
         apply_local(data)?;
         Ok(true)
     } else {
@@ -404,20 +404,20 @@ pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
             "Warning:".yellow().bold(),
             package_name
         );
-        Ok(false) // パッケージが見つからなかった
+        Ok(false) 
     }
 }
-/// グローバルスコープのパッケージリストから指定された名前のパッケージを削除します。
-///
-/// パッケージがリストから削除された場合、グローバルのパッケージリストファイル
-/// (`/usr/local/share/<your_app_name>/packages.yml`) を更新します。
-///
-/// # 引数
-/// * `package_name` - 削除するパッケージの名前。
-///
-/// # 戻り値
-/// 削除が成功した場合は `Ok(true)` を、パッケージが見つからなかった場合は `Ok(false)` を、
-/// エラーが発生した場合は `io::Error` を返します。
+
+
+
+
+
+
+
+
+
+
+
 pub fn del_pkg_global(package_name: &str) -> Result<bool, io::Error> {
     let mut data = get_global()?;
     let initial_len = data.installed_packages.len();
@@ -425,7 +425,7 @@ pub fn del_pkg_global(package_name: &str) -> Result<bool, io::Error> {
         .retain(|pkg| pkg.info.about.package.name != package_name);
 
     if data.installed_packages.len() < initial_len {
-        // パッケージが削除された場合のみ保存
+        
         apply_global(data)?;
         Ok(true)
     } else {
@@ -434,6 +434,6 @@ pub fn del_pkg_global(package_name: &str) -> Result<bool, io::Error> {
             "Warning:".yellow().bold(),
             package_name
         );
-        Ok(false) // パッケージが見つからなかった
+        Ok(false) 
     }
 }
