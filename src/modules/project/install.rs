@@ -1,3 +1,6 @@
+//! このモジュールは、プロジェクトのインストールに関連する機能を提供します。
+//! プロジェクトのメタデータと指定されたインストールモードに基づいて、プロジェクトをインストールします。
+
 use super::ExecMode;
 use super::ExecShell;
 use super::metadata::{self, metadata};
@@ -6,12 +9,18 @@ use crate::modules::version::Version;
 use crate::utils::color::colorize::*;
 use std::fmt::{self, Display};
 use std::process::Command;
+
+/// プロジェクトインストールのオプションを定義する構造体です。
 #[derive(Default)]
 pub struct InstallOptions {
+    /// インストールに使用するシェル。
     pub install_shell: ExecShell,
+    /// インストールモード（例: ローカル、グローバル）。
     pub install_mode: ExecMode,
 }
+
 impl Display for InstallOptions {
+    /// `InstallOptions`を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let lines = [
             format!("{}{}", "Install Options".cyan().bold(), ":"),
@@ -34,20 +43,23 @@ impl Display for InstallOptions {
         Ok(())
     }
 }
+
+/// プロジェクトをインストールします。
+///
+/// 指定されたインストールオプションに基づいて、プロジェクトをインストールします。
+/// インストールは`ipak/scripts/install.sh`スクリプトを通じて実行されます。
+///
+/// # Arguments
+/// * `opts` - インストールオプションを含む`InstallOptions`構造体。
+///
+/// # Returns
+/// `Ok(())` インストールが正常に完了した場合。
+/// `Err(String)` インストール中にエラーが発生した場合。
 pub fn install(opts: InstallOptions) -> Result<(), String> {
     dprintln!("{}", &opts);
-    let target_dir = metadata::get_dir();
-    let target_dir = match target_dir {
-        Ok(path) => path,
-        Err(e) => {
-            let msg = format!("Error: {}", e);
-            eprintln!("{}", msg);
-            return Err(msg);
-        }
-    };
-    let project_metadata = metadata().unwrap();
+    let target_dir = metadata::get_dir().map_err(|e| format!("Error: {}", e))?;
+    let project_metadata = metadata().map_err(|e| format!("Error: {}", e))?;
 
-    
     fn setup_execshell(
         cmd: &mut Command,
         target_dir: &std::path::Path,
@@ -71,7 +83,6 @@ pub fn install(opts: InstallOptions) -> Result<(), String> {
         &opts.install_mode,
     );
 
-    
     let status = install_process.status().map_err(|e| {
         format!("Failed to execute install process: {}", e)
     })?;

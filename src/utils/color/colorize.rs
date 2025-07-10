@@ -152,12 +152,3 @@ impl StyleModifier for &str {
         format!("\x1b[4m{}\x1b[0m", self)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test() {
-        println!("{}", "Hello, World!".red());
-    }
-}

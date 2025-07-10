@@ -11,7 +11,6 @@ use std::fs;
 use std::io;
 use std::path::PathBuf;
 
-
 #[derive(Serialize, Deserialize)]
 pub struct PackageListData {
     pub last_modified: DateTime<Local>,
@@ -27,7 +26,6 @@ impl Default for PackageListData {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct InstalledPackageData {
     pub info: PackageData,
@@ -35,16 +33,6 @@ pub struct InstalledPackageData {
 }
 
 impl PackageListData {
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     fn from_filepath(
         list_filepath: &PathBuf,
     ) -> Result<PackageListData, io::Error> {
@@ -52,7 +40,6 @@ impl PackageListData {
             Ok(s) => s,
             Err(e) => {
                 if e.kind() == io::ErrorKind::NotFound {
-                    
                     return Ok(PackageListData::default());
                 } else {
                     return Err(io::Error::new(
@@ -81,7 +68,6 @@ impl PackageListData {
 }
 
 impl Display for PackageListData {
-    
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
@@ -102,7 +88,6 @@ impl Display for PackageListData {
 }
 
 impl Display for InstalledPackageData {
-    
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         writeln!(
             f,
@@ -141,17 +126,6 @@ impl Display for InstalledPackageData {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
 pub fn list(mode: ExecMode) -> Result<(), Error> {
     let packages_list_data = match mode {
         ExecMode::Local => {
@@ -165,49 +139,21 @@ pub fn list(mode: ExecMode) -> Result<(), Error> {
     Ok(())
 }
 
-
-
-
-
-
-
-
 pub fn get_local() -> Result<PackageListData, std::io::Error> {
     let local_filepath = path::local::packageslist_filepath();
     PackageListData::from_filepath(&local_filepath)
 }
-
-
-
-
-
-
-
 
 pub fn get_global() -> Result<PackageListData, std::io::Error> {
     let global_filepath = path::global::packageslist_filepath();
     PackageListData::from_filepath(&global_filepath)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 pub fn apply_local(
     mut data: PackageListData,
 ) -> Result<(), std::io::Error> {
     let local_filepath = path::local::packageslist_filepath();
 
-    
     if let Some(parent_dir) = local_filepath.parent() {
         fs::create_dir_all(parent_dir).map_err(|e| {
             io::Error::new(
@@ -221,10 +167,8 @@ pub fn apply_local(
         })?;
     }
 
-    
     data.last_modified = Local::now();
 
-    
     let yaml_string = serde_yaml::to_string(&data).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
@@ -236,7 +180,6 @@ pub fn apply_local(
         )
     })?;
 
-    
     fs::write(&local_filepath, yaml_string).map_err(|e| {
         io::Error::new(
             e.kind(),
@@ -251,23 +194,11 @@ pub fn apply_local(
     Ok(())
 }
 
-
-
-
-
-
-
-
-
-
-
-
 pub fn apply_global(
     mut data: PackageListData,
 ) -> Result<(), std::io::Error> {
     let global_filepath = path::global::packageslist_filepath();
 
-    
     if let Some(parent_dir) = global_filepath.parent() {
         fs::create_dir_all(parent_dir).map_err(|e| {
             io::Error::new(
@@ -281,10 +212,8 @@ pub fn apply_global(
         })?;
     }
 
-    
     data.last_modified = Local::now();
 
-    
     let yaml_string = serde_yaml::to_string(&data).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
@@ -296,7 +225,6 @@ pub fn apply_global(
         )
     })?;
 
-    
     fs::write(&global_filepath, yaml_string).map_err(|e| {
         io::Error::new(
             e.kind(),
@@ -320,12 +248,11 @@ pub fn add_pkg_local(
         if data.installed_packages[i].info.about.package.name
             == new_pkg.info.about.package.name
         {
-            
             data.installed_packages[i] = new_pkg.clone();
             found = true;
             eprintln!(
                 "{} Package '{}' already exists locally. Updating its data.",
-                "Info:".blue().bold(), 
+                "Info:".blue().bold(),
                 data.installed_packages[i].info.about.package.name
             );
             break;
@@ -333,7 +260,6 @@ pub fn add_pkg_local(
     }
 
     if !found {
-        
         data.installed_packages.push(new_pkg);
         eprintln!(
             "{} Package added to local list.",
@@ -353,12 +279,11 @@ pub fn add_pkg_global(
         if data.installed_packages[i].info.about.package.name
             == new_pkg.info.about.package.name
         {
-            
             data.installed_packages[i] = new_pkg.clone();
             found = true;
             eprintln!(
                 "{} Package '{}' already exists globally. Updating its data.",
-                "Info:".blue().bold(), 
+                "Info:".blue().bold(),
                 data.installed_packages[i].info.about.package.name
             );
             break;
@@ -366,7 +291,6 @@ pub fn add_pkg_global(
     }
 
     if !found {
-        
         data.installed_packages.push(new_pkg);
         eprintln!(
             "{} Package added to global list.",
@@ -378,16 +302,6 @@ pub fn add_pkg_global(
     Ok(())
 }
 
-
-
-
-
-
-
-
-
-
-
 pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
     let mut data = get_local()?;
     let initial_len = data.installed_packages.len();
@@ -395,7 +309,6 @@ pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
         .retain(|pkg| pkg.info.about.package.name != package_name);
 
     if data.installed_packages.len() < initial_len {
-        
         apply_local(data)?;
         Ok(true)
     } else {
@@ -404,19 +317,9 @@ pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
             "Warning:".yellow().bold(),
             package_name
         );
-        Ok(false) 
+        Ok(false)
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 pub fn del_pkg_global(package_name: &str) -> Result<bool, io::Error> {
     let mut data = get_global()?;
@@ -425,7 +328,6 @@ pub fn del_pkg_global(package_name: &str) -> Result<bool, io::Error> {
         .retain(|pkg| pkg.info.about.package.name != package_name);
 
     if data.installed_packages.len() < initial_len {
-        
         apply_global(data)?;
         Ok(true)
     } else {
@@ -434,6 +336,6 @@ pub fn del_pkg_global(package_name: &str) -> Result<bool, io::Error> {
             "Warning:".yellow().bold(),
             package_name
         );
-        Ok(false) 
+        Ok(false)
     }
 }

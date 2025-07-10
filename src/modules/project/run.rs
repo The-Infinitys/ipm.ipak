@@ -1,9 +1,25 @@
+//! このモジュールは、プロジェクト内で定義されたスクリプトを実行する機能を提供します。
+//! プロジェクトのメタデータに基づいて、指定されたシェルでスクリプトを実行します。
+
 use super::metadata::{self, metadata};
 use crate::modules::project::ExecShell;
 use crate::modules::version::Version;
 use crate::utils::color::colorize::*;
 use std::process::Command;
 
+/// プロジェクト内で指定されたスクリプトを実行します。
+///
+/// プロジェクトのメタデータから実行ディレクトリとプロジェクト名、バージョンを取得し、
+/// 指定されたシェルでスクリプトを実行します。スクリプトは`ipak/scripts/{name}.sh`に存在すると仮定されます。
+///
+/// # Arguments
+/// * `shell` - スクリプトの実行に使用するシェル。`None`の場合はデフォルトのシェルが使用されます。
+/// * `name` - 実行するスクリプトの名前（例: "build", "install"）。
+/// * `args` - スクリプトに渡す追加の引数。
+///
+/// # Returns
+/// `Ok(())` スクリプトが正常に実行された場合。
+/// `Err(String)` スクリプトの実行に失敗した場合、または必要なメタデータが見つからない場合。
 pub fn run(
     shell: Option<ExecShell>,
     name: &str,
@@ -12,18 +28,11 @@ pub fn run(
     let name = name.to_ascii_lowercase();
     println!("{}: {}", "Run".bold().green(), name.bold().cyan());
     let exec_shell = shell.unwrap_or_default();
-    let target_dir = metadata::get_dir();
-    let target_dir = match target_dir {
-        Ok(path) => path,
-        Err(e) => {
-            let msg = format!("Error: {}", e);
-            eprintln!("{}", msg);
-            return Err(msg);
-        }
-    };
-    let project_metadata = metadata().unwrap();
+    let target_dir =
+        metadata::get_dir().map_err(|e| format!("Error: {}", e))?;
+    let project_metadata =
+        metadata().map_err(|e| format!("Error: {}", e))?;
 
-    
     fn setup_execshell(
         cmd: &mut Command,
         name: &str,
@@ -50,7 +59,6 @@ pub fn run(
         args,
     );
 
-    
     let status = exec_process
         .status()
         .map_err(|e| format!("Failed to execute exec process: {}", e))?;

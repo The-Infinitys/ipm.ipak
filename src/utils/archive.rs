@@ -1,6 +1,9 @@
+//! このモジュールは、様々な形式のアーカイブ（zip, tar.gz, tar.xz, tar.zstd, tar, unix ar）の作成と展開機能を提供します。
+//! ファイルパスの処理とアーカイブタイプに応じた適切な圧縮・解凍ロジックを管理します。
+
 use crate::dprintln;
 use ar::Archive as ArArchive;
-use ar::Builder as ArBuilder; 
+use ar::Builder as ArBuilder;
 use clap;
 use file_format::{self, FileFormat};
 use flate2::Compression;
@@ -14,9 +17,9 @@ use tar::{Builder as TarBuilder, Header};
 use walkdir::WalkDir;
 use xz2::write::XzEncoder;
 use zip::ZipWriter;
-use zstd::stream::Encoder as ZstdEncoder; 
+use zstd::stream::Encoder as ZstdEncoder;
 
-#[derive(Default, clap::ValueEnum, Clone, Copy)]
+#[derive(Default, clap::ValueEnum, Clone, Copy, Debug)]
 pub enum ArchiveType {
     Zip,
     #[default]
@@ -28,18 +31,6 @@ pub enum ArchiveType {
 }
 
 impl Display for ArchiveType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Zip => write!(f, "zip"),
-            Self::TarGz => write!(f, "tar.gz"),
-            Self::TarXz => write!(f, "tar.xz"),
-            Self::TarZstd => write!(f, "tar.zst"),
-            Self::Tar => write!(f, "tar"),
-            Self::UnixAr => write!(f, "unix archive"),
-        }
-    }
-}
-impl std::fmt::Debug for ArchiveType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Zip => write!(f, "zip"),
@@ -129,7 +120,7 @@ pub fn extract_archive(
             while let Some(entry) = archive.next_entry() {
                 let mut entry = entry?;
                 let header = entry.header();
-                let entry_name_bytes = header.identifier(); 
+                let entry_name_bytes = header.identifier();
                 let entry_name =
                     String::from_utf8_lossy(entry_name_bytes).into_owned();
                 let outpath = to.join(entry_name);
@@ -159,7 +150,7 @@ pub fn extract_archive(
                     Box::new(zstd::stream::Decoder::new(file)?)
                         as Box<dyn Read>
                 }
-                _ => unreachable!(), 
+                _ => unreachable!(),
             };
             let mut archive = tar::Archive::new(reader);
             archive.unpack(to)?;
@@ -180,7 +171,6 @@ pub fn create_archive(
         archive_type
     );
 
-    
     let has_slash = from
         .to_str()
         .ok_or_else(|| {
@@ -192,7 +182,6 @@ pub fn create_archive(
         .ends_with('/')
         || from.to_str().unwrap().ends_with('\\');
 
-    
     let dir_name = if !has_slash {
         Some(
             from.file_name()
@@ -224,12 +213,11 @@ pub fn create_archive(
                 let relative = path.strip_prefix(from).map_err(|e| {
                     std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
-                        e.to_string(), 
+                        e.to_string(),
                     )
                 })?;
-                
+
                 let name = if has_slash {
-                    
                     relative
                         .to_str()
                         .ok_or_else(|| {
@@ -240,7 +228,6 @@ pub fn create_archive(
                         })?
                         .replace('\\', "/")
                 } else {
-                    
                     if relative == Path::new("") {
                         dir_name.unwrap().to_string()
                     } else {
@@ -269,13 +256,10 @@ pub fn create_archive(
                     zip.start_file(&name, options)?;
                     std::io::copy(&mut f, &mut zip)?;
                 } else if path.is_dir() {
-                    
-                    
-                    
                     if has_slash && relative == Path::new("") {
-                        continue; 
+                        continue;
                     }
-                    
+
                     zip.add_directory::<&str, zip::write::ExtendedFileOptions>(
                         &format!("{}/", name), 
                         zip::write::FileOptions::default(),
@@ -335,7 +319,7 @@ pub fn create_archive(
             )?;
             let encoder = builder.into_inner()?;
             let file = encoder.finish()?;
-            drop(file); 
+            drop(file);
             Ok(())
         }
         ArchiveType::UnixAr => {
@@ -359,7 +343,6 @@ pub fn create_archive(
                         })?;
 
                     let ar_name = if has_slash {
-                        
                         relative_path
                             .to_str()
                             .ok_or_else(|| {
@@ -370,8 +353,6 @@ pub fn create_archive(
                             })?
                             .to_string()
                     } else {
-                        
-                        
                         format!(
                             "{}/{}",
                             dir_name.unwrap(),
@@ -387,7 +368,6 @@ pub fn create_archive(
                     let mut file_to_archive = File::open(path)?;
                     let metadata = path.metadata()?;
 
-                    
                     let mut header = ar::Header::new(
                         ar_name.into_bytes(),
                         metadata.len(),
@@ -409,26 +389,23 @@ pub fn create_archive(
 
                     builder.append(&header, &mut file_to_archive)?;
                 }
-                
-                
             }
-            builder.into_inner()?.flush()?; 
+            builder.into_inner()?.flush()?;
             Ok(())
         }
     }
 }
 
-
 fn add_directory_contents<B: Write>(
     builder: &mut TarBuilder<B>,
     from: &Path,
-    has_slash: bool, 
+    has_slash: bool,
     dir_name: Option<&str>,
 ) -> Result<(), std::io::Error> {
     for entry in WalkDir::new(from) {
         let entry = entry?;
         let path = entry.path();
-        let metadata = path.metadata()?; 
+        let metadata = path.metadata()?;
 
         let relative = path.strip_prefix(from).map_err(|e| {
             std::io::Error::new(
@@ -436,13 +413,9 @@ fn add_directory_contents<B: Write>(
                 format!("Failed to strip prefix: {}", e),
             )
         })?;
-        
+
         let name = if has_slash {
-            
             if relative == Path::new("") {
-                
-                
-                
                 "".to_string()
             } else {
                 relative
@@ -456,7 +429,6 @@ fn add_directory_contents<B: Write>(
                     .replace('\\', "/")
             }
         } else {
-            
             if relative == Path::new("") {
                 dir_name.unwrap().to_string()
             } else {
@@ -476,22 +448,8 @@ fn add_directory_contents<B: Write>(
             }
         };
 
-        
-        
-        
         if name.is_empty() {
             continue;
-        }
-
-        
-        
-        
-        
-        if name.len() > 100 {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                format!("Path too long for tar: {}", name),
-            ));
         }
 
         let entry_path_for_append = PathBuf::from(name.clone());
@@ -499,17 +457,6 @@ fn add_directory_contents<B: Write>(
         if path.is_file() {
             builder.append_path_with_name(path, &entry_path_for_append)?;
         } else if path.is_dir() {
-            
-            
-            
-            
-            
-            
-            
-            
-
-            
-            
             let mut dir_entry_name = name;
             if !dir_entry_name.ends_with('/') {
                 dir_entry_name.push('/');
@@ -518,20 +465,12 @@ fn add_directory_contents<B: Write>(
             let mut header = Header::new_ustar();
             header.set_path(&dir_entry_name)?;
             header.set_entry_type(tar::EntryType::Directory);
-            header.set_size(0); 
+            header.set_size(0);
 
-            
-            
-            
-            
             #[cfg(unix)]
             {
                 header.set_metadata(&metadata);
             }
-            
-            
-            
-            
 
             builder.append(&header, &mut std::io::empty())?;
         }
@@ -585,9 +524,7 @@ mod tests {
             TempDir::with_prefix("archive_test_long_path").unwrap();
         let source_dir = temp_dir.path().join("dir-a");
         fs::create_dir(&source_dir).unwrap();
-        let long_file = source_dir.join(
-            "a".repeat(150), 
-        );
+        let long_file = source_dir.join("a".repeat(150));
         File::create(&long_file)
             .unwrap()
             .write_all(b"Test content")
@@ -596,7 +533,7 @@ mod tests {
         let archive_path = temp_dir.path().join("test.tar.gz");
         let result =
             create_archive(&source_dir, &archive_path, ArchiveType::TarGz);
-        
+
         assert!(result.is_err(), "Expected error for long path");
         assert_eq!(
             result.unwrap_err().kind(),

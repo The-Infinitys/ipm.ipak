@@ -1,6 +1,10 @@
+//! このモジュールは、プロジェクトを様々な形式でパッケージ化する機能を提供します。
+//! プロジェクトのファイル構造を分析し、`.gitignore`のような設定を尊重して、
+//! 指定されたターゲット（ソースビルド、通常、最小）に応じたアーカイブを作成します。
+
 use super::metadata;
 use crate::dprintln;
-use crate::utils::archive::{ArchiveType, create_archive}; 
+use crate::utils::archive::{ArchiveType, create_archive};
 use crate::utils::color::colorize::*;
 use ignore::gitignore::GitignoreBuilder;
 use serde_yaml;
@@ -9,26 +13,29 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-
+/// パッケージ化のオプションを定義する構造体です。
 #[derive(Debug, Default)]
 pub struct PackageOptions {
-    
+    /// パッケージ化のターゲット（例: SourceBuild, Normal, Min）。
     pub target: PackageTarget,
 }
 
-
+/// パッケージ化のターゲットタイプを定義する列挙型です。
 #[derive(Debug, Clone, Copy, Default, clap::ValueEnum)]
 pub enum PackageTarget {
-    
+    /// ソースビルド用のパッケージ。
     SourceBuild,
-    
+
     #[default]
+    /// 通常のパッケージ。
     Normal,
-    
+
+    /// 最小限のパッケージ。
     Min,
 }
 
 impl Display for PackageTarget {
+    /// `PackageTarget`を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PackageTarget::SourceBuild => write!(f, "source-build"),
@@ -41,6 +48,7 @@ impl Display for PackageTarget {
 impl FromStr for PackageTarget {
     type Err = String;
 
+    /// 文字列から`PackageTarget`をパースします。
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_ascii_lowercase().as_str() {
             "src" | "source" | "source-build" => Ok(Self::SourceBuild),
@@ -52,6 +60,7 @@ impl FromStr for PackageTarget {
 }
 
 impl Display for PackageOptions {
+    /// `PackageOptions`を整形して表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}:", "Package Options".cyan().bold())?;
         writeln!(f, "  {}: {}", "target".green().bold(), self.target)?;
@@ -59,7 +68,7 @@ impl Display for PackageOptions {
     }
 }
 
-
+/// プロジェクトの無視設定を定義する構造体です。
 #[derive(serde::Deserialize)]
 struct ProjectIgnore {
     #[serde(rename = "source-build")]
@@ -68,8 +77,17 @@ struct ProjectIgnore {
     min: Vec<String>,
 }
 
-
-
+/// 指定されたディレクトリの内容をコピーし、`.gitignore`パターンを尊重します。
+///
+/// # Arguments
+/// * `source_base` - コピー元のベースディレクトリ。
+/// * `dest_base` - コピー先のベースディレクトリ。
+/// * `gitignore` - 使用する`.gitignore`パターン。
+/// * `skip_prefix` - コピー時にスキップするパスのプレフィックス。
+///
+/// # Returns
+/// `Ok(())` 成功した場合。
+/// `Err(String)` コピー中にエラーが発生した場合。
 fn walk_and_copy(
     source_base: &Path,
     dest_base: &Path,
@@ -141,11 +159,20 @@ fn walk_and_copy(
     inner(source_base, source_base, dest_base, gitignore, skip_prefix)
 }
 
-
+/// プロジェクトをパッケージ化します。
+///
+/// 指定されたパッケージオプションに基づいて、プロジェクトのファイルを収集し、
+/// `.gitignore`設定を尊重してアーカイブを作成します。
+///
+/// # Arguments
+/// * `opts` - パッケージ化オプションを含む`PackageOptions`構造体。
+///
+/// # Returns
+/// `Ok(())` パッケージ化が正常に完了した場合。
+/// `Err(String)` パッケージ化中にエラーが発生した場合。
 pub fn package(opts: PackageOptions) -> Result<(), String> {
     dprintln!("Starting packaging process with options: {}", &opts);
 
-    
     let target_dir = metadata::get_dir().map_err(|e| {
         format!(
             "Error: Couldn't find Ipak Directory. Make sure you are in an ipak project. Details: {:?}", 
@@ -154,7 +181,6 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     })?;
     dprintln!("Project directory: {}", target_dir.display());
 
-    
     let project_metadata = metadata::metadata().map_err(|e| {
         format!("Error: Failed to read project metadata: {:?}", e)
     })?;
@@ -164,7 +190,6 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         project_metadata.about.package.version
     );
 
-    
     let ignore_file = target_dir.join("ipak").join("project-ignore.yaml");
     let ignore_config: ProjectIgnore = if ignore_file.exists() {
         let file = fs::File::open(&ignore_file).map_err(|e| {
@@ -181,7 +206,6 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         ProjectIgnore { source_build: vec![], normal: vec![], min: vec![] }
     };
 
-    
     let ignore_list: Vec<String> = match opts.target {
         PackageTarget::SourceBuild => ignore_config.source_build,
         PackageTarget::Normal => {
@@ -204,7 +228,6 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     );
     dprintln!("Target Directory: {}", target_dir.display());
 
-    
     let mut builder = GitignoreBuilder::new(&target_dir);
     for pattern in &ignore_list {
         if let Err(e) = builder.add_line(None, pattern.as_str()) {
@@ -217,7 +240,6 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         .map_err(|e| format!("Failed to build gitignore: {}", e))?;
     dprintln!("Gitignore built: {}", gitignore.len());
 
-    
     let source_base = &target_dir;
     let package_name = &project_metadata.about.package.name;
     let version = &project_metadata.about.package.version;
@@ -227,35 +249,28 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         .join(format!("{}-{}/", package_name, version));
     let skip_prefix: PathBuf = PathBuf::from("ipak").join("package");
 
-    
     walk_and_copy(source_base, &dest_base, &gitignore, &skip_prefix)?;
 
-    
     let archive_path: PathBuf = source_base
         .join("ipak")
         .join("package")
-        .join(format!("{}-{}.ipak", package_name, version)); 
-    
+        .join(format!("{}-{}.ipak", package_name, version));
 
-    
     if let Some(parent) = archive_path.parent() {
         fs::create_dir_all(parent).map_err(|e| {
             format!("Failed to create directories for {:?}: {}", parent, e)
         })?;
     }
 
-    
-    dprintln!("Creating tar.gz archive at {}", archive_path.display());
+    dprintln!("Creating zip archive at {}", archive_path.display());
     create_archive(&dest_base, &archive_path, ArchiveType::Zip)
         .map_err(|e| format!("Failed to create archive: {}", e))?;
 
-    
     fs::remove_dir_all(&dest_base).map_err(|e| {
         format!("Failed to remove directory {:?}: {}", dest_base, e)
     })?;
     dprintln!("Removed temporary directory {}", dest_base.display());
 
-    
     if !archive_path.exists() {
         return Err(format!(
             "Archive file {} was not created",

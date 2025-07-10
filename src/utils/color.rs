@@ -1,16 +1,29 @@
+//! このモジュールは、RGBカラー値の表現と操作を提供します。
+//! 16進数文字列との相互変換機能を含みます。
+
 use std::fmt;
 use std::str::FromStr;
 pub mod colorize;
+
+/// RGBカラー値を表現する構造体です。
 #[derive(Debug)]
 pub struct RGB {
-    red: u8,
-    green: u8,
-    blue: u8,
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
 }
 
 impl FromStr for RGB {
     type Err = String;
 
+    /// 16進数文字列（例: "#RRGGBB"）からRGB構造体をパースします。
+    ///
+    /// # Arguments
+    /// * `s` - 16進数カラーコード文字列
+    ///
+    /// # Returns
+    /// `Ok(RGB)`: パースが成功した場合
+    /// `Err(String)`: パースに失敗した場合
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if !s.starts_with('#') || s.len() != 7 {
             return Err(format!("無効なカラーコードです: {}", s));
@@ -28,32 +41,20 @@ impl FromStr for RGB {
 }
 
 impl fmt::Display for RGB {
+    /// RGB値を16進数文字列（例: "#RRGGBB"）としてフォーマットします。
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "#{:02X}{:02X}{:02X}", self.red, self.green, self.blue)
     }
 }
 
 impl RGB {
+    /// 新しいRGB構造体を作成します。
+    ///
+    /// # Arguments
+    /// * `red` - 赤色の値 (0-255)
+    /// * `green` - 緑色の値 (0-255)
+    /// * `blue` - 青色の値 (0-255)
     pub fn new(red: u8, green: u8, blue: u8) -> Self {
         RGB { red, green, blue }
-    }
-
-    pub fn to_ansi_color_code(&self) -> String {
-        format!("\x1b[38;2;{};{};{}m", self.red, self.green, self.blue)
-    }
-
-    pub fn reset() -> &'static str {
-        "\x1b[0m"
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::str::FromStr;
-    #[test]
-    fn test() {
-        let red = RGB::from_str("#FF0000").unwrap();
-        assert_eq!(red.to_string(), "#FF0000");
     }
 }

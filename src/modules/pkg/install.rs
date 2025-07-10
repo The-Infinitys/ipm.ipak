@@ -11,7 +11,7 @@ use std::env;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
-use tempfile::tempdir; 
+use tempfile::tempdir;
 
 pub fn install(
     file_path: PathBuf,
@@ -24,7 +24,6 @@ pub fn install(
         return Err(Error::from(std::io::ErrorKind::NotFound));
     }
 
-    
     let temp_dir = tempdir()?;
     dprintln!("Created temp directory at {}", temp_dir.path().display());
 
@@ -43,7 +42,6 @@ pub fn install(
         pkg_archive_in_temp.display()
     );
 
-    
     dprintln!(
         "Extracting archive from {} to {}",
         pkg_archive_in_temp.display(),
@@ -52,7 +50,6 @@ pub fn install(
     extract_archive(&pkg_archive_in_temp, &temp_dir.path().to_path_buf())?;
     fs::remove_file(&pkg_archive_in_temp)?;
 
-    
     let install_process_result = {
         let original_cwd = env::current_dir()?;
         env::set_current_dir(temp_dir.path())?;
@@ -101,7 +98,6 @@ pub fn install(
         }
     }
 
-    
     fs::create_dir_all(&final_pkg_destination_path)?;
     for entry in fs::read_dir(temp_dir.path())? {
         let entry = entry?;
@@ -120,7 +116,6 @@ pub fn install(
         final_pkg_destination_path.display()
     );
 
-    
     let installed_package_data = pkg::list::InstalledPackageData {
         info: pkg_data,
         last_modified: Local::now(),
@@ -139,7 +134,6 @@ pub fn install(
 
     Ok(())
 }
-
 
 fn copy_dir_all(src: &PathBuf, dst: &Path) -> std::io::Result<()> {
     for entry in fs::read_dir(src)? {

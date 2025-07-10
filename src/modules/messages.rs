@@ -1,24 +1,12 @@
 use crate::utils::shell::{self, markdown};
 
-
-
 struct CargoPackageInfo {
-    
     name: &'static str,
-    
+
     version: &'static str,
-    
+
     architecture: &'static str,
 }
-
-
-
-
-
-
-
-
-
 
 fn get_info() -> CargoPackageInfo {
     CargoPackageInfo {
@@ -27,17 +15,6 @@ fn get_info() -> CargoPackageInfo {
         architecture: std::env::consts::ARCH,
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 fn insert_info(text: &'static str) -> String {
     let cargo_package = get_info();
@@ -53,8 +30,6 @@ fn insert_info(text: &'static str) -> String {
     }
     text
 }
-
-
 
 pub fn manual() -> Result<(), std::io::Error> {
     let manual_str =

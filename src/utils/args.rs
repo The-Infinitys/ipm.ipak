@@ -1,3 +1,6 @@
+//! このモジュールは、コマンドライン引数の解析を定義します。
+//! `clap`クレートを使用して、アプリケーションの様々なコマンドとサブコマンドを構造化します。
+
 use crate::modules::project::ProjectTemplateType;
 use crate::modules::project::package::PackageTarget;
 use crate::{modules::project::ExecShell, utils::archive::ArchiveType};

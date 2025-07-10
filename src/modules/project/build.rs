@@ -69,7 +69,6 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
     };
     let project_metadata = metadata().unwrap();
 
-    
     fn setup_execshell(
         cmd: &mut Command,
         target_dir: &std::path::Path,
@@ -94,7 +93,6 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
         &opts.build_mode,
     );
 
-    
     let status = build_process
         .status()
         .map_err(|e| format!("Failed to execute build process: {}", e))?;

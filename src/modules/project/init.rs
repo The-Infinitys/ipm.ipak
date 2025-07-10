@@ -1,7 +1,7 @@
 use super::super::version::Version;
 use super::metadata;
 use crate::dprintln;
-use crate::utils::files::file_creation; 
+use crate::utils::files::file_creation;
 use std::env;
 use std::fmt;
 use std::fs;
@@ -11,7 +11,7 @@ enum PackageLanguage {
     Python,
     Rust,
     DotNet,
-    Other, 
+    Other,
 }
 
 impl fmt::Display for PackageLanguage {
@@ -20,17 +20,15 @@ impl fmt::Display for PackageLanguage {
             PackageLanguage::Python => write!(f, "python"),
             PackageLanguage::Rust => write!(f, "rust"),
             PackageLanguage::DotNet => write!(f, "dotnet"),
-            PackageLanguage::Other => write!(f, "other"), 
+            PackageLanguage::Other => write!(f, "other"),
         }
     }
 }
-
 
 struct SetUpItem {
     path: String,
     content: String,
 }
-
 
 fn setup_template_files(
     setup_list: Vec<SetUpItem>,
@@ -61,8 +59,8 @@ pub fn init() -> Result<(), std::io::Error> {
         dprintln!("Initialized project metadata.");
     }
 
-    let mut pkg_lang = PackageLanguage::Other; 
-    let mut lang_file_path_str = String::new(); 
+    let mut pkg_lang = PackageLanguage::Other;
+    let mut lang_file_path_str = String::new();
 
     if target_dir.join("Cargo.toml").exists() {
         pkg_lang = PackageLanguage::Rust;
@@ -75,7 +73,6 @@ pub fn init() -> Result<(), std::io::Error> {
             .to_string_lossy()
             .into_owned();
     } else {
-        
         let dotnet_result = find_csproj_file_recursive(&target_dir)?;
         if let Some(csproj_path) = dotnet_result {
             pkg_lang = PackageLanguage::DotNet;
@@ -86,7 +83,6 @@ pub fn init() -> Result<(), std::io::Error> {
 
     dprintln!("Detected package language: {}", pkg_lang);
 
-    
     match pkg_lang {
         PackageLanguage::Rust => {
             if !lang_file_path_str.is_empty() {
@@ -271,7 +267,6 @@ pub fn init() -> Result<(), std::io::Error> {
             setup_template_files(setup_list)
         }
         PackageLanguage::Other => {
-            
             let setup_list = vec![
                 SetUpItem {
                     path: "ipak/scripts/build.sh".to_string(),
@@ -303,19 +298,18 @@ pub fn init() -> Result<(), std::io::Error> {
                 },
                 SetUpItem {
                     path: "ipak/scripts/README.md".to_string(),
-                    content: script_readme_content, 
+                    content: script_readme_content,
                 },
             ];
             setup_template_files(setup_list)
         }
     };
 
-    script_setup_result?; 
+    script_setup_result?;
 
     dprintln!("ipak init process completed successfully.");
     Ok(())
 }
-
 
 fn find_csproj_file_recursive(
     dir: &Path,
@@ -328,7 +322,6 @@ fn find_csproj_file_recursive(
                 return Ok(Some(path));
             }
         } else if path.is_dir() {
-            
             if path.file_name().is_some_and(|name| {
                 name == "target"
                     || name == "node_modules"
@@ -344,7 +337,6 @@ fn find_csproj_file_recursive(
     }
     Ok(None)
 }
-
 
 fn parse_cargo_toml(
     path: &Path,
@@ -369,7 +361,6 @@ fn parse_cargo_toml(
     Ok(None)
 }
 
-
 fn parse_pyproject_toml(
     path: &Path,
 ) -> Result<Option<(String, String)>, std::io::Error> {
@@ -393,13 +384,11 @@ fn parse_pyproject_toml(
     Ok(None)
 }
 
-
 fn parse_csproj(
     path: &Path,
 ) -> Result<Option<(String, String)>, std::io::Error> {
     let content = fs::read_to_string(path)?;
-    
-    
+
     let name_tag_start = "<AssemblyName>";
     let name_tag_end = "</AssemblyName>";
     let version_tag_start = "<Version>";

@@ -2,7 +2,7 @@ use std::io;
 use std::str::FromStr;
 use thiserror::Error;
 pub mod templates;
-use super::super::pkg::{AuthorAboutData, PackageData}; 
+use super::super::pkg::{AuthorAboutData, PackageData};
 use crate::utils::color::colorize::*;
 use crate::utils::files::file_creation;
 use clap;
@@ -11,7 +11,6 @@ use std::fmt::{self, Display, Formatter};
 #[derive(PartialEq, Eq, Default, clap::ValueEnum, Clone, Copy)]
 pub enum ProjectTemplateType {
     #[default]
-    
     Default,
     Rust,
     Python,
@@ -26,7 +25,6 @@ impl fmt::Debug for ProjectTemplateType {
 impl FromStr for ProjectTemplateType {
     type Err = String;
 
-    
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_ascii_lowercase().as_str() {
             "default" => Ok(Self::Default),
@@ -39,8 +37,7 @@ impl FromStr for ProjectTemplateType {
     }
 }
 
-
-#[derive(Default)] 
+#[derive(Default)]
 pub struct ProjectParams {
     pub project_name: String,
     pub project_template: ProjectTemplateType,
@@ -48,13 +45,12 @@ pub struct ProjectParams {
 }
 
 impl Display for ProjectParams {
-    
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}: {}", "Project".bold(), self.project_name)?;
         writeln!(f, "{}: {}", "Template".bold(), self.project_template)?;
         writeln!(
             f,
-            "{}: {} <{}>", 
+            "{}: {} <{}>",
             "Author".bold(),
             self.author.name,
             self.author.email
@@ -62,7 +58,6 @@ impl Display for ProjectParams {
     }
 }
 impl Display for ProjectTemplateType {
-    
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let template_str = match self {
             Self::Default => "default",
@@ -77,34 +72,21 @@ impl Display for ProjectTemplateType {
 
 #[derive(Debug, Error)]
 pub enum ProjectCreationError {
-    
     #[error("YAML serialization/deserialization error: {0}")]
     Yaml(#[from] serde_yaml::Error),
-    
+
     #[error("I/O error: {0}")]
     Io(#[from] io::Error),
-    
+
     #[error("Template creation error: {0}")]
-    Template(String), 
+    Template(String),
 }
 
-
-
-
-
-
-
-
-
-
-
 pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
-    
     let mut project_data = PackageData::default();
-    project_data.about.package.name = params.project_name.clone(); 
+    project_data.about.package.name = params.project_name.clone();
     project_data.about.author = params.author.clone();
 
-    
     let project_data = match params.project_template {
         ProjectTemplateType::Default => templates::default(project_data)
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
@@ -116,15 +98,13 @@ pub fn create(params: &ProjectParams) -> Result<(), ProjectCreationError> {
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
         ProjectTemplateType::CLang => templates::clang(project_data)
             .map_err(|e| ProjectCreationError::Template(e.to_string())),
-    }?; 
+    }?;
 
     let project_data_filename = "ipak/project.yaml";
-    let data = serde_yaml::to_string(&project_data)?; 
+    let data = serde_yaml::to_string(&project_data)?;
 
-    
-    
     file_creation(project_data_filename, &data)
-        .map_err(ProjectCreationError::Io)?; 
+        .map_err(ProjectCreationError::Io)?;
 
     Ok(())
 }

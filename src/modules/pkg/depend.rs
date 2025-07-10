@@ -6,7 +6,6 @@ use crate::utils::shell;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-
 #[derive(Debug)]
 pub enum InstallError {
     MissingDependencies {
@@ -73,13 +72,11 @@ impl fmt::Display for InstallError {
 
 impl std::error::Error for InstallError {}
 
-
 #[derive(Debug)]
 pub enum RemoveError {
-    
     DependencyOfOtherPackages {
         package: String,
-        
+
         dependent_packages: Vec<String>,
     },
 }
@@ -103,19 +100,16 @@ impl fmt::Display for RemoveError {
 
 impl std::error::Error for RemoveError {}
 
-
 #[derive(Clone)]
 pub struct DependencyGraph {
-    
     available_packages: HashMap<String, HashSet<Version>>,
-    
+
     real_packages: HashMap<String, HashSet<Version>>,
-    
+
     installed_package_data: Vec<InstalledPackageData>,
 }
 
 impl DependencyGraph {
-    
     pub fn from_installed_packages(
         installed_packages: &PackageListData,
     ) -> Self {
@@ -128,19 +122,16 @@ impl DependencyGraph {
             let name = package.info.about.package.name.clone();
             let version = package.info.about.package.version.clone();
 
-            
             real_packages
                 .entry(name.clone())
                 .or_insert_with(HashSet::new)
                 .insert(version.clone());
 
-            
             available_packages
                 .entry(name)
                 .or_insert_with(HashSet::new)
                 .insert(version.clone());
 
-            
             for virtual_pkg in &package.info.relation.virtuals {
                 let v_name = virtual_pkg.name.clone();
                 let v_version = virtual_pkg.version.clone();
@@ -158,7 +149,6 @@ impl DependencyGraph {
         }
     }
 
-    
     fn with_additional_packages(
         &self,
         additional_packages: &[PackageData],
@@ -169,21 +159,18 @@ impl DependencyGraph {
             let name = package.about.package.name.clone();
             let version = package.about.package.version.clone();
 
-            
             new_graph
                 .real_packages
                 .entry(name.clone())
                 .or_default()
                 .insert(version.clone());
 
-            
             new_graph
                 .available_packages
                 .entry(name)
                 .or_default()
                 .insert(version.clone());
 
-            
             for virtual_pkg in &package.relation.virtuals {
                 let v_name = virtual_pkg.name.clone();
                 let v_version = virtual_pkg.version.clone();
@@ -193,17 +180,16 @@ impl DependencyGraph {
                     .or_default()
                     .insert(v_version);
             }
-            
+
             new_graph.installed_package_data.push(InstalledPackageData {
                 info: package.clone(),
-                last_modified: chrono::Local::now(), 
+                last_modified: chrono::Local::now(),
             });
         }
 
         new_graph
     }
 
-    
     fn without_packages(&self, packages_to_remove: &[&str]) -> Self {
         let mut new_graph = DependencyGraph {
             available_packages: HashMap::new(),
@@ -243,14 +229,12 @@ impl DependencyGraph {
         new_graph
     }
 
-    
     pub fn is_dependency_satisfied(&self, dep: &PackageRange) -> bool {
         self.available_packages.get(&dep.name).is_some_and(|versions| {
             versions.iter().any(|v| dep.range.compare(v))
         })
     }
 
-    
     pub fn are_dependencies_satisfied(
         &self,
         package: &PackageData,
@@ -260,7 +244,6 @@ impl DependencyGraph {
         })
     }
 
-    
     pub fn get_missing_dependencies(
         &self,
         package: &PackageData,
@@ -276,7 +259,6 @@ impl DependencyGraph {
             .collect()
     }
 
-    
     pub fn has_conflicts(
         &self,
         package: &PackageData,
@@ -297,7 +279,6 @@ impl DependencyGraph {
         if conflicts.is_empty() { None } else { Some(conflicts) }
     }
 
-    
     pub fn has_conflicts_with_packages(
         &self,
         package: &PackageData,
@@ -314,7 +295,6 @@ impl DependencyGraph {
                 return Some(other_name.clone());
             }
 
-            
             if other.relation.conflicts.iter().any(|conflict| {
                 conflict.name == package.about.package.name
                     && conflict
@@ -327,16 +307,13 @@ impl DependencyGraph {
         None
     }
 
-    
     pub fn is_packages_installable(
         &self,
         installing_packages: Vec<PackageData>,
     ) -> Result<(), InstallError> {
-        
         let temp_graph =
             self.with_additional_packages(&installing_packages);
 
-        
         for package in &installing_packages {
             let missing_cmds = get_missing_depend_cmds(&package.relation);
             if !missing_cmds.is_empty() {
@@ -347,11 +324,9 @@ impl DependencyGraph {
             }
         }
 
-        
         for (i, package) in installing_packages.iter().enumerate() {
             let pkg_name = package.about.package.name.clone();
 
-            
             let missing_deps =
                 temp_graph.get_missing_dependencies(package);
             if !missing_deps.is_empty() {
@@ -361,7 +336,6 @@ impl DependencyGraph {
                 });
             }
 
-            
             if let Some(conflicts) = self.has_conflicts(package) {
                 return Err(InstallError::ConflictsWithInstalled {
                     package: pkg_name,
@@ -369,7 +343,6 @@ impl DependencyGraph {
                 });
             }
 
-            
             let other_packages = installing_packages
                 .iter()
                 .enumerate()
@@ -389,45 +362,29 @@ impl DependencyGraph {
         Ok(())
     }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
     pub fn is_packages_removable(
         &self,
         packages_to_remove_names: &[&str],
     ) -> Result<(), RemoveError> {
-        
         let temp_graph = self.without_packages(packages_to_remove_names);
 
-        
-        
         for installed_pkg_data in &self.installed_package_data {
             let current_pkg_name =
                 &installed_pkg_data.info.about.package.name;
 
-            
             if packages_to_remove_names
                 .contains(&current_pkg_name.as_str())
             {
                 continue;
             }
 
-            
-            
             if !temp_graph
                 .are_dependencies_satisfied(&installed_pkg_data.info)
             {
                 let dependent_packages = vec![current_pkg_name.clone()];
-                
-                
+
                 return Err(RemoveError::DependencyOfOtherPackages {
-                    package: packages_to_remove_names.join(", "), 
+                    package: packages_to_remove_names.join(", "),
                     dependent_packages,
                 });
             }
@@ -437,11 +394,9 @@ impl DependencyGraph {
     }
 }
 
-
 pub fn are_depend_cmds_available(relation: &RelationData) -> bool {
     relation.depend_cmds.iter().all(|cmd| shell::is_cmd_available(cmd))
 }
-
 
 pub fn get_missing_depend_cmds(relation: &RelationData) -> Vec<String> {
     relation
@@ -566,12 +521,10 @@ mod tests {
             DependencyGraph::from_installed_packages(&installed_packages);
         assert!(graph.are_dependencies_satisfied(&package));
 
-        
         let mut package2 = package.clone();
         package2.relation.depend[0][0].name = "dep2".to_string();
         assert!(!graph.are_dependencies_satisfied(&package2));
 
-        
         let mut package3 = PackageData::default();
         package3.relation.depend = vec![vec![PackageRange {
             name: "virtual-pkg".to_string(),
@@ -670,10 +623,8 @@ mod tests {
             &PackageListData::default(),
         );
 
-        
         assert!(graph.is_packages_installable(vec![]).is_ok());
 
-        
         let pkg1 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -687,7 +638,6 @@ mod tests {
         };
         assert!(graph.is_packages_installable(vec![pkg1.clone()]).is_ok());
 
-        
         let pkg2 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -712,7 +662,6 @@ mod tests {
                 .is_ok()
         );
 
-        
         let pkg3 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -756,7 +705,6 @@ mod tests {
             Err(InstallError::ConflictsWithOtherPackages { .. })
         ));
 
-        
         let pkg5 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -778,7 +726,6 @@ mod tests {
             Err(InstallError::MissingSystemCommands { .. })
         ));
 
-        
         let pkg6 = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -803,7 +750,6 @@ mod tests {
             Err(InstallError::MissingDependencies { .. })
         ));
 
-        
         let mut installed_packages = PackageListData::default();
         installed_packages.installed_packages =
             vec![InstalledPackageData {
@@ -849,8 +795,6 @@ mod tests {
 
     #[test]
     fn test_is_packages_removable_no_dependents() {
-        
-        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -887,7 +831,6 @@ mod tests {
         let graph =
             DependencyGraph::from_installed_packages(&installed_packages);
 
-        
         let result = graph.is_packages_removable(&["pkgA"]);
         assert!(
             result.is_ok(),
@@ -898,9 +841,6 @@ mod tests {
 
     #[test]
     fn test_is_packages_removable_with_dependent() {
-        
-        
-        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -959,7 +899,6 @@ mod tests {
         let graph =
             DependencyGraph::from_installed_packages(&installed_packages);
 
-        
         let result = graph.is_packages_removable(&["pkgA"]);
         assert!(matches!(
             result,
@@ -979,8 +918,6 @@ mod tests {
 
     #[test]
     fn test_is_packages_removable_multiple_packages_with_dependent() {
-        
-        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -1061,7 +998,6 @@ mod tests {
         let graph =
             DependencyGraph::from_installed_packages(&installed_packages);
 
-        
         let result = graph.is_packages_removable(&["pkgA", "pkgB"]);
         assert!(matches!(
             result,
@@ -1079,14 +1015,11 @@ mod tests {
                 dependent_packages.contains(&"pkgC".to_string())
                     || dependent_packages.contains(&"pkgD".to_string())
             );
-            
-            
         }
     }
 
     #[test]
     fn test_is_packages_removable_self_contained() {
-        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
@@ -1130,7 +1063,6 @@ mod tests {
         let graph =
             DependencyGraph::from_installed_packages(&installed_packages);
 
-        
         let result = graph.is_packages_removable(&["pkgA", "pkgB"]);
         assert!(
             result.is_ok(),
@@ -1141,8 +1073,6 @@ mod tests {
 
     #[test]
     fn test_is_packages_removable_virtual_dependency() {
-        
-        
         let pkg_a_data = PackageData {
             about: AboutData {
                 package: PackageAboutData {
