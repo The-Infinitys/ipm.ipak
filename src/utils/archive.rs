@@ -58,7 +58,7 @@ impl FromStr for ArchiveType {
     }
 }
 
-fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
+pub fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
     let archive_format = match FileFormat::from_file(path) {
         Ok(file_format) => file_format,
         Err(e) => {
