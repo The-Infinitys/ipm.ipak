@@ -1,11 +1,11 @@
-//! The `ipak` package management module defines core data structures and operations
-//! for handling package metadata, dependencies, installation modes, and CLI arguments.
+//! `ipak` パッケージ管理モジュールは、パッケージメタデータ、依存関係、インストールモード、
+//! およびコマンドライン引数の処理に必要なコアデータ構造と操作を定義します。
 //!
-//! This module provides functionality for:
-//! - Package installation (local and global modes)
-//! - Dependency and conflict management
-//! - Package metadata processing
-//! - Command-line interface operations
+//! このモジュールは以下の機能を提供します：
+//! - パッケージのインストール（ローカルおよびグローバルモード）
+//! - 依存関係と競合の管理
+//! - パッケージメタデータの処理
+//! - コマンドラインインターフェース操作
 
 use super::version::{Version, VersionRange};
 use crate::utils::args::PkgCommands;
@@ -18,7 +18,7 @@ use crate::utils::{
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-// Module declarations
+// モジュール宣言
 pub mod depend;
 pub mod install;
 pub mod list;
@@ -26,19 +26,20 @@ pub mod metadata;
 pub mod purge;
 pub mod remove;
 
-/// Defines the installation mode for packages.
+/// パッケージのインストールモードを定義する列挙型。
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum Mode {
-    /// Local installation mode, scoped to the current project.
+    /// ローカルインストールモード。現在のプロジェクトに限定されます。
     Local,
-    /// Global installation mode, system-wide installation.
+    /// グローバルインストールモード。システム全体に適用されます。
     Global,
-    /// Default mode considering both local and global installations.
+    /// デフォルトモード。ローカルとグローバルの両方を考慮します。
     #[default]
     Any,
 }
 
 impl Display for Mode {
+    /// インストールモードを文字列としてフォーマットします。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Local => write!(f, "local"),
@@ -48,116 +49,132 @@ impl Display for Mode {
     }
 }
 
-/// Represents complete package metadata including author, architecture, and dependencies.
+/// パッケージメタデータ全体を表し、作者、アーキテクチャ、依存関係を含みます。
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct PackageData {
-    /// Package and author information
+    /// パッケージおよび作者情報
     pub about: AboutData,
-    /// Supported architectures (empty implies all architectures)
+    /// サポートされるアーキテクチャ（空の場合はすべてのアーキテクチャを意味します）
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub architecture: Vec<String>,
-    /// Installation mode
+    /// インストールモード
     pub mode: Mode,
-    /// Dependency and relationship information
+    /// 依存関係および関連情報
     #[serde(skip_serializing_if = "RelationData::is_empty")]
     pub relation: RelationData,
 }
 
-/// Contains author and package-specific metadata.
+/// 作者およびパッケージ固有のメタデータを含みます。
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct AboutData {
-    /// Author details
+    /// 作者の詳細情報
     pub author: AuthorAboutData,
-    /// Package details
+    /// パッケージの詳細情報
     pub package: PackageAboutData,
 }
 
-/// Stores author information including name and email.
+/// 作者の名前とメールアドレスを格納します。
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(default)]
 pub struct AuthorAboutData {
-    /// Author's name
+    /// 作者の名前
     pub name: String,
-    /// Author's email address
+    /// 作者のメールアドレス
     pub email: String,
 }
 
-/// Contains package metadata including name, version, and description.
+/// パッケージのメタデータ（名前、バージョン、説明）を含みます。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PackageAboutData {
-    /// Package name
+    /// パッケージ名
     pub name: String,
-    /// Package version
+    /// パッケージのバージョン
     pub version: Version,
-    /// Package description (optional)
+    /// パッケージの説明（オプション）
     #[serde(skip_serializing_if = "String::is_empty")]
     pub description: String,
 }
 
-/// Manages package relationships including dependencies and conflicts.
+/// パッケージの依存関係や競合を含む関係を管理します。
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct RelationData {
-    /// Required dependencies (OR groups)
+    /// 必須の依存関係（ORグループ）
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub depend: Vec<Vec<PackageRange>>,
-    /// Required command-line tools
+    /// 必要なコマンドラインツール
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub depend_cmds: Vec<String>,
-    /// Suggested optional dependencies
+    /// 推奨されるオプションの依存関係
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub suggests: Vec<Vec<PackageRange>>,
-    /// Recommended dependencies
+    /// 推奨される依存関係
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub recommends: Vec<Vec<PackageRange>>,
-    /// Conflicting packages
+    /// 競合するパッケージ
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub conflicts: Vec<PackageRange>,
-    /// Virtual package provisions
+    /// 仮想パッケージの提供
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub virtuals: Vec<PackageVersion>,
-    /// Commands provided by this package
+    /// このパッケージが提供するコマンド
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub provide_cmds: Vec<String>,
 }
 
-/// Represents a package dependency with version constraints.
+/// バージョンの制約を持つパッケージ依存関係を表します。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PackageRange {
-    /// Package name
+    /// パッケージ名
     pub name: String,
-    /// Version constraints
+    /// バージョンの制約
     pub range: VersionRange,
 }
 
-/// Represents a package with a specific version.
+/// 特定のバージョンのパッケージを表します。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PackageVersion {
-    /// Package name
+    /// パッケージ名
     pub name: String,
-    /// Specific package version
+    /// 特定のバージョン
     pub version: Version,
 }
 
-// Implementation of Display traits
+// Displayトレイトの実装
 impl Display for PackageData {
+    /// パッケージデータをフォーマットして表示します。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{} {}", "Package:".bold(), self.about.package.name.cyan())?;
-        writeln!(f, "{} {}", "Version:".bold(), self.about.package.version)?;
-        
+        writeln!(
+            f,
+            "{} {}",
+            "パッケージ:".bold(),
+            self.about.package.name.cyan()
+        )?;
+        writeln!(
+            f,
+            "{} {}",
+            "バージョン:".bold(),
+            self.about.package.version
+        )?;
+
         if !self.about.package.description.is_empty() {
-            writeln!(f, "{} {}", "Description:".bold(), self.about.package.description)?;
+            writeln!(
+                f,
+                "{} {}",
+                "説明:".bold(),
+                self.about.package.description
+            )?;
         }
-        
+
         writeln!(
             f,
             "{} {} <{}>",
-            "Author:".bold(),
+            "作者:".bold(),
             self.about.author.name.trim(),
             self.about.author.email
         )?;
@@ -165,33 +182,36 @@ impl Display for PackageData {
         writeln!(
             f,
             "{} {}",
-            "Architectures:".bold(),
+            "アーキテクチャ:".bold(),
             if self.architecture.is_empty() {
-                "any".italic()
+                "任意".italic()
             } else {
                 self.architecture.join(", ").italic()
             }
         )?;
 
-        writeln!(f, "{} {}", "Installation Mode:".bold(), self.mode)?;
+        writeln!(f, "{} {}", "インストールモード:".bold(), self.mode)?;
         write!(f, "{}", self.relation)
     }
 }
 
 impl Display for AboutData {
+    /// メタデータをフォーマットして表示します。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{} {}", "Author:".bold(), self.author)?;
-        writeln!(f, "{} {}", "Package:".bold(), self.package)
+        writeln!(f, "{} {}", "作者:".bold(), self.author)?;
+        writeln!(f, "{} {}", "パッケージ:".bold(), self.package)
     }
 }
 
 impl Display for AuthorAboutData {
+    /// 作者情報をフォーマットして表示します。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} <{}>", self.name, self.email)
     }
 }
 
 impl Display for PackageAboutData {
+    /// パッケージ情報をフォーマットして表示します。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} ({})", self.name.cyan(), self.version)?;
         if !self.description.is_empty() {
@@ -202,60 +222,76 @@ impl Display for PackageAboutData {
 }
 
 impl Display for RelationData {
+    /// 依存関係情報をフォーマットして表示します。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        fn format_group(group: &[PackageRange], color: fn(&str) -> String) -> String {
+        fn format_group(
+            group: &[PackageRange],
+            color: fn(&str) -> String,
+        ) -> String {
             if group.len() == 1 {
                 format!("{}", color(&group[0].to_string()))
             } else {
-                let alts: Vec<String> = group.iter().map(|d| d.to_string()).collect();
+                let alts: Vec<String> =
+                    group.iter().map(|d| d.to_string()).collect();
                 format!("({})", color(&alts.join(" | ")))
             }
         }
 
+        // 依存関係を表示します。
         if !self.depend.is_empty() {
-            writeln!(f, "\n{}", "Dependencies:".bold())?;
+            writeln!(f, "\n{}", "依存関係:".bold())?;
             for group in &self.depend {
                 writeln!(f, "  - {}", format_group(group, |s| s.green()))?;
             }
         }
 
+        // 必要なコマンドを表示します。
         if !self.depend_cmds.is_empty() {
-            writeln!(f, "\n{}", "Necessary Commands:".bold())?;
+            writeln!(f, "\n{}", "必要なコマンド:".bold())?;
             for cmd in &self.depend_cmds {
                 writeln!(f, "  - {}", cmd.green())?;
             }
         }
 
+        // 推奨される依存関係（オプション）を表示します。
         if !self.suggests.is_empty() {
-            writeln!(f, "\n{}", "Suggests:".bold())?;
+            writeln!(f, "\n{}", "推奨（オプション）:".bold())?;
             for group in &self.suggests {
-                writeln!(f, "  - {}", format_group(group, |s| s.yellow()))?;
+                writeln!(
+                    f,
+                    "  - {}",
+                    format_group(group, |s| s.yellow())
+                )?;
             }
         }
 
+        // 推奨される依存関係を表示します。
         if !self.recommends.is_empty() {
-            writeln!(f, "\n{}", "Recommends:".bold())?;
+            writeln!(f, "\n{}", "推奨:".bold())?;
             for group in &self.recommends {
                 writeln!(f, "  - {}", format_group(group, |s| s.blue()))?;
             }
         }
 
+        // 競合するパッケージを表示します。
         if !self.conflicts.is_empty() {
-            writeln!(f, "\n{}", "Conflicts:".bold())?;
+            writeln!(f, "\n{}", "競合:".bold())?;
             for conflict in &self.conflicts {
                 writeln!(f, "  - {}", conflict.to_string().red())?;
             }
         }
 
+        // 仮想パッケージを表示します。
         if !self.virtuals.is_empty() {
-            writeln!(f, "\n{}", "Virtual Packages:".bold())?;
+            writeln!(f, "\n{}", "仮想パッケージ:".bold())?;
             for virtual_pkg in &self.virtuals {
                 writeln!(f, "  - {}", virtual_pkg.to_string().magenta())?;
             }
         }
 
+        // 提供するコマンドを表示します。
         if !self.provide_cmds.is_empty() {
-            writeln!(f, "\n{}", "Providing Commands:".bold())?;
+            writeln!(f, "\n{}", "提供するコマンド:".bold())?;
             for cmd in &self.provide_cmds {
                 writeln!(f, "  - {}", cmd.green())?;
             }
@@ -265,28 +301,29 @@ impl Display for RelationData {
 }
 
 impl Display for PackageRange {
+    /// パッケージ依存関係をフォーマットして表示します。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} ({})", self.name, self.range)
     }
 }
 
 impl Display for PackageVersion {
+    /// パッケージバージョンをフォーマットして表示します。
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} ({})", self.name, self.version)
     }
 }
 
-// Default implementations
+// デフォルト実装
 impl Default for AuthorAboutData {
+    /// 作者情報のデフォルト値を生成します。
     fn default() -> Self {
-        Self {
-            name: username(),
-            email: generate_email_address(),
-        }
+        Self { name: username(), email: generate_email_address() }
     }
 }
 
 impl Default for PackageAboutData {
+    /// パッケージ情報のデフォルト値を生成します。
     fn default() -> Self {
         Self {
             name: "default-package".to_string(),
@@ -297,6 +334,7 @@ impl Default for PackageAboutData {
 }
 
 impl Default for PackageRange {
+    /// パッケージ依存関係のデフォルト値を生成します。
     fn default() -> Self {
         Self {
             name: "default-dependency".to_string(),
@@ -306,6 +344,7 @@ impl Default for PackageRange {
 }
 
 impl Default for PackageVersion {
+    /// パッケージバージョンのデフォルト値を生成します。
     fn default() -> Self {
         Self {
             name: "default-version".to_string(),
@@ -315,7 +354,7 @@ impl Default for PackageVersion {
 }
 
 impl RelationData {
-    /// Checks if all relation fields are empty.
+    /// すべての依存関係フィールドが空かどうかを確認します。
     pub fn is_empty(&self) -> bool {
         self.depend.is_empty()
             && self.depend_cmds.is_empty()
@@ -327,7 +366,13 @@ impl RelationData {
     }
 }
 
-/// Processes package-related commands based on provided CLI arguments.
+/// コマンドライン引数に基づいてパッケージ関連のコマンドを処理します。
+///
+/// # 引数
+/// * `args` - 処理するパッケージコマンド
+///
+/// # エラー
+/// コマンドの処理中にエラーが発生した場合、`Error`を返します。
 pub fn pkg(args: PkgCommands) -> Result<(), Error> {
     match args {
         PkgCommands::Install { file_path, local, global } => {
@@ -339,17 +384,22 @@ pub fn pkg(args: PkgCommands) -> Result<(), Error> {
         PkgCommands::Purge { package_name, local, global } => {
             purge::purge(package_name, (local, global).into())
         }
-        PkgCommands::List { local, global } => list::list((local, global).into()),
-        PkgCommands::MetaData { package_path } => metadata::metadata(package_path),
+        PkgCommands::List { local, global } => {
+            list::list((local, global).into())
+        }
+        PkgCommands::MetaData { package_path } => {
+            metadata::metadata(package_path)
+        }
     }
 }
 
-// Test module
+// テストモジュール
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::str::FromStr;
 
+    /// 依存関係や新しいフィールドを含む表示テスト
     #[test]
     fn test_display_with_relations_and_new_fields() {
         let mut data = PackageData::default();
@@ -360,12 +410,15 @@ mod tests {
         data.about.package = PackageAboutData {
             name: "my-package".to_string(),
             version: Version::default(),
-            description: "This is a test package for demonstration.".to_string(),
+            description:
+                "これはデモンストレーション用のテストパッケージです。"
+                    .to_string(),
         };
-        data.architecture = vec!["x86_64".to_string(), "aarch64".to_string()];
+        data.architecture =
+            vec!["x86_64".to_string(), "aarch64".to_string()];
         data.mode = Mode::Global;
 
-        // Add test dependencies
+        // テスト依存関係の追加
         data.relation.depend.push(vec![PackageRange {
             name: "dep-a".to_string(),
             range: VersionRange::from_str(">= 1.0, < 2.0").unwrap(),
@@ -381,13 +434,13 @@ mod tests {
             },
         ]);
 
-        // Add test suggestions
+        // テスト推奨（オプション）の追加
         data.relation.suggests.push(vec![PackageRange {
             name: "suggest-x".to_string(),
             range: VersionRange::from_str("= 3.0").unwrap(),
         }]);
 
-        // Add test recommendations
+        // テスト推奨の追加
         data.relation.recommends.push(vec![
             PackageRange {
                 name: "rec-y".to_string(),
@@ -399,38 +452,114 @@ mod tests {
             },
         ]);
 
-        // Add test conflicts
+        // テスト競合の追加
         data.relation.conflicts.push(PackageRange {
             name: "old-package".to_string(),
             range: VersionRange::from_str("0.9.0").unwrap(),
         });
 
-        // Add test virtual packages
+        // テスト仮想パッケージの追加
         data.relation.virtuals.push(PackageVersion {
             name: "my-virtual-pkg".to_string(),
             version: Version::from_str("1.0.0").unwrap(),
         });
 
-        // Add test commands
-        data.relation.provide_cmds.extend(vec!["my-command".to_string(), "another-command".to_string()]);
-        data.relation.depend_cmds.extend(vec!["git".to_string(), "make".to_string()]);
+        // テストコマンドの追加
+        data.relation.provide_cmds.extend(vec![
+            "my-command".to_string(),
+            "another-command".to_string(),
+        ]);
+        data.relation
+            .depend_cmds
+            .extend(vec!["git".to_string(), "make".to_string()]);
 
-        println!("\n--- Test Display With Relations and New Fields ---");
+        println!("\n--- 依存関係と新しいフィールドの表示テスト ---");
         println!("{}", data);
-        assert_eq!(data.architecture, vec!["x86_64".to_string(), "aarch64".to_string()]);
+        assert_eq!(
+            data.architecture,
+            vec!["x86_64".to_string(), "aarch64".to_string()]
+        );
         assert_eq!(data.mode, Mode::Global);
     }
-
-    // Other test cases remain similar but with added documentation
+    /// 作者情報の表示テスト
     #[test]
     fn test_display_author() {
         let author = AuthorAboutData {
             name: "Test Author".to_string(),
             email: "test@example.com".to_string(),
         };
-        println!("\n--- Test Display Author ---");
+        println!("\n--- 作者表示テスト ---");
         println!("{}", author);
     }
 
-    // ... (other test cases remain similar but with consistent formatting)
+    /// パッケージ情報の表示テスト
+    #[test]
+    fn test_display_package() {
+        let package = PackageAboutData {
+            name: "test-package".to_string(),
+            version: Version::default(),
+            description: "テストパッケージの簡単な説明。".to_string(),
+        };
+        println!("\n--- パッケージ表示テスト ---");
+        println!("{}", package);
+
+        let package_no_desc = PackageAboutData {
+            name: "test-package-no-desc".to_string(),
+            version: Version::default(),
+            description: String::new(),
+        };
+        println!("\n--- パッケージ表示テスト（説明なし） ---");
+        println!("{}", package_no_desc);
+    }
+
+    /// 依存関係情報の表示テスト
+    #[test]
+    fn test_display_relation() {
+        let mut relation = RelationData::default();
+        relation.depend.push(vec![PackageRange {
+            name: "dep-a".to_string(),
+            range: VersionRange::from_str(">= 1.0").unwrap(),
+        }]);
+        relation.suggests.push(vec![PackageRange {
+            name: "suggest-x".to_string(),
+            range: VersionRange::from_str("= 3.0").unwrap(),
+        }]);
+        relation.conflicts.push(PackageRange {
+            name: "conflicting-pkg".to_string(),
+            range: VersionRange::from_str("< 1.0").unwrap(),
+        });
+        println!("\n--- 依存関係表示テスト ---");
+        println!("{}", relation);
+    }
+
+    /// パッケージ依存関係の表示テスト
+    #[test]
+    fn test_display_package_range() {
+        let range = PackageRange {
+            name: "test-dep".to_string(),
+            range: VersionRange::from_str(">= 1.0").unwrap(),
+        };
+        println!("\n--- パッケージ範囲表示テスト ---");
+        println!("{}", range);
+    }
+
+    /// パッケージバージョンの表示テスト
+    #[test]
+    fn test_display_package_version() {
+        let version = PackageVersion {
+            name: "test-version".to_string(),
+            version: Version::default(),
+        };
+        println!("\n--- パッケージバージョン表示テスト ---");
+        println!("{}", version);
+    }
+
+    /// インストールモードの表示テスト
+    #[test]
+    fn test_mode_display() {
+        println!("\n--- モード表示テスト ---");
+        println!("ローカル: {}", Mode::Local);
+        println!("グローバル: {}", Mode::Global);
+        println!("任意: {}", Mode::Any);
+    }
 }
