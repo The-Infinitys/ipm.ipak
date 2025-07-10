@@ -160,10 +160,10 @@ impl Display for InstalledPackageData {
 pub fn list(mode: ExecMode) -> Result<(), Error> {
     let packages_list_data = match mode {
         ExecMode::Local => {
-            get_local().map_err(|e| -> Error { e.into() })?
+            get_local().map_err(|e| Error::from(e))?
         }
         ExecMode::Global => {
-            get_global().map_err(|e| -> Error { e.into() })?
+            get_global().map_err(|e| Error::from(e))?
         }
     };
     println!("{}", packages_list_data);

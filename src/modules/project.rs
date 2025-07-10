@@ -217,7 +217,7 @@ fn project_run(
     command: String,
     args: Vec<String>,
 ) -> Result<(), Error> {
-    run::run(shell, &command, args).map_err(|e| -> Error { e.into() })
+    run::run(shell, &command, args).map_err(|e| Error::from(e))
 }
 
 /// プロジェクトを初期化します。
@@ -228,7 +228,7 @@ fn project_run(
 /// `Ok(())` 初期化が正常に完了した場合。
 /// `Err(Error)` 初期化中にエラーが発生した場合。
 fn project_init() -> Result<(), Error> {
-    init::init().map_err(|e| -> Error { e.into() })
+    init::init().map_err(|e| Error::from(e))
 }
 
 /// プロジェクトをパッケージ化します。
@@ -245,7 +245,7 @@ fn project_package(target: Option<PackageTarget>) -> Result<(), Error> {
     let package_options =
         package::PackageOptions { target: target.unwrap_or_default() };
 
-    package::package(package_options).map_err(|e| -> Error { e.into() })
+    package::package(package_options).map_err(|e| Error::from(e))
 }
 
 /// プロジェクトをビルドします。
@@ -271,7 +271,7 @@ fn project_build(
         },
         build_shell: shell.unwrap_or_default(),
     };
-    build::build(build_options).map_err(|e| -> Error { e.into() })
+    build::build(build_options).map_err(|e| Error::from(e))
 }
 
 /// プロジェクトをインストールします。
@@ -297,7 +297,7 @@ fn project_install(
             ExecMode::Local
         },
     };
-    install::install(install_options).map_err(|e| -> Error { e.into() })
+    install::install(install_options).map_err(|e| Error::from(e))
 }
 
 /// プロジェクトを削除します。
@@ -319,7 +319,7 @@ fn project_remove(
         remove_shell: shell.unwrap_or_default(),
         remove_mode,
     };
-    remove::remove(remove_options).map_err(|e| -> Error { e.into() })
+    remove::remove(remove_options).map_err(|e| Error::from(e))
 }
 
 /// プロジェクトを完全に削除（パージ）します。
@@ -341,7 +341,7 @@ fn project_purge(
         purge_shell: shell.unwrap_or_default(),
         purge_mode,
     };
-    purge::purge(purge_options).map_err(|e| -> Error { e.into() })
+    purge::purge(purge_options).map_err(|e| Error::from(e))
 }
 
 /// プロジェクトのメタデータを表示します。
@@ -352,7 +352,7 @@ fn project_purge(
 /// `Ok(())` メタデータが正常に表示された場合。
 /// `Err(Error)` メタデータの表示中にエラーが発生した場合。
 fn project_metadata() -> Result<(), Error> {
-    metadata::show_metadata().map_err(|e| -> Error { e.into() })
+    metadata::show_metadata().map_err(|e| Error::from(e))
 }
 
 /// 新しいプロジェクトを作成します。

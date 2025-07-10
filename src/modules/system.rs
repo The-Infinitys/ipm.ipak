@@ -28,7 +28,7 @@ pub fn system(args: SystemCommands) -> Result<(), Error> {
                     None
                 }
             })
-            .map_err(|e| -> Error { e.into() })?
+            .map_err(|e| Error::from(e))?
         }
     }
     Ok(())
