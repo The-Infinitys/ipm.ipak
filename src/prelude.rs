@@ -75,13 +75,34 @@ pub mod ipak {
         }
         impl CommandExecution for Commands {
             fn exec(self) -> Result<(), Error> {
-                use crate::modules::{pkg, project, system, utils};
                 match self {
-                    Self::Project(args) => project::project(args),
-                    Self::System(args) => system::system(args),
-                    Self::Pkg(args) => pkg::pkg(args),
-                    Self::Utils(args) => utils::utils(args),
+                    Self::Project(project_command) => {
+                        project_command.exec()
+                    }
+                    Self::System(system_command) => system_command.exec(),
+                    Self::Pkg(pkg_command) => pkg_command.exec(),
+                    Self::Utils(utils_command) => utils_command.exec(),
                 }
+            }
+        }
+        impl CommandExecution for ProjectCommands {
+            fn exec(self) -> Result<(), Error> {
+                crate::modules::project::project(self)
+            }
+        }
+        impl CommandExecution for SystemCommands {
+            fn exec(self) -> Result<(), Error> {
+                crate::modules::system::system(self)
+            }
+        }
+        impl CommandExecution for PkgCommands {
+            fn exec(self) -> Result<(), Error> {
+                crate::modules::pkg::pkg(self)
+            }
+        }
+        impl CommandExecution for UtilsCommands {
+            fn exec(self) -> Result<(), Error> {
+                crate::modules::utils::utils(self)
             }
         }
     }
