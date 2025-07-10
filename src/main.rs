@@ -7,7 +7,6 @@ fn main() -> Result<(), Error> {
     let args = Args::parse();
 
     match args.command {
-        Commands::Version => messages::version()?,
         Commands::Manual => messages::manual()?,
         Commands::Project(args) => project::project(args)?,
         Commands::System(args) => system::system(args)?,

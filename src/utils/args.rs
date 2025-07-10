@@ -14,8 +14,6 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Display version information.
-    Version,
     /// Display the manual.
     Manual,
     /// Manage projects.
