@@ -4,7 +4,7 @@
 use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::dprintln;
-use crate::modules::version::Version;
+use crate::utils::version::Version;
 use crate::utils::color::colorize::*;
 use std::fmt::{self, Display};
 use std::process::Command;

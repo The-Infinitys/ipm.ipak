@@ -7,7 +7,7 @@
 //! - パッケージメタデータの処理
 //! - コマンドラインインターフェース操作
 
-use super::version::{Version, VersionRange};
+use crate::utils::version::{Version, VersionRange};
 use crate::utils::args::PkgCommands;
 use crate::utils::color::colorize::*;
 use crate::utils::error::Error;

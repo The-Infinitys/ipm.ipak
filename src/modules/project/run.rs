@@ -3,7 +3,7 @@
 
 use super::metadata::{self, metadata};
 use crate::modules::project::ExecShell;
-use crate::modules::version::Version;
+use crate::utils::version::Version;
 use crate::utils::color::colorize::*;
 use std::process::Command;
 

@@ -1,4 +1,4 @@
-use super::super::version::Version;
+use crate::utils::version::Version;
 use super::list::PackageListData;
 use super::{PackageData, PackageRange, RelationData};
 use crate::modules::pkg::list::InstalledPackageData;
@@ -415,7 +415,7 @@ mod tests {
         PackageVersion, RelationData,
     };
     use super::*;
-    use crate::modules::version::{Version, VersionRange};
+    use crate::utils::version::{Version, VersionRange};
     use chrono::Local;
     use std::str::FromStr;
 

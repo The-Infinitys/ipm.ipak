@@ -23,6 +23,3 @@ pub mod system;
 
 /// 一般的なユーティリティ関数や補助機能を提供します。
 pub mod utils;
-
-/// バージョニングおよびバージョン範囲の管理を処理します。
-pub mod version;
