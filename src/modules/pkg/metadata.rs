@@ -3,6 +3,7 @@
 
 use super::super::pkg;
 use crate::dprintln;
+use crate::modules::pkg::PackageData;
 use crate::modules::project;
 use crate::utils::archive::extract_archive;
 use crate::utils::error::Error;
@@ -11,18 +12,7 @@ use std::fs;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
-/// 指定されたパッケージアーカイブからメタデータを抽出し、表示します。
-///
-/// パッケージアーカイブを一時ディレクトリにコピーし、展開した後、
-/// その中の`ipak/project.yaml`からメタデータを読み込み、標準出力に表示します。
-///
-/// # Arguments
-/// * `target_path` - メタデータを取得するパッケージアーカイブへのパス。
-///
-/// # Returns
-/// `Ok(())` メタデータが正常に表示された場合。
-/// `Err(Error)` ファイルが見つからない、アーカイブの展開、またはメタデータの読み込みに失敗した場合。
-pub fn metadata(target_path: PathBuf) -> Result<(), Error> {
+pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
     let target_path = env::current_dir()?.join(&target_path);
 
     if !target_path.is_file() {
@@ -79,7 +69,21 @@ pub fn metadata(target_path: PathBuf) -> Result<(), Error> {
         );
         result
     };
-    let pkg_data = metadata_process_result?;
+    metadata_process_result.map_err(|e| Error::from(e))
+}
+/// 指定されたパッケージアーカイブからメタデータを抽出し、表示します。
+///
+/// パッケージアーカイブを一時ディレクトリにコピーし、展開した後、
+/// その中の`ipak/project.yaml`からメタデータを読み込み、標準出力に表示します。
+///
+/// # Arguments
+/// * `target_path` - メタデータを取得するパッケージアーカイブへのパス。
+///
+/// # Returns
+/// `Ok(())` メタデータが正常に表示された場合。
+/// `Err(Error)` ファイルが見つからない、アーカイブの展開、またはメタデータの読み込みに失敗した場合。
+pub fn metadata(target_path: &PathBuf) -> Result<(), Error> {
+    let pkg_data = get(target_path)?;
     println!("{}", pkg_data);
     Ok(())
 }

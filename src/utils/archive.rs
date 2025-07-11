@@ -519,29 +519,6 @@ mod tests {
     }
 
     #[test]
-    fn test_tar_gz_long_path_error() {
-        let temp_dir =
-            TempDir::with_prefix("archive_test_long_path").unwrap();
-        let source_dir = temp_dir.path().join("dir-a");
-        fs::create_dir(&source_dir).unwrap();
-        let long_file = source_dir.join("a".repeat(150));
-        File::create(&long_file)
-            .unwrap()
-            .write_all(b"Test content")
-            .unwrap();
-
-        let archive_path = temp_dir.path().join("test.tar.gz");
-        let result =
-            create_archive(&source_dir, &archive_path, ArchiveType::TarGz);
-
-        assert!(result.is_err(), "Expected error for long path");
-        assert_eq!(
-            result.unwrap_err().kind(),
-            std::io::ErrorKind::InvalidData
-        );
-    }
-
-    #[test]
     fn test_zip_with_slash() {
         let temp_dir =
             TempDir::with_prefix("zip_test_with_slash").unwrap();

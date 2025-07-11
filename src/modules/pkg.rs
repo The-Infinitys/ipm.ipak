@@ -7,10 +7,10 @@
 //! - パッケージメタデータの処理
 //! - コマンドラインインターフェース操作
 
-use crate::utils::version::{Version, VersionRange};
 use crate::utils::args::PkgCommands;
 use crate::utils::color::colorize::*;
 use crate::utils::error::Error;
+use crate::utils::version::{Version, VersionRange};
 use crate::utils::{
     generate_email_address,
     shell::{markdown, username},
@@ -388,7 +388,7 @@ pub fn pkg(args: PkgCommands) -> Result<(), Error> {
             list::list((local, global).into())
         }
         PkgCommands::MetaData { package_path } => {
-            metadata::metadata(package_path)
+            metadata::metadata(&package_path)
         }
     }
 }

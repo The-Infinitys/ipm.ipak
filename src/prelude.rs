@@ -46,15 +46,37 @@ pub mod ipak {
             archive::extract_archive(from, to).map_err(|e| Error::from(e))
         }
     }
-
+    /// パッケージ系統の処理
     pub mod packages {
         use super::Error;
-        // use crate::modules::pkg;
+        use super::depend;
+        use crate::modules::{pkg::*, project::ExecMode};
         use std::path::PathBuf;
         /// 指定したパスのパッケージをすべてインストールする (依存関係を考慮)
         pub fn install_packages(
-            _target: Vec<&PathBuf>,
+            target: Vec<&PathBuf>,
+            mode: ExecMode,
         ) -> Result<(), Error> {
+            for path in &target {
+                // ファイルの存在チェック
+                if !path.is_file() {
+                    return Err(Error::from(std::io::ErrorKind::NotFound));
+                }
+            }
+            // メタデータをすべて取得
+            let mut metadata_list = Vec::with_capacity(target.len());
+            for path in &target {
+                metadata_list.push(path.metadata()?)
+            }
+            let installed_packages = match mode {
+                ExecMode::Global => list::get_global(),
+                ExecMode::Local => list::get_local(),
+            }?;
+            let _graph = depend::DependencyGraph::from_installed_packages(
+                &installed_packages,
+            );
+
+            // install(file_path, install_mode)
             Ok(())
         }
         /// 指定した名称のパッケージをすべて削除する (依存関係を考慮)
@@ -65,23 +87,30 @@ pub mod ipak {
         pub fn purge_packages(_target: Vec<&str>) -> Result<(), Error> {
             Ok(())
         }
+        pub trait PackageMetadata {
+            fn metadata(&self) -> Result<PackageData, Error>;
+        }
+        impl PackageMetadata for PathBuf {
+            fn metadata(&self) -> Result<PackageData, Error> {
+                metadata::get(self)
+            }
+        }
     }
+    /// 引数系の処理
     pub mod args {
         use super::Error;
         pub use crate::utils::args::*;
-
+        /// 指定したコマンドを実行し消費する
         pub trait CommandExecution {
             fn exec(self) -> Result<(), Error>;
         }
         impl CommandExecution for Commands {
             fn exec(self) -> Result<(), Error> {
                 match self {
-                    Self::Project(project_command) => {
-                        project_command.exec()
-                    }
-                    Self::System(system_command) => system_command.exec(),
-                    Self::Pkg(pkg_command) => pkg_command.exec(),
-                    Self::Utils(utils_command) => utils_command.exec(),
+                    Self::Project(project_cmd) => project_cmd.exec(),
+                    Self::System(system_cmd) => system_cmd.exec(),
+                    Self::Pkg(pkg_cmd) => pkg_cmd.exec(),
+                    Self::Utils(utils_cmd) => utils_cmd.exec(),
                 }
             }
         }
@@ -105,5 +134,25 @@ pub mod ipak {
                 crate::modules::utils::utils(self)
             }
         }
+    }
+    /// プロジェクト関連のモジュール
+    pub mod project {
+        // use super::Error;
+    }
+    /// 依存関係の解決モジュール
+
+    pub mod depend {
+        pub use crate::modules::pkg::depend::error::{
+            InstallError, RemoveError,
+        };
+        pub use crate::modules::pkg::depend::graph::DependencyGraph;
+        pub use crate::modules::pkg::depend::utils::get_missing_depend_cmds;
+        pub use crate::modules::pkg::list::{
+            InstalledPackageData, PackageListData,
+        };
+        pub use crate::modules::pkg::{
+            PackageData, PackageRange, PackageVersion,
+        };
+        pub use crate::utils::version::{Version, VersionRange};
     }
 }
