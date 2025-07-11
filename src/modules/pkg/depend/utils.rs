@@ -1,5 +1,5 @@
-use crate::utils::shell;
 use crate::modules::pkg::RelationData;
+use crate::utils::shell;
 
 pub fn are_depend_cmds_available(relation: &RelationData) -> bool {
     relation.depend_cmds.iter().all(|cmd| shell::is_cmd_available(cmd))

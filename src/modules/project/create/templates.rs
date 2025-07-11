@@ -1,5 +1,5 @@
-use crate::utils::version::Version;
 use crate::utils::shell;
+use crate::utils::version::Version;
 use crate::{modules::pkg::PackageData, utils::files::file_creation};
 use std::str::FromStr;
 use std::{

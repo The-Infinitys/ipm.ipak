@@ -44,8 +44,7 @@ pub mod ipak {
             path: &PathBuf,
         ) -> Result<ArchiveType, Error> {
             let target_path = env::current_dir()?.join(path);
-            archive::get_archive_type(&target_path)
-                .map_err(Error::from)
+            archive::get_archive_type(&target_path).map_err(Error::from)
         }
 
         /// 指定したパスからアーカイブを作成します。
@@ -279,8 +278,14 @@ pub mod ipak {
             /// # 返り値
             /// `Ok(())` - パッケージが正常にインストールされた場合。
             /// `Err(Error)` - エラーが発生した場合。
-            pub fn install(file_path: &PathBuf, mode: ExecMode) -> Result<(), Error> {
-                println!("Installing package from {:?} in mode {:?}", file_path, mode);
+            pub fn install(
+                file_path: &PathBuf,
+                mode: ExecMode,
+            ) -> Result<(), Error> {
+                println!(
+                    "Installing package from {:?} in mode {:?}",
+                    file_path, mode
+                );
                 // ここに実際のインストールロジックを実装
                 Ok(())
             }
@@ -300,8 +305,14 @@ pub mod ipak {
             /// # 返り値
             /// `Ok(())` - パッケージが正常に削除された場合。
             /// `Err(Error)` - エラーが発生した場合。
-            pub fn remove(package_name: String, mode: ExecMode) -> Result<(), Error> {
-                println!("Removing package: {} in mode {:?}", package_name, mode);
+            pub fn remove(
+                package_name: String,
+                mode: ExecMode,
+            ) -> Result<(), Error> {
+                println!(
+                    "Removing package: {} in mode {:?}",
+                    package_name, mode
+                );
                 // ここに実際のファイル削除ロジックを実装
                 Ok(())
             }
@@ -315,8 +326,14 @@ pub mod ipak {
             /// # 返り値
             /// `Ok(())` - パッケージが正常にパージされた場合。
             /// `Err(Error)` - エラーが発生した場合。
-            pub fn purge(package_name: String, mode: ExecMode) -> Result<(), Error> {
-                println!("Purging package: {} in mode {:?}", package_name, mode);
+            pub fn purge(
+                package_name: String,
+                mode: ExecMode,
+            ) -> Result<(), Error> {
+                println!(
+                    "Purging package: {} in mode {:?}",
+                    package_name, mode
+                );
                 // ここに実際のファイルと設定の削除ロジックを実装
                 Ok(())
             }
@@ -414,10 +431,10 @@ pub mod ipak {
         pub use crate::modules::project::project_run;
 
         // 関連するオプション構造体もエクスポート
-        /// ビルドオプションを定義する構造体です。
-        pub use crate::modules::project::build::BuildOptions;
         /// ビルドモード（リリースまたはデバッグ）を定義する列挙型です。
         pub use crate::modules::project::build::BuildMode;
+        /// ビルドオプションを定義する構造体です。
+        pub use crate::modules::project::build::BuildOptions;
         /// プロジェクト作成パラメータを定義する構造体です。
         pub use crate::modules::project::create::ProjectParams;
         /// インストールオプションを定義する構造体です。
@@ -433,16 +450,24 @@ pub mod ipak {
     /// 依存関係の解決モジュールをまとめています。
     pub mod depend {
         /// インストール関連のエラーを公開します。
-        pub use crate::modules::pkg::depend::error::{InstallError, RemoveError};
+        pub use crate::modules::pkg::depend::error::{
+            InstallError, RemoveError,
+        };
         /// 依存関係グラフの構造と操作を公開します。
-        pub use crate::modules::pkg::depend::graph::{DependencyGraph, DependencyGraphOperations};
+        pub use crate::modules::pkg::depend::graph::{
+            DependencyGraph, DependencyGraphOperations,
+        };
         /// 不足している依存コマンドを取得するユーティリティを公開します。
         pub use crate::modules::pkg::depend::utils::get_missing_depend_cmds;
 
         /// インストール済みパッケージデータとパッケージリストデータを公開します。
-        pub use crate::modules::pkg::list::{InstalledPackageData, PackageListData};
+        pub use crate::modules::pkg::list::{
+            InstalledPackageData, PackageListData,
+        };
         /// パッケージデータ、パッケージ範囲、パッケージバージョンを公開します。
-        pub use crate::modules::pkg::{PackageData, PackageRange, PackageVersion};
+        pub use crate::modules::pkg::{
+            PackageData, PackageRange, PackageVersion,
+        };
         /// バージョンとバージョン範囲を公開します。
         pub use crate::utils::version::{Version, VersionRange};
     }

@@ -1,5 +1,5 @@
-use std::fmt;
-use crate::modules::pkg::{PackageRange}; // PackageRange を使用するために追加
+use crate::modules::pkg::PackageRange;
+use std::fmt; // PackageRange を使用するために追加
 
 #[derive(Debug)]
 pub enum InstallError {

@@ -7,15 +7,15 @@ use crate::modules::pkg::depend::error::{InstallError, RemoveError};
 /// アプリケーション全体で利用されるカスタムエラー構造体です。
 /// エラーの種類と詳細なメッセージを保持します。
 pub struct Error {
-    kind: ErrorKind,
-    message: String,
+    pub kind: ErrorKind,
+    pub message: String,
     // 他のエラータイプをラップするためのフィールドを追加
     // 'static ライフタイム制約を追加
-    source: Option<Box<dyn std::error::Error + Send + Sync + 'static>>,
+    pub source: Option<Box<dyn std::error::Error + Send + Sync + 'static>>,
 }
 
 /// エラーの種類を定義する列挙型です。
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub enum ErrorKind {
     /// その他の一般的なエラー。
     #[default]
@@ -65,21 +65,33 @@ impl From<io::Error> for Error {
     /// `io::Error`から`Error`を生成します。
     fn from(value: io::Error) -> Self {
         // io::Error は std::error::Error を実装しているので、source に渡せる
-        Error::new(ErrorKind::Io(value.kind()), value.to_string(), Some(Box::new(value)))
+        Error::new(
+            ErrorKind::Io(value.kind()),
+            value.to_string(),
+            Some(Box::new(value)),
+        )
     }
 }
 
 // InstallError から Error への変換を実装
 impl From<InstallError> for Error {
     fn from(value: InstallError) -> Self {
-        Error::new(ErrorKind::Install, value.to_string(), Some(Box::new(value)))
+        Error::new(
+            ErrorKind::Install,
+            value.to_string(),
+            Some(Box::new(value)),
+        )
     }
 }
 
 // RemoveError から Error への変換を実装
 impl From<RemoveError> for Error {
     fn from(value: RemoveError) -> Self {
-        Error::new(ErrorKind::Remove, value.to_string(), Some(Box::new(value)))
+        Error::new(
+            ErrorKind::Remove,
+            value.to_string(),
+            Some(Box::new(value)),
+        )
     }
 }
 
@@ -98,10 +110,13 @@ impl Error {
     /// * `kind` - エラーの種類
     /// * `message` - エラーメッセージ
     /// * `source` - 元のエラー（オプション）
-    pub fn new(kind: ErrorKind, message: String, source: Option<Box<dyn std::error::Error + Send + Sync + 'static>>) -> Self {
+    pub fn new(
+        kind: ErrorKind,
+        message: String,
+        source: Option<Box<dyn std::error::Error + Send + Sync + 'static>>,
+    ) -> Self {
         Self { kind, message, source }
     }
-
     /// エラー情報をフォーマットして表示します。
     fn display_for(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.message.is_empty() && self.source.is_none() {
@@ -159,6 +174,8 @@ impl std::error::Error for Error {
         // self.source.as_ref() は Option<&Box<dyn std::error::Error + Send + Sync + 'static>> を返します。
         // map(|s| s.as_ref()) は Option<&(dyn std::error::Error + Send + Sync + 'static)> を返します。
         // これを &(dyn std::error::Error + 'static) にダウンキャストします。
-        self.source.as_ref().map(|s| s.as_ref() as &(dyn std::error::Error + 'static))
+        self.source
+            .as_ref()
+            .map(|s| s.as_ref() as &(dyn std::error::Error + 'static))
     }
 }

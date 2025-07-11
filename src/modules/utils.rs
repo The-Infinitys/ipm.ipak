@@ -39,8 +39,7 @@ fn archive(args: ArchiveCommands) -> Result<(), Error> {
                 .map_err(Error::from)?
         }
         ArchiveCommands::Extract { from, to } => {
-            extract_archive(&from, &to)
-                .map_err(Error::from)?
+            extract_archive(&from, &to).map_err(Error::from)?
         }
     }
     Ok(())

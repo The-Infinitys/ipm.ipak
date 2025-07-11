@@ -1,4 +1,3 @@
-
 // モジュールの宣言
 pub mod error;
 pub mod graph;

@@ -197,7 +197,8 @@ fn installation_process(
         &installed_packages,
     );
     let package_data = project::metadata::metadata()?; // Call once
-    match depend_graph.is_packages_installable(vec![package_data.clone()]) {
+    match depend_graph.is_packages_installable(vec![package_data.clone()])
+    {
         Ok(()) => {
             let opts = project::install::InstallOptions {
                 install_mode,

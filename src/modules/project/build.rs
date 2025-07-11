@@ -4,8 +4,8 @@
 use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::dprintln;
-use crate::utils::version::Version;
 use crate::utils::color::colorize::*;
+use crate::utils::version::Version;
 use std::fmt::{self, Display};
 use std::process::Command;
 
@@ -80,8 +80,10 @@ impl Display for BuildMode {
 /// `Err(String)` ビルド中にエラーが発生した場合。
 pub fn build(opts: BuildOptions) -> Result<(), String> {
     dprintln!("{}", &opts);
-    let target_dir = metadata::get_dir().map_err(|e| format!("Error: {}", e))?;
-    let project_metadata = metadata().map_err(|e| format!("Error: {}", e))?;
+    let target_dir =
+        metadata::get_dir().map_err(|e| format!("Error: {}", e))?;
+    let project_metadata =
+        metadata().map_err(|e| format!("Error: {}", e))?;
 
     fn setup_execshell(
         cmd: &mut Command,

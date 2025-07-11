@@ -3,8 +3,8 @@
 
 use super::metadata::{self, metadata};
 use crate::modules::project::ExecShell;
-use crate::utils::version::Version;
 use crate::utils::color::colorize::*;
+use crate::utils::version::Version;
 use std::process::Command;
 
 /// プロジェクト内で指定されたスクリプトを実行します。

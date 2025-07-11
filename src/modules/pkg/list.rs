@@ -159,12 +159,8 @@ impl Display for InstalledPackageData {
 /// `Err(Error)` パッケージリストの取得または表示中にエラーが発生した場合。
 pub fn list(mode: ExecMode) -> Result<(), Error> {
     let packages_list_data = match mode {
-        ExecMode::Local => {
-            get_local().map_err(Error::from)?
-        }
-        ExecMode::Global => {
-            get_global().map_err(Error::from)?
-        }
+        ExecMode::Local => get_local().map_err(Error::from)?,
+        ExecMode::Global => get_global().map_err(Error::from)?,
     };
     println!("{}", packages_list_data);
     Ok(())

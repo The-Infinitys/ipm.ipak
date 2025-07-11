@@ -243,7 +243,9 @@ pub fn project_init() -> Result<(), Error> {
 /// # Returns
 /// `Ok(())` パッケージ化が正常に完了した場合。
 /// `Err(Error)` パッケージ化中にエラーが発生した場合。
-pub fn project_package(target: Option<PackageTarget>) -> Result<(), Error> {
+pub fn project_package(
+    target: Option<PackageTarget>,
+) -> Result<(), Error> {
     let package_options =
         package::PackageOptions { target: target.unwrap_or_default() };
 
