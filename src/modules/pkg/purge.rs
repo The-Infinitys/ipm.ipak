@@ -34,7 +34,7 @@ pub fn purge(
     for target_pkg_name in target_pkg_names {
         let final_pkg_destination_path = match uninstall_mode {
             ExecMode::Local => {
-                path::local::packages_dirpath().join(&target_pkg_name)
+                path::local::packages_dirpath().join(target_pkg_name)
             }
             ExecMode::Global => {
                 let list_file_path = path::global::packageslist_filepath();
@@ -49,7 +49,7 @@ pub fn purge(
                             ),
                         )
                     })?
-                    .join(&target_pkg_name)
+                    .join(target_pkg_name)
             }
         };
 
@@ -62,12 +62,12 @@ pub fn purge(
         }
 
         uninstall_package(
-            &target_pkg_name,
+            target_pkg_name,
             uninstall_mode,
             &final_pkg_destination_path,
         )?;
 
-        remove_package_from_list(&target_pkg_name, uninstall_mode)?;
+        remove_package_from_list(target_pkg_name, uninstall_mode)?;
     }
 
     lock_manager.release_lock()?;
