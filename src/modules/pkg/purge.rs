@@ -6,6 +6,7 @@ use super::super::project;
 use super::super::project::ExecMode;
 use super::depend;
 use crate::dprintln;
+use crate::modules::pkg::lock::LockManager;
 use crate::modules::system::path;
 use crate::utils::error::Error;
 use std::env;
@@ -24,45 +25,52 @@ use std::path::PathBuf;
 /// `Ok(())` パッケージが正常にパージされた場合。
 /// `Err(Error)` パッケージが見つからない、またはアンインストール中にエラーが発生した場合。
 pub fn purge(
-    target_pkg_name: String,
+    target_pkg_names: &Vec<String>,
     uninstall_mode: ExecMode,
 ) -> Result<(), Error> {
-    let final_pkg_destination_path = match uninstall_mode {
-        ExecMode::Local => {
-            path::local::packages_dirpath().join(&target_pkg_name)
-        }
-        ExecMode::Global => {
-            let list_file_path = path::global::packageslist_filepath();
-            list_file_path
-                .parent()
-                .ok_or_else(|| {
-                    std::io::Error::new(
-                        std::io::ErrorKind::InvalidInput,
-                        format!(
-                            "Global packages list file path '{}' does not have a parent directory.",
-                            list_file_path.display()
-                        ),
-                    )
-                })?
-                .join(&target_pkg_name)
-        }
-    };
+    let lock_manager = LockManager::new(matches!(uninstall_mode, ExecMode::Global));
+    lock_manager.acquire_lock()?;
 
-    if !final_pkg_destination_path.exists() {
-        eprintln!(
-            "Package not found at: {}",
-            final_pkg_destination_path.display()
-        );
-        return Err(std::io::ErrorKind::NotFound.into());
+    for target_pkg_name in target_pkg_names {
+        let final_pkg_destination_path = match uninstall_mode {
+            ExecMode::Local => {
+                path::local::packages_dirpath().join(&target_pkg_name)
+            }
+            ExecMode::Global => {
+                let list_file_path = path::global::packageslist_filepath();
+                list_file_path
+                    .parent()
+                    .ok_or_else(|| {
+                        std::io::Error::new(
+                            std::io::ErrorKind::InvalidInput,
+                            format!(
+                                "Global packages list file path '{}' does not have a parent directory.",
+                                list_file_path.display()
+                            ),
+                        )
+                    })?
+                    .join(&target_pkg_name)
+            }
+        };
+
+        if !final_pkg_destination_path.exists() {
+            eprintln!(
+                "Package not found at: {}",
+                final_pkg_destination_path.display()
+            );
+            return Err(std::io::ErrorKind::NotFound.into());
+        }
+
+        uninstall_package(
+            &target_pkg_name,
+            uninstall_mode,
+            &final_pkg_destination_path,
+        )?;
+
+        remove_package_from_list(&target_pkg_name, uninstall_mode)?;
     }
 
-    uninstall_package(
-        &target_pkg_name,
-        uninstall_mode,
-        &final_pkg_destination_path,
-    )?;
-
-    remove_package_from_list(&target_pkg_name, uninstall_mode)?;
+    lock_manager.release_lock()?;
 
     Ok(())
 }

@@ -53,3 +53,19 @@ pub fn packages_dirpath() -> PathBuf {
 pub fn cache_path() -> PathBuf {
     home_path().join(".cache/ipak/")
 }
+
+/// `ipak`のロックファイルへのパスを返します。
+///
+/// # Returns
+/// `ipak`のロックファイルへの`PathBuf`。
+pub fn lock_filepath() -> PathBuf {
+    ipak_path().join("lock")
+}
+
+/// `ipak`のタスクファイルへのパスを返します。
+///
+/// # Returns
+/// `ipak`のタスクファイルへの`PathBuf`。
+pub fn tasks_filepath() -> PathBuf {
+    ipak_path().join("tasks")
+}

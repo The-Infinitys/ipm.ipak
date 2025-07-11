@@ -22,10 +22,11 @@ use std::fmt::Display;
 pub mod depend;
 pub mod install;
 pub mod list;
+pub mod manage;
 pub mod metadata;
 pub mod purge;
 pub mod remove;
-
+pub mod lock;
 /// パッケージのインストールモードを定義する列挙型。
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum Mode {
@@ -375,14 +376,14 @@ impl RelationData {
 /// コマンドの処理中にエラーが発生した場合、`Error`を返します。
 pub fn pkg(args: PkgCommands) -> Result<(), Error> {
     match args {
-        PkgCommands::Install { file_path, local, global } => {
-            install::install(&file_path, (local, global).into())
+        PkgCommands::Install { file_paths, local, global } => {
+            install::install(&file_paths, (local, global).into())
         }
-        PkgCommands::Remove { package_name, local, global } => {
-            remove::remove(package_name, (local, global).into())
+        PkgCommands::Remove { package_names, local, global } => {
+            remove::remove(&package_names, (local, global).into())
         }
-        PkgCommands::Purge { package_name, local, global } => {
-            purge::purge(package_name, (local, global).into())
+        PkgCommands::Purge { package_names, local, global } => {
+            purge::purge(&package_names, (local, global).into())
         }
         PkgCommands::List { local, global } => {
             list::list((local, global).into())

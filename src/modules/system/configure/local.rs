@@ -28,6 +28,8 @@ pub fn configure() -> Result<(), Error> {
         [".ipak/README.md", include_str!("data/local/README.md")],
         [".ipak/bin/ipak-local", include_str!("data/local/ipak-local")],
         [".ipak/packages/list.yaml", package_list_data.as_str()],
+        [".ipak/lock", ""],
+        [".ipak/tasks", ""],
     ];
     let home_dir = env::var("HOME").map_err(|e| {
         Error::new(

@@ -36,3 +36,20 @@ pub fn packageslist_filepath() -> PathBuf {
 pub fn packages_dirpath() -> PathBuf {
     ipak_path().join("packages")
 }
+
+/// グローバルロックファイルへのパスを返します。
+///
+/// # Returns
+/// グローバルロックファイルへの`PathBuf`。
+pub fn lock_filepath() -> PathBuf {
+    ipak_path().join("lock")
+}
+
+/// グローバルタスクファイルへのパスを返します。
+///
+/// # Returns
+/// グローバルタスクファイルへの`PathBuf`。
+pub fn tasks_filepath() -> PathBuf {
+    ipak_path().join("tasks")
+}
+

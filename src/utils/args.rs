@@ -170,7 +170,7 @@ pub enum PkgCommands {
     Install {
         /// Path to the package file. / パッケージファイルへのパス。
         #[arg()]
-        file_path: PathBuf,
+        file_paths: Vec<PathBuf>,
         /// Install locally. / ローカルにインストールします。
         #[arg(long)]
         local: bool,
@@ -182,7 +182,7 @@ pub enum PkgCommands {
     Remove {
         /// Name of the package to remove. / 削除するパッケージの名前。
         #[arg()]
-        package_name: String,
+        package_names: Vec<String>,
         /// Remove locally. / ローカルで削除します。
         #[arg(long)]
         local: bool,
@@ -194,7 +194,7 @@ pub enum PkgCommands {
     Purge {
         /// Name of the package to purge. / 完全に削除するパッケージの名前。
         #[arg()]
-        package_name: String,
+        package_names: Vec<String>,
         /// Purge locally. / ローカルで完全に削除します。
         #[arg(long)]
         local: bool,

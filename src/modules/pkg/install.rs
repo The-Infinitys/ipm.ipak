@@ -5,6 +5,7 @@ use super::super::pkg;
 use super::super::project::ExecMode;
 use super::depend;
 use crate::dprintln;
+use crate::modules::pkg::lock::LockManager;
 use crate::modules::project;
 use crate::modules::system::path;
 use crate::utils::archive::extract_archive;
@@ -22,73 +23,77 @@ use tempfile::tempdir;
 /// に基づいて適切な場所にファイルを配置します。その後、パッケージリストを更新します。
 ///
 /// # Arguments
-/// * `file_path` - インストールするパッケージアーカイブへのパス。
+/// * `file_paths` - インストールするパッケージアーカイブへのパスのベクター。
 /// * `install_mode` - インストールモード（`ExecMode::Local`または`ExecMode::Global`）。
 ///
 /// # Returns
 /// `Ok(())` パッケージが正常にインストールされた場合。
 /// `Err(Error)` ファイルが見つからない、アーカイブの展開、ファイルの配置、またはパッケージリストの更新中にエラーが発生した場合。
 pub fn install(
-    file_path: &PathBuf,
+    file_paths: &Vec<PathBuf>,
     install_mode: ExecMode,
 ) -> Result<(), Error> {
-    let target_path = env::current_dir()?.join(file_path);
+    let lock_manager = LockManager::new(matches!(install_mode, ExecMode::Global));
+    lock_manager.acquire_lock()?;
 
-    if !target_path.is_file() {
-        eprintln!("Couldn't find target file: {}", target_path.display());
-        return Err(Error::from(std::io::ErrorKind::NotFound));
-    }
+    for file_path in file_paths {
+        let target_path = env::current_dir()?.join(file_path);
 
-    let temp_dir = tempdir()?;
-    dprintln!("Created temp directory at {}", temp_dir.path().display());
+        if !target_path.is_file() {
+            eprintln!("Couldn't find target file: {}", target_path.display());
+            return Err(Error::from(std::io::ErrorKind::NotFound));
+        }
 
-    let pkg_archive_in_temp = temp_dir.path().join(
-        target_path.file_name().ok_or_else(|| {
-            std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "Target path has no filename",
-            )
-        })?,
-    );
+        let temp_dir = tempdir()?;
+        dprintln!("Created temp directory at {}", temp_dir.path().display());
 
-    fs::copy(&target_path, &pkg_archive_in_temp)?;
-    dprintln!(
-        "Copied package to temp directory: {}",
-        pkg_archive_in_temp.display()
-    );
+        let pkg_archive_in_temp = temp_dir.path().join(
+            target_path.file_name().ok_or_else(|| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "Target path has no filename",
+                )
+            })?,
+        );
 
-    dprintln!(
-        "Extracting archive from {} to {}",
-        pkg_archive_in_temp.display(),
-        temp_dir.path().display()
-    );
-    extract_archive(&pkg_archive_in_temp, &temp_dir.path().to_path_buf())?;
-    fs::remove_file(&pkg_archive_in_temp)?;
-
-    let install_process_result = {
-        let original_cwd = env::current_dir()?;
-        env::set_current_dir(temp_dir.path())?;
+        fs::copy(&target_path, &pkg_archive_in_temp)?;
         dprintln!(
-            "Changed current directory to {}",
+            "Copied package to temp directory: {}",
+            pkg_archive_in_temp.display()
+        );
+
+        dprintln!(
+            "Extracting archive from {} to {}",
+            pkg_archive_in_temp.display(),
             temp_dir.path().display()
         );
+        extract_archive(&pkg_archive_in_temp, &temp_dir.path().to_path_buf())?;
+        fs::remove_file(&pkg_archive_in_temp)?;
 
-        let result = installation_process(install_mode);
+        let install_process_result = {
+            let original_cwd = env::current_dir()?;
+            env::set_current_dir(temp_dir.path())?;
+            dprintln!(
+                "Changed current directory to {}",
+                temp_dir.path().display()
+            );
 
-        env::set_current_dir(&original_cwd)?;
-        dprintln!(
-            "Restored current directory to {}",
-            original_cwd.display()
-        );
-        result
-    };
-    let pkg_data = install_process_result?;
+            let result = installation_process(install_mode);
 
-    let final_destination_base_dir: PathBuf = match install_mode {
-        ExecMode::Local => path::local::packages_dirpath(),
-        ExecMode::Global => {
-            let list_file_path = path::global::packageslist_filepath();
-            list_file_path.parent().ok_or_else(|| {
+            env::set_current_dir(&original_cwd)?;
+            dprintln!(
+                "Restored current directory to {}",
+                original_cwd.display()
+            );
+            result
+        };
+        let pkg_data = install_process_result?;
+
+        let final_destination_base_dir: PathBuf = match install_mode {
+            ExecMode::Local => path::local::packages_dirpath(),
+            ExecMode::Global => {
+                let list_file_path = path::global::packageslist_filepath();
+                list_file_path.parent().ok_or_else(|| {
                 std::io::Error::new(
                     std::io::ErrorKind::InvalidInput,
                     format!(
@@ -97,56 +102,58 @@ pub fn install(
                     ),
                 )
             })?.to_path_buf()
+            }
+        };
+
+        fs::create_dir_all(&final_destination_base_dir)?;
+        let pkg_name = pkg_data.about.package.name.clone();
+        let final_pkg_destination_path =
+            final_destination_base_dir.join(&pkg_name);
+
+        if final_pkg_destination_path.exists() {
+            if final_pkg_destination_path.is_dir() {
+                fs::remove_dir_all(&final_pkg_destination_path)?;
+            } else {
+                fs::remove_file(&final_pkg_destination_path)?;
+            }
         }
-    };
 
-    fs::create_dir_all(&final_destination_base_dir)?;
-    let pkg_name = pkg_data.about.package.name.clone();
-    let final_pkg_destination_path =
-        final_destination_base_dir.join(&pkg_name);
+        fs::create_dir_all(&final_pkg_destination_path)?;
+        for entry in fs::read_dir(temp_dir.path())? {
+            let entry = entry?;
+            let target_path =
+                final_pkg_destination_path.join(entry.file_name());
+            if entry.path().is_dir() {
+                fs::create_dir_all(&target_path)?;
+                copy_dir_all(&entry.path(), &target_path)?;
+            } else {
+                fs::copy(entry.path(), &target_path)?;
+            }
+        }
 
-    if final_pkg_destination_path.exists() {
-        if final_pkg_destination_path.is_dir() {
-            fs::remove_dir_all(&final_pkg_destination_path)?;
-        } else {
-            fs::remove_file(&final_pkg_destination_path)?;
+        dprintln!(
+            "Successfully installed package to {}",
+            final_pkg_destination_path.display()
+        );
+
+        let installed_package_data = pkg::list::InstalledPackageData {
+            info: pkg_data,
+            last_modified: Local::now(),
+        };
+
+        match install_mode {
+            ExecMode::Local => {
+                pkg::list::add_pkg_local(installed_package_data)?;
+                dprintln!("Added package '{}' to local list.", pkg_name);
+            }
+            ExecMode::Global => {
+                pkg::list::add_pkg_global(installed_package_data)?;
+                dprintln!("Added package '{}' to global list.", pkg_name);
+            }
         }
     }
 
-    fs::create_dir_all(&final_pkg_destination_path)?;
-    for entry in fs::read_dir(temp_dir.path())? {
-        let entry = entry?;
-        let target_path =
-            final_pkg_destination_path.join(entry.file_name());
-        if entry.path().is_dir() {
-            fs::create_dir_all(&target_path)?;
-            copy_dir_all(&entry.path(), &target_path)?;
-        } else {
-            fs::copy(entry.path(), &target_path)?;
-        }
-    }
-
-    dprintln!(
-        "Successfully installed package to {}",
-        final_pkg_destination_path.display()
-    );
-
-    let installed_package_data = pkg::list::InstalledPackageData {
-        info: pkg_data,
-        last_modified: Local::now(),
-    };
-
-    match install_mode {
-        ExecMode::Local => {
-            pkg::list::add_pkg_local(installed_package_data)?;
-            dprintln!("Added package '{}' to local list.", pkg_name);
-        }
-        ExecMode::Global => {
-            pkg::list::add_pkg_global(installed_package_data)?;
-            dprintln!("Added package '{}' to global list.", pkg_name);
-        }
-    }
-
+    lock_manager.release_lock()?;
     Ok(())
 }
 
@@ -209,7 +216,8 @@ fn installation_process(
             Ok(package_data)
         }
         Err(e) => {
-            eprintln!("You cannot install this package.\n{}", e);
+            eprintln!("You cannot install this package.
+{}", e);
             Err(std::io::Error::new(std::io::ErrorKind::Unsupported, e))
         }
     }

@@ -171,9 +171,8 @@ pub mod ipak {
             temp_graph
                 .is_packages_installable(sorted_package_data.clone())?;
 
-            for package_info in &sorted_package_infos {
-                install::install(&package_info.path, mode)?;
-            }
+            let file_paths: Vec<PathBuf> = sorted_package_infos.iter().map(|info| info.path.clone()).collect();
+            install::install(&file_paths, mode)?;
 
             Ok(())
         }
@@ -188,27 +187,10 @@ pub mod ipak {
         /// `Ok(())` - パッケージが正常に削除された場合。
         /// `Err(Error)` - エラーが発生した場合。
         pub fn remove_packages(
-            target_names: Vec<&str>,
+            target_names: &Vec<String>,
             mode: ExecMode,
         ) -> Result<(), Error> {
-            let installed_packages = match mode {
-                ExecMode::Local => list::get_local(),
-                ExecMode::Global => list::get_global(),
-            }?;
-            let base_graph =
-                depend::DependencyGraph::from_installed_packages(
-                    &installed_packages,
-                );
-
-            // 削除可能であるかを確認
-            base_graph.is_packages_removable(&target_names)?;
-
-            // 依存関係チェックをパスした場合、実際の削除処理を実行
-            for pkg_name in &target_names {
-                uninstall::remove(pkg_name.to_string(), mode)?
-            }
-
-            Ok(())
+            remove::remove(target_names, mode)
         }
 
         /// 指定したパッケージを設定ごと完全に削除（パージ）します (依存関係を考慮)。
@@ -221,27 +203,10 @@ pub mod ipak {
         /// `Ok(())` - パッケージが正常にパージされた場合。
         /// `Err(Error)` - エラーが発生した場合。
         pub fn purge_packages(
-            target_names: Vec<&str>,
+            target_names: &Vec<String>,
             mode: ExecMode,
         ) -> Result<(), Error> {
-            let installed_packages = match mode {
-                ExecMode::Local => list::get_local(),
-                ExecMode::Global => list::get_global(),
-            }?;
-            let base_graph =
-                depend::DependencyGraph::from_installed_packages(
-                    &installed_packages,
-                );
-
-            // 削除可能であるかを確認 (remove と同じロジック)
-            base_graph.is_packages_removable(&target_names)?;
-
-            // 依存関係チェックをパスした場合、実際のパージ処理を実行
-            for pkg_name in &target_names {
-                purge::purge(pkg_name.to_string(), mode)?;
-            }
-
-            Ok(())
+            purge::purge(target_names, mode)
         }
 
         /// パスからパッケージのメタデータを取得するためのトレイトです。
@@ -279,15 +244,10 @@ pub mod ipak {
             /// `Ok(())` - パッケージが正常にインストールされた場合。
             /// `Err(Error)` - エラーが発生した場合。
             pub fn install(
-                file_path: &PathBuf,
+                file_paths: &Vec<PathBuf>,
                 mode: ExecMode,
             ) -> Result<(), Error> {
-                println!(
-                    "Installing package from {:?} in mode {:?}",
-                    file_path, mode
-                );
-                // ここに実際のインストールロジックを実装
-                Ok(())
+                crate::modules::pkg::install::install(file_paths, mode)
             }
         }
 
