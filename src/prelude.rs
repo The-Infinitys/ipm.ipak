@@ -1,28 +1,45 @@
 //! prelude!
 //! ipakの機能を利用しやすくまとめています。
 
+/// ipakクレートの主要な機能を提供します。
+/// このモジュールをインポートすることで、ipakの様々なサブモジュールや関数に簡単にアクセスできます。
 pub mod ipak {
     use crate::utils::error::Error;
     /// バージョン構造体を利用できるようにしています。
     pub use crate::utils::version::{Version, VersionRange};
-    use std::str::FromStr; // HashMap はここで使用されるため残す
+    use std::str::FromStr;
+
     /// ipak自身のバージョンを、Version構造体で返します。
-    /// - 引数
+    ///
+    /// # 引数
     /// なし
-    /// - 返り値
+    ///
+    /// # 返り値
     /// ipakのバージョンを示す構造体
     pub fn version() -> Version {
         Version::from_str(
             option_env!("CARGO_PKG_VERSION").unwrap_or("unknown"),
         ).expect("Failed to parse CARGO_PKG_VERSION. This is not a normal behavior.")
     }
-    /// エラー系のコードをすぐに使用できるように
+
+    /// エラー系のコードをすぐに使用できるようにします。
     pub use crate::utils::error;
-    /// アーカイブ系統をまとめている
+
+    /// アーカイブ系統の処理をまとめています。
     pub mod archive {
         use super::Error;
+        /// アーカイブ関連のユーティリティとアーカイブタイプを公開します。
         pub use crate::utils::archive::{self, ArchiveType};
         use std::{env, path::PathBuf};
+
+        /// 指定したパスのアーカイブタイプを判定します。
+        ///
+        /// # 引数
+        /// * `path` - 判定するアーカイブファイルのパス。
+        ///
+        /// # 返り値
+        /// `Ok(ArchiveType)` - アーカイブタイプが正常に判定された場合。
+        /// `Err(Error)` - エラーが発生した場合。
         pub fn get_archive_type(
             path: &PathBuf,
         ) -> Result<ArchiveType, Error> {
@@ -30,6 +47,17 @@ pub mod ipak {
             archive::get_archive_type(&target_path)
                 .map_err(|e| Error::from(e))
         }
+
+        /// 指定したパスからアーカイブを作成します。
+        ///
+        /// # 引数
+        /// * `from` - アーカイブ元となるパス。
+        /// * `to` - 作成するアーカイブファイルの出力パス。
+        /// * `archive_type` - 作成するアーカイブのタイプ。
+        ///
+        /// # 返り値
+        /// `Ok(())` - アーカイブが正常に作成された場合。
+        /// `Err(Error)` - エラーが発生した場合。
         pub fn create_archive(
             from: &PathBuf,
             to: &PathBuf,
@@ -39,6 +67,15 @@ pub mod ipak {
                 .map_err(|e| Error::from(e))
         }
 
+        /// 指定したアーカイブを解凍します。
+        ///
+        /// # 引数
+        /// * `from` - 解凍するアーカイブファイルのパス。
+        /// * `to` - 解凍先のディレクトリパス。
+        ///
+        /// # 返り値
+        /// `Ok(())` - アーカイブが正常に解凍された場合。
+        /// `Err(Error)` - エラーが発生した場合。
         pub fn extract_archive(
             from: &PathBuf,
             to: &PathBuf,
@@ -46,7 +83,8 @@ pub mod ipak {
             archive::extract_archive(from, to).map_err(|e| Error::from(e))
         }
     }
-    /// パッケージ系統の処理
+
+    /// パッケージ系統の処理をまとめています。
     pub mod packages {
         use super::Error;
         use super::depend;
@@ -57,14 +95,24 @@ pub mod ipak {
         // トレイトをスコープにインポート
         use super::depend::DependencyGraphOperations;
 
-        /// パッケージのパスと解析済みのパッケージデータを保持する構造体
+        /// パッケージのパスと解析済みのパッケージデータを保持する構造体です。
         #[derive(Clone)]
         pub struct PackageInfo {
+            /// パッケージファイルのパス。
             pub path: PathBuf,
+            /// 解析されたパッケージデータ。
             pub data: PackageData, // pkg::PackageData を格納
         }
 
-        /// 指定したパスのパッケージをすべてインストールする (依存関係を考慮)
+        /// 指定したパスのパッケージをすべてインストールします (依存関係を考慮)。
+        ///
+        /// # 引数
+        /// * `target` - インストールするパッケージファイルのパスのリスト。
+        /// * `mode` - インストールモード（ローカルまたはグローバル）。
+        ///
+        /// # 返り値
+        /// `Ok(())` - パッケージが正常にインストールされた場合。
+        /// `Err(Error)` - エラーが発生した場合。
         pub fn install_packages(
             target: Vec<&PathBuf>,
             mode: ExecMode,
@@ -130,48 +178,171 @@ pub mod ipak {
 
             Ok(())
         }
-        /// 指定した名称のパッケージをすべて削除する (依存関係を考慮)
-        pub fn remove_packages(_target: Vec<&str>) -> Result<(), Error> {
+
+        /// 指定した名称のパッケージをすべて削除します (依存関係を考慮)。
+        ///
+        /// # 引数
+        /// * `target_names` - 削除するパッケージ名のリスト。
+        /// * `mode` - 削除モード（ローカルまたはグローバル）。
+        ///
+        /// # 返り値
+        /// `Ok(())` - パッケージが正常に削除された場合。
+        /// `Err(Error)` - エラーが発生した場合。
+        pub fn remove_packages(
+            target_names: Vec<&str>,
+            mode: ExecMode,
+        ) -> Result<(), Error> {
+            let installed_packages = match mode {
+                ExecMode::Local => list::get_local(),
+                ExecMode::Global => list::get_global(),
+            }?;
+            let base_graph =
+                depend::DependencyGraph::from_installed_packages(
+                    &installed_packages,
+                );
+
+            // 削除可能であるかを確認
+            base_graph.is_packages_removable(&target_names)?;
+
+            // 依存関係チェックをパスした場合、実際の削除処理を実行
+            for pkg_name in &target_names {
+                uninstall::remove(pkg_name.to_string(), mode)?
+            }
+
             Ok(())
         }
-        /// 指定したパッケージを設定ごと削除する (依存関係を考慮)
-        pub fn purge_packages(_target: Vec<&str>) -> Result<(), Error> {
+
+        /// 指定したパッケージを設定ごと完全に削除（パージ）します (依存関係を考慮)。
+        ///
+        /// # 引数
+        /// * `target_names` - パージするパッケージ名のリスト。
+        /// * `mode` - パージモード（ローカルまたはグローバル）。
+        ///
+        /// # 返り値
+        /// `Ok(())` - パッケージが正常にパージされた場合。
+        /// `Err(Error)` - エラーが発生した場合。
+        pub fn purge_packages(
+            target_names: Vec<&str>,
+            mode: ExecMode,
+        ) -> Result<(), Error> {
+            let installed_packages = match mode {
+                ExecMode::Local => list::get_local(),
+                ExecMode::Global => list::get_global(),
+            }?;
+            let base_graph =
+                depend::DependencyGraph::from_installed_packages(
+                    &installed_packages,
+                );
+
+            // 削除可能であるかを確認 (remove と同じロジック)
+            base_graph.is_packages_removable(&target_names)?;
+
+            // 依存関係チェックをパスした場合、実際のパージ処理を実行
+            for pkg_name in &target_names {
+                purge::purge(pkg_name.to_string(), mode)?;
+            }
+
             Ok(())
         }
-        /// パスからパッケージのメタデータを取得するためのトレイト
+
+        /// パスからパッケージのメタデータを取得するためのトレイトです。
         pub trait PackageMetadata {
+            /// パスからパッケージのメタデータを取得します。
+            ///
+            /// # 引数
+            /// なし (self)
+            ///
+            /// # 返り値
+            /// `Ok(PackageData)` - メタデータが正常に取得された場合。
+            /// `Err(Error)` - エラーが発生した場合。
             fn metadata(&self) -> Result<PackageData, Error>;
         }
-        /// PathBuf に PackageMetadata トレイトを実装
+
+        /// `PathBuf`に対する`PackageMetadata`トレイトの実装です。
         impl PackageMetadata for PathBuf {
             fn metadata(&self) -> Result<PackageData, Error> {
                 metadata::get(self)
             }
         }
+
+        /// パッケージのインストール処理をまとめるモジュールです。
         pub mod install {
             use super::{Error, ExecMode};
             use std::path::PathBuf;
 
-            pub fn install(
-                file_path: &PathBuf,
-                mode: ExecMode,
-            ) -> Result<(), Error> {
-                println!(
-                    "Installing package from {:?} in mode {:?}",
-                    file_path, mode
-                );
+            /// 指定したパッケージをインストールします。
+            ///
+            /// # 引数
+            /// * `file_path` - インストールするパッケージファイルのパス。
+            /// * `mode` - インストールモード（ローカルまたはグローバル）。
+            ///
+            /// # 返り値
+            /// `Ok(())` - パッケージが正常にインストールされた場合。
+            /// `Err(Error)` - エラーが発生した場合。
+            pub fn install(file_path: &PathBuf, mode: ExecMode) -> Result<(), Error> {
+                println!("Installing package from {:?} in mode {:?}", file_path, mode);
+                // ここに実際のインストールロジックを実装
+                Ok(())
+            }
+        }
+
+        /// パッケージのアンインストール処理をまとめるモジュールです。
+        pub mod uninstall {
+            use super::Error;
+            use crate::modules::project::ExecMode; // ExecMode を使用するために追加
+
+            /// 指定したパッケージを削除します (ファイルのみ)。
+            ///
+            /// # 引数
+            /// * `package_name` - 削除するパッケージの名前。
+            /// * `mode` - 削除モード（ローカルまたはグローバル）。
+            ///
+            /// # 返り値
+            /// `Ok(())` - パッケージが正常に削除された場合。
+            /// `Err(Error)` - エラーが発生した場合。
+            pub fn remove(package_name: String, mode: ExecMode) -> Result<(), Error> {
+                println!("Removing package: {} in mode {:?}", package_name, mode);
+                // ここに実際のファイル削除ロジックを実装
+                Ok(())
+            }
+
+            /// 指定したパッケージを設定ごと完全に削除（パージ）します (ファイルと設定)。
+            ///
+            /// # 引数
+            /// * `package_name` - パージするパッケージの名前。
+            /// * `mode` - パージモード（ローカルまたはグローバル）。
+            ///
+            /// # 返り値
+            /// `Ok(())` - パッケージが正常にパージされた場合。
+            /// `Err(Error)` - エラーが発生した場合。
+            pub fn purge(package_name: String, mode: ExecMode) -> Result<(), Error> {
+                println!("Purging package: {} in mode {:?}", package_name, mode);
+                // ここに実際のファイルと設定の削除ロジックを実装
                 Ok(())
             }
         }
     }
-    /// 引数系の処理
+
+    /// 引数系の処理をまとめています。
     pub mod args {
         use super::Error;
+        /// 引数関連のユーティリティを公開します。
         pub use crate::utils::args::*;
-        /// 指定したコマンドを実行し消費する
+
+        /// 指定したコマンドを実行し消費するためのトレイトです。
         pub trait CommandExecution {
+            /// コマンドを実行します。
+            ///
+            /// # 引数
+            /// なし (self)
+            ///
+            /// # 返り値
+            /// `Ok(())` - コマンドが正常に実行された場合。
+            /// `Err(Error)` - エラーが発生した場合。
             fn exec(self) -> Result<(), Error>;
         }
+
+        /// `Commands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for Commands {
             fn exec(self) -> Result<(), Error> {
                 match self {
@@ -182,49 +353,97 @@ pub mod ipak {
                 }
             }
         }
+
+        /// `ProjectCommands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for ProjectCommands {
             fn exec(self) -> Result<(), Error> {
                 crate::modules::project::project(self)
             }
         }
+
+        /// `SystemCommands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for SystemCommands {
             fn exec(self) -> Result<(), Error> {
                 crate::modules::system::system(self)
             }
         }
+
+        /// `PkgCommands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for PkgCommands {
             fn exec(self) -> Result<(), Error> {
                 crate::modules::pkg::pkg(self)
             }
         }
+
+        /// `UtilsCommands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for UtilsCommands {
             fn exec(self) -> Result<(), Error> {
                 crate::modules::utils::utils(self)
             }
         }
     }
-    /// プロジェクト関連のモジュール
-    pub mod project {
-        // use super::Error;
-    }
-    /// 依存関係の解決モジュール
-    pub mod depend {
-        pub use crate::modules::pkg::depend::error::{
-            InstallError, RemoveError,
-        };
-        pub use crate::modules::pkg::depend::graph::{
-            DependencyGraph, DependencyGraphOperations,
-        };
-        pub use crate::modules::pkg::depend::utils::get_missing_depend_cmds; // utils モジュールも存在すると仮定
 
-        // これらの use 宣言は、prelude.rs の他の場所で必要であれば残します。
-        // ここでは depend モジュールが再エクスポートするのみなので、直接は不要です。
-        pub use crate::modules::pkg::list::{
-            InstalledPackageData, PackageListData,
-        };
-        pub use crate::modules::pkg::{
-            PackageData, PackageRange, PackageVersion,
-        };
+    /// プロジェクト関連のモジュールをまとめています。
+    pub mod project {
+        // src/modules/project.rs から主要なアイテムを再エクスポート
+        /// 実行モード（ローカルまたはグローバル）を定義する列挙型です。
+        pub use crate::modules::project::ExecMode;
+        /// 実行に使用するシェルを定義する列挙型です。
+        pub use crate::modules::project::ExecShell;
+        /// プロジェクトテンプレートのタイプを定義する列挙型です。
+        pub use crate::modules::project::ProjectTemplateType;
+        /// プロジェクト関連のコマンドを処理するメインエントリポイントです。
+        pub use crate::modules::project::project;
+        /// プロジェクトをビルドします。
+        pub use crate::modules::project::project_build;
+        /// 新しいプロジェクトを作成します。
+        pub use crate::modules::project::project_create;
+        /// プロジェクトを初期化します。
+        pub use crate::modules::project::project_init;
+        /// プロジェクトをインストールします。
+        pub use crate::modules::project::project_install;
+        /// プロジェクトのメタデータを表示します。
+        pub use crate::modules::project::project_metadata;
+        /// プロジェクトをパッケージ化します。
+        pub use crate::modules::project::project_package;
+        /// プロジェクトを完全に削除（パージ）します。
+        pub use crate::modules::project::project_purge;
+        /// プロジェクトを削除します。
+        pub use crate::modules::project::project_remove;
+        /// プロジェクトを実行します。
+        pub use crate::modules::project::project_run;
+
+        // 関連するオプション構造体もエクスポート
+        /// ビルドオプションを定義する構造体です。
+        pub use crate::modules::project::build::BuildOptions;
+        /// ビルドモード（リリースまたはデバッグ）を定義する列挙型です。
+        pub use crate::modules::project::build::BuildMode;
+        /// プロジェクト作成パラメータを定義する構造体です。
+        pub use crate::modules::project::create::ProjectParams;
+        /// インストールオプションを定義する構造体です。
+        pub use crate::modules::project::install::InstallOptions;
+        /// パッケージ化ターゲットを定義する列挙型です。
+        pub use crate::modules::project::package::PackageTarget;
+        /// パージオプションを定義する構造体です。
+        pub use crate::modules::project::purge::PurgeOptions;
+        /// 削除オプションを定義する構造体です。
+        pub use crate::modules::project::remove::RemoveOptions;
+    }
+
+    /// 依存関係の解決モジュールをまとめています。
+    pub mod depend {
+        /// インストール関連のエラーを公開します。
+        pub use crate::modules::pkg::depend::error::{InstallError, RemoveError};
+        /// 依存関係グラフの構造と操作を公開します。
+        pub use crate::modules::pkg::depend::graph::{DependencyGraph, DependencyGraphOperations};
+        /// 不足している依存コマンドを取得するユーティリティを公開します。
+        pub use crate::modules::pkg::depend::utils::get_missing_depend_cmds;
+
+        /// インストール済みパッケージデータとパッケージリストデータを公開します。
+        pub use crate::modules::pkg::list::{InstalledPackageData, PackageListData};
+        /// パッケージデータ、パッケージ範囲、パッケージバージョンを公開します。
+        pub use crate::modules::pkg::{PackageData, PackageRange, PackageVersion};
+        /// バージョンとバージョン範囲を公開します。
         pub use crate::utils::version::{Version, VersionRange};
     }
 }

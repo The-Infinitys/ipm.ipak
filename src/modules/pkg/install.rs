@@ -29,7 +29,7 @@ use tempfile::tempdir;
 /// `Ok(())` パッケージが正常にインストールされた場合。
 /// `Err(Error)` ファイルが見つからない、アーカイブの展開、ファイルの配置、またはパッケージリストの更新中にエラーが発生した場合。
 pub fn install(
-    file_path: PathBuf,
+    file_path: &PathBuf,
     install_mode: ExecMode,
 ) -> Result<(), Error> {
     let target_path = env::current_dir()?.join(&file_path);

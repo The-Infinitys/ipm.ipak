@@ -16,8 +16,8 @@ use install::InstallOptions;
 use purge::PurgeOptions;
 use remove::RemoveOptions;
 use std::{env, fs, str::FromStr};
-mod build;
-mod create;
+pub mod build;
+pub mod create;
 mod init;
 pub mod install;
 pub mod metadata;
@@ -212,7 +212,9 @@ pub fn project(args: ProjectCommands) -> Result<(), Error> {
         }
     }
 }
-fn project_run(
+
+// 以下の関数を `pub` に変更
+pub fn project_run(
     shell: Option<ExecShell>,
     command: String,
     args: Vec<String>,
@@ -227,7 +229,7 @@ fn project_run(
 /// # Returns
 /// `Ok(())` 初期化が正常に完了した場合。
 /// `Err(Error)` 初期化中にエラーが発生した場合。
-fn project_init() -> Result<(), Error> {
+pub fn project_init() -> Result<(), Error> {
     init::init().map_err(|e| Error::from(e))
 }
 
@@ -241,7 +243,7 @@ fn project_init() -> Result<(), Error> {
 /// # Returns
 /// `Ok(())` パッケージ化が正常に完了した場合。
 /// `Err(Error)` パッケージ化中にエラーが発生した場合。
-fn project_package(target: Option<PackageTarget>) -> Result<(), Error> {
+pub fn project_package(target: Option<PackageTarget>) -> Result<(), Error> {
     let package_options =
         package::PackageOptions { target: target.unwrap_or_default() };
 
@@ -259,7 +261,7 @@ fn project_package(target: Option<PackageTarget>) -> Result<(), Error> {
 /// # Returns
 /// `Ok(())` ビルドが正常に完了した場合。
 /// `Err(Error)` ビルド中にエラーが発生した場合。
-fn project_build(
+pub fn project_build(
     release: bool,
     shell: Option<ExecShell>,
 ) -> Result<(), Error> {
@@ -285,7 +287,7 @@ fn project_build(
 /// # Returns
 /// `Ok(())` インストールが正常に完了した場合。
 /// `Err(Error)` インストール中にエラーが発生した場合。
-fn project_install(
+pub fn project_install(
     global: bool,
     shell: Option<ExecShell>,
 ) -> Result<(), Error> {
@@ -311,7 +313,7 @@ fn project_install(
 /// # Returns
 /// `Ok(())` 削除が正常に完了した場合。
 /// `Err(Error)` 削除中にエラーが発生した場合。
-fn project_remove(
+pub fn project_remove(
     remove_mode: ExecMode,
     shell: Option<ExecShell>,
 ) -> Result<(), Error> {
@@ -333,7 +335,7 @@ fn project_remove(
 /// # Returns
 /// `Ok(())` パージが正常に完了した場合。
 /// `Err(Error)` パージ中にエラーが発生した場合。
-fn project_purge(
+pub fn project_purge(
     purge_mode: ExecMode,
     shell: Option<ExecShell>,
 ) -> Result<(), Error> {
@@ -351,7 +353,7 @@ fn project_purge(
 /// # Returns
 /// `Ok(())` メタデータが正常に表示された場合。
 /// `Err(Error)` メタデータの表示中にエラーが発生した場合。
-fn project_metadata() -> Result<(), Error> {
+pub fn project_metadata() -> Result<(), Error> {
     metadata::show_metadata().map_err(|e| Error::from(e))
 }
 
@@ -368,7 +370,7 @@ fn project_metadata() -> Result<(), Error> {
 /// # Returns
 /// `Ok(())` プロジェクトが正常に作成された場合。
 /// `Err(Error)` プロジェクト作成中にエラーが発生した場合。
-fn project_create(
+pub fn project_create(
     project_name: String,
     template: Option<ProjectTemplateType>,
     author_name: Option<String>,

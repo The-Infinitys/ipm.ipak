@@ -376,7 +376,7 @@ impl RelationData {
 pub fn pkg(args: PkgCommands) -> Result<(), Error> {
     match args {
         PkgCommands::Install { file_path, local, global } => {
-            install::install(file_path, (local, global).into())
+            install::install(&file_path, (local, global).into())
         }
         PkgCommands::Remove { package_name, local, global } => {
             remove::remove(package_name, (local, global).into())
