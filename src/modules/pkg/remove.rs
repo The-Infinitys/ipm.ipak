@@ -28,7 +28,8 @@ pub fn remove(
     target_pkg_names: &Vec<String>,
     uninstall_mode: ExecMode,
 ) -> Result<(), Error> {
-    let lock_manager = LockManager::new(matches!(uninstall_mode, ExecMode::Global));
+    let lock_manager =
+        LockManager::new(matches!(uninstall_mode, ExecMode::Global));
     lock_manager.acquire_lock()?;
 
     for target_pkg_name in target_pkg_names {

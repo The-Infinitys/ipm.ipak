@@ -52,4 +52,3 @@ pub fn lock_filepath() -> PathBuf {
 pub fn tasks_filepath() -> PathBuf {
     ipak_path().join("tasks")
 }
-

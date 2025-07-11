@@ -5,12 +5,14 @@ use super::super::pkg;
 use super::super::project::ExecMode;
 use super::depend;
 use crate::dprintln;
+use crate::modules::pkg::PackageData;
 use crate::modules::pkg::lock::LockManager;
 use crate::modules::project;
 use crate::modules::system::path;
 use crate::utils::archive::extract_archive;
 use crate::utils::error::Error;
 use chrono::Local;
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -33,19 +35,107 @@ pub fn install(
     file_paths: &Vec<PathBuf>,
     install_mode: ExecMode,
 ) -> Result<(), Error> {
-    let lock_manager = LockManager::new(matches!(install_mode, ExecMode::Global));
+    use super::depend::graph::DependencyGraphOperations;
+    use super::list;
+    pub trait PackageMetadata {
+        /// パスからパッケージのメタデータを取得します。
+        ///
+        /// # 引数
+        /// なし (self)
+        ///
+        /// # 返り値
+        /// `Ok(PackageData)` - メタデータが正常に取得された場合。
+        /// `Err(Error)` - エラーが発生した場合。
+        fn metadata(&self) -> Result<PackageData, Error>;
+    }
+
+    /// `PathBuf`に対する`PackageMetadata`トレイトの実装です。
+    impl PackageMetadata for PathBuf {
+        fn metadata(&self) -> Result<PackageData, Error> {
+            super::metadata::get(self)
+        }
+    }
+    /// パッケージのパスと解析済みのパッケージデータを保持する構造体です。
+    #[derive(Clone)]
+    pub struct PackageInfo {
+        /// パッケージファイルのパス。
+        pub path: PathBuf,
+        /// 解析されたパッケージデータ。
+        pub data: PackageData, // pkg::PackageData を格納
+    }
+
+    let mut package_infos: Vec<PackageInfo> =
+        Vec::with_capacity(file_paths.len());
+    let mut package_info_map: HashMap<String, PackageInfo> =
+        HashMap::new();
+
+    for path in file_paths {
+        if !path.is_file() {
+            return Err(Error::from(std::io::ErrorKind::NotFound));
+        }
+
+        let package_data = path.metadata()?;
+        let pkg_info =
+            PackageInfo { path: path.to_path_buf(), data: package_data };
+        package_info_map.insert(
+            pkg_info.data.about.package.name.clone(),
+            pkg_info.clone(),
+        );
+        package_infos.push(pkg_info);
+    }
+
+    let installed_packages = match install_mode {
+        ExecMode::Global => list::get_global(),
+        ExecMode::Local => list::get_local(),
+    }?;
+
+    let base_graph = depend::DependencyGraph::from_installed_packages(
+        &installed_packages,
+    );
+
+    let installing_package_data: Vec<PackageData> =
+        package_infos.iter().map(|pi| pi.data.clone()).collect();
+
+    let sorted_package_data = base_graph
+        .topological_sort_packages_for_install(&installing_package_data)?;
+
+    let sorted_package_infos: Vec<PackageInfo> = sorted_package_data
+        .iter()
+        .filter_map(|pkg_data| {
+            package_info_map.remove(&pkg_data.about.package.name)
+        })
+        .collect();
+
+    let temp_graph =
+        base_graph.with_additional_packages(&sorted_package_data);
+
+    temp_graph.is_packages_installable(sorted_package_data.clone())?;
+
+    let file_paths: Vec<PathBuf> = sorted_package_infos
+        .iter()
+        .map(|info| info.path.clone())
+        .collect();
+
+    let lock_manager =
+        LockManager::new(matches!(install_mode, ExecMode::Global));
     lock_manager.acquire_lock()?;
 
     for file_path in file_paths {
         let target_path = env::current_dir()?.join(file_path);
 
         if !target_path.is_file() {
-            eprintln!("Couldn't find target file: {}", target_path.display());
+            eprintln!(
+                "Couldn't find target file: {}",
+                target_path.display()
+            );
             return Err(Error::from(std::io::ErrorKind::NotFound));
         }
 
         let temp_dir = tempdir()?;
-        dprintln!("Created temp directory at {}", temp_dir.path().display());
+        dprintln!(
+            "Created temp directory at {}",
+            temp_dir.path().display()
+        );
 
         let pkg_archive_in_temp = temp_dir.path().join(
             target_path.file_name().ok_or_else(|| {
@@ -67,7 +157,10 @@ pub fn install(
             pkg_archive_in_temp.display(),
             temp_dir.path().display()
         );
-        extract_archive(&pkg_archive_in_temp, &temp_dir.path().to_path_buf())?;
+        extract_archive(
+            &pkg_archive_in_temp,
+            &temp_dir.path().to_path_buf(),
+        )?;
         fs::remove_file(&pkg_archive_in_temp)?;
 
         let install_process_result = {
@@ -216,8 +309,11 @@ fn installation_process(
             Ok(package_data)
         }
         Err(e) => {
-            eprintln!("You cannot install this package.
-{}", e);
+            eprintln!(
+                "You cannot install this package.
+{}",
+                e
+            );
             Err(std::io::Error::new(std::io::ErrorKind::Unsupported, e))
         }
     }

@@ -22,10 +22,10 @@ use std::fmt::Display;
 pub mod depend;
 pub mod install;
 pub mod list;
+pub mod lock;
 pub mod metadata;
 pub mod purge;
 pub mod remove;
-pub mod lock;
 /// パッケージのインストールモードを定義する列挙型。
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum Mode {

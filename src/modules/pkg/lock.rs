@@ -17,7 +17,6 @@ const LOCK_TIMEOUT: Duration = Duration::from_secs(60); // 1 minute
 pub struct LockManager {
     lock_path: PathBuf,
     tasks_path: PathBuf,
-    is_global: bool,
 }
 
 impl LockManager {
@@ -31,13 +30,11 @@ impl LockManager {
             Self {
                 lock_path: global::lock_filepath(),
                 tasks_path: global::tasks_filepath(),
-                is_global,
             }
         } else {
             Self {
                 lock_path: local::lock_filepath(),
                 tasks_path: local::tasks_filepath(),
-                is_global,
             }
         }
     }
