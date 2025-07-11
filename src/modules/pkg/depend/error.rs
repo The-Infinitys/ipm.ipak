@@ -1,14 +1,15 @@
 use std::fmt;
+use crate::modules::pkg::{PackageRange}; // PackageRange を使用するために追加
 
 #[derive(Debug)]
 pub enum InstallError {
     MissingDependencies {
         package: String,
-        missing: Vec<Vec<super::PackageRange>>,
+        missing: Vec<Vec<PackageRange>>,
     },
     ConflictsWithInstalled {
         package: String,
-        conflicts: Vec<super::PackageRange>,
+        conflicts: Vec<PackageRange>,
     },
     ConflictsWithOtherPackages {
         package: String,
@@ -17,6 +18,9 @@ pub enum InstallError {
     MissingSystemCommands {
         package: String,
         missing_cmds: Vec<String>,
+    },
+    CyclicDependencies {
+        packages: Vec<String>,
     },
 }
 
@@ -58,6 +62,13 @@ impl fmt::Display for InstallError {
                     f,
                     "Package {} requires unavailable system commands: {:?}",
                     package, missing_cmds
+                )
+            }
+            InstallError::CyclicDependencies { packages } => {
+                write!(
+                    f,
+                    "Cyclic dependencies detected among packages: {:?}",
+                    packages
                 )
             }
         }

@@ -1,18 +1,33 @@
-use super::error::{InstallError, RemoveError};
-use super::utils;
+use std::collections::{HashMap, HashSet, VecDeque};
+use chrono::Local;
+
 use crate::utils::version::Version;
 use crate::modules::pkg::list::{InstalledPackageData, PackageListData};
 use crate::modules::pkg::{PackageData, PackageRange};
-use std::collections::{HashMap, HashSet};
+use super::error::{InstallError, RemoveError}; // 同じモジュール内のエラーをインポート
+use super::utils; // utils::get_missing_depend_cmds を使用
 
 #[derive(Clone)]
 pub struct DependencyGraph {
-    available_packages: HashMap<String, HashSet<Version>>,
-    real_packages: HashMap<String, HashSet<Version>>,
-    installed_package_data: Vec<InstalledPackageData>,
+    pub available_packages: HashMap<String, HashSet<Version>>,
+    pub real_packages: HashMap<String, HashSet<Version>>,
+    pub installed_package_data: Vec<InstalledPackageData>,
 }
 
 impl DependencyGraph {
+    /// 空のDependencyGraphを作成します。
+    ///
+    /// # Returns
+    ///
+    /// 新しい空の `DependencyGraph` インスタンス。
+    pub fn new() -> Self {
+        Self {
+            available_packages: HashMap::new(),
+            real_packages: HashMap::new(),
+            installed_package_data: Vec::new(),
+        }
+    }
+
     pub fn from_installed_packages(installed_packages: &PackageListData) -> Self {
         let mut real_packages = HashMap::new();
         let mut available_packages = HashMap::new();
@@ -48,37 +63,8 @@ impl DependencyGraph {
         &self.available_packages
     }
 
-    fn with_additional_packages(&self, additional_packages: &[PackageData]) -> Self {
-        let mut new_graph = self.clone();
-
-        for package in additional_packages {
-            let name = package.about.package.name.clone();
-            let version = package.about.package.version.clone();
-
-            new_graph.real_packages.entry(name.clone()).or_default().insert(version.clone());
-            new_graph.available_packages.entry(name).or_default().insert(version.clone());
-
-            for virtual_pkg in &package.relation.virtuals {
-                let v_name = virtual_pkg.name.clone();
-                let v_version = virtual_pkg.version.clone();
-                new_graph.available_packages.entry(v_name).or_default().insert(v_version);
-            }
-
-            new_graph.installed_package_data.push(InstalledPackageData {
-                info: package.clone(),
-                last_modified: chrono::Local::now(),
-            });
-        }
-
-        new_graph
-    }
-
-    fn without_packages(&self, packages_to_remove: &[&str]) -> Self {
-        let mut new_graph = DependencyGraph {
-            available_packages: HashMap::new(),
-            real_packages: HashMap::new(),
-            installed_package_data: Vec::new(),
-        };
+    pub fn without_packages(&self, packages_to_remove: &[&str]) -> Self {
+        let mut new_graph = DependencyGraph::new();
 
         for package in &self.installed_package_data {
             let pkg_name = &package.info.about.package.name;
@@ -154,7 +140,9 @@ impl DependencyGraph {
     }
 
     pub fn is_packages_installable(&self, installing_packages: Vec<PackageData>) -> Result<(), InstallError> {
+        // `with_additional_packages` はトレイトメソッドとして呼び出す
         let temp_graph = self.with_additional_packages(&installing_packages);
+
 
         for package in &installing_packages {
             let missing_cmds = utils::get_missing_depend_cmds(&package.relation);
@@ -221,5 +209,128 @@ impl DependencyGraph {
         }
 
         Ok(())
+    }
+}
+
+/// DependencyGraph の拡張操作を定義するトレイト
+pub trait DependencyGraphOperations {
+    /// 指定されたパッケージを追加した新しいDependencyGraphを返します。
+    fn with_additional_packages(&self, additional_packages: &[PackageData]) -> Self;
+
+    /// インストール対象のパッケージを依存関係に基づいてトポロジカルソートします。
+    /// 既にインストールされているパッケージを考慮し、未解決の依存関係がある場合はエラーを返します。
+    ///
+    /// # Arguments
+    /// * `packages_to_sort` - ソート対象のパッケージデータのリスト。
+    ///
+    /// # Returns
+    /// ソートされたパッケージデータのリスト、または解決できない依存関係がある場合のエラー。
+    fn topological_sort_packages_for_install(
+        &self,
+        packages_to_sort: &[PackageData],
+    ) -> Result<Vec<PackageData>, InstallError>;
+}
+
+// DependencyGraphOperations トレイトを DependencyGraph に実装
+impl DependencyGraphOperations for DependencyGraph {
+    fn with_additional_packages(&self, additional_packages: &[PackageData]) -> Self {
+        let mut new_graph = self.clone();
+
+        for package in additional_packages {
+            let name = package.about.package.name.clone();
+            let version = package.about.package.version.clone();
+
+            new_graph.real_packages.entry(name.clone()).or_default().insert(version.clone());
+            new_graph.available_packages.entry(name).or_default().insert(version.clone());
+
+            for virtual_pkg in &package.relation.virtuals {
+                let v_name = virtual_pkg.name.clone();
+                let v_version = virtual_pkg.version.clone();
+                new_graph.available_packages.entry(v_name).or_default().insert(v_version);
+            }
+
+            new_graph.installed_package_data.push(InstalledPackageData {
+                info: package.clone(),
+                last_modified: Local::now(),
+            });
+        }
+
+        new_graph
+    }
+
+    fn topological_sort_packages_for_install(
+        &self,
+        packages_to_sort: &[PackageData],
+    ) -> Result<Vec<PackageData>, InstallError> {
+        let mut sorted_list = Vec::new();
+        let mut in_degree: HashMap<String, usize> = HashMap::new();
+        let mut adj_list: HashMap<String, Vec<String>> = HashMap::new();
+
+        let mut package_map: HashMap<String, PackageData> = HashMap::new();
+        for pkg in packages_to_sort {
+            package_map.insert(pkg.about.package.name.clone(), pkg.clone());
+        }
+
+        for pkg in packages_to_sort {
+            let pkg_name = &pkg.about.package.name;
+            in_degree.entry(pkg_name.clone()).or_insert(0);
+
+            for dep_group in &pkg.relation.depend {
+                let mut group_satisfied_by_installed = false;
+                for dep in dep_group {
+                    if self.is_dependency_satisfied(dep) {
+                        group_satisfied_by_installed = true;
+                        break;
+                    }
+                }
+
+                if !group_satisfied_by_installed {
+                    let mut depends_on_internal = false;
+                    for dep in dep_group {
+                        if package_map.contains_key(&dep.name) {
+                            adj_list.entry(dep.name.clone()).or_default().push(pkg_name.clone());
+                            depends_on_internal = true;
+                        }
+                    }
+                    if depends_on_internal {
+                        in_degree.entry(pkg_name.clone()).and_modify(|e| *e += 1);
+                    }
+                }
+            }
+        }
+
+        let mut queue: VecDeque<String> = VecDeque::new();
+        for (pkg_name, &degree) in &in_degree {
+            if degree == 0 {
+                queue.push_back(pkg_name.clone());
+            }
+        }
+
+        while let Some(pkg_name) = queue.pop_front() {
+            if let Some(pkg_data) = package_map.get(&pkg_name) {
+                sorted_list.push(pkg_data.clone());
+            }
+
+            if let Some(dependents) = adj_list.get(&pkg_name) {
+                for dependent_pkg_name in dependents {
+                    *in_degree.get_mut(dependent_pkg_name).unwrap() -= 1;
+                    if *in_degree.get(dependent_pkg_name).unwrap() == 0 {
+                        queue.push_back(dependent_pkg_name.clone());
+                    }
+                }
+            }
+        }
+
+        if sorted_list.len() != packages_to_sort.len() {
+            let missing_packages: Vec<String> = packages_to_sort
+                .iter()
+                .filter(|pkg| !sorted_list.iter().any(|s_pkg| s_pkg.about.package.name == pkg.about.package.name))
+                .map(|pkg| pkg.about.package.name.clone())
+                .collect();
+
+            return Err(InstallError::CyclicDependencies { packages: missing_packages });
+        }
+
+        Ok(sorted_list)
     }
 }

@@ -1,4 +1,3 @@
-use crate::modules::pkg::PackageRange;
 
 // モジュールの宣言
 pub mod error;
