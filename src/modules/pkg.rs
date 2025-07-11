@@ -22,7 +22,6 @@ use std::fmt::Display;
 pub mod depend;
 pub mod install;
 pub mod list;
-pub mod manage;
 pub mod metadata;
 pub mod purge;
 pub mod remove;
