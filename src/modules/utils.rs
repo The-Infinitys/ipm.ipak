@@ -36,11 +36,11 @@ fn archive(args: ArchiveCommands) -> Result<(), Error> {
     match args {
         ArchiveCommands::Create { from, to, archive_type } => {
             create_archive(&from, &to, archive_type)
-                .map_err(|e| Error::from(e))?
+                .map_err(Error::from)?
         }
         ArchiveCommands::Extract { from, to } => {
             extract_archive(&from, &to)
-                .map_err(|e| Error::from(e))?
+                .map_err(Error::from)?
         }
     }
     Ok(())

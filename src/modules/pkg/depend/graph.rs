@@ -14,6 +14,12 @@ pub struct DependencyGraph {
     pub installed_package_data: Vec<InstalledPackageData>,
 }
 
+impl Default for DependencyGraph {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DependencyGraph {
     /// 空のDependencyGraphを作成します。
     ///

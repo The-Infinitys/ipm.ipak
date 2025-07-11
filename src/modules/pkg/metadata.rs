@@ -13,7 +13,7 @@ use std::path::PathBuf;
 use tempfile::tempdir;
 
 pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
-    let target_path = env::current_dir()?.join(&target_path);
+    let target_path = env::current_dir()?.join(target_path);
 
     if !target_path.is_file() {
         return Err(std::io::Error::new(
@@ -69,7 +69,7 @@ pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
         );
         result
     };
-    metadata_process_result.map_err(|e| Error::from(e))
+    metadata_process_result.map_err(Error::from)
 }
 /// 指定されたパッケージアーカイブからメタデータを抽出し、表示します。
 ///

@@ -46,7 +46,7 @@ pub fn username() -> String {
 
     if cfg!(target_os = "windows") {
         // Windowsの場合、出力は通常 'DOMAIN\username' 形式
-        username.split('\\').last().unwrap_or("").trim().to_string()
+        username.split('\\').next_back().unwrap_or("").trim().to_string()
     } else {
         // Linux/macOSの場合、出力は直接ユーザー名
         username.trim().to_string()
@@ -75,7 +75,7 @@ pub fn shell_type() -> String {
     env::var("SHELL")
         .unwrap_or_else(|_| "unknown".to_string())
         .split('/')
-        .last()
+        .next_back()
         .unwrap_or("unknown")
         .to_string()
 }
@@ -175,14 +175,12 @@ pub fn pager(target_string: String) {
         .wait_with_output()
         .expect("failed to wait for pager process");
 
-    if !output.status.success() {
-        if !output.stderr.is_empty() {
-            eprintln!(
-                "Pager '{}' exited with error: {}",
-                pager_command_str,
-                String::from_utf8_lossy(&output.stderr)
-            );
-        }
+    if !output.status.success() && !output.stderr.is_empty() {
+        eprintln!(
+            "Pager '{}' exited with error: {}",
+            pager_command_str,
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 }
 

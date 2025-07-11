@@ -45,7 +45,7 @@ pub mod ipak {
         ) -> Result<ArchiveType, Error> {
             let target_path = env::current_dir()?.join(path);
             archive::get_archive_type(&target_path)
-                .map_err(|e| Error::from(e))
+                .map_err(Error::from)
         }
 
         /// 指定したパスからアーカイブを作成します。
@@ -64,7 +64,7 @@ pub mod ipak {
             archive_type: ArchiveType,
         ) -> Result<(), Error> {
             archive::create_archive(from, to, archive_type)
-                .map_err(|e| Error::from(e))
+                .map_err(Error::from)
         }
 
         /// 指定したアーカイブを解凍します。
@@ -80,7 +80,7 @@ pub mod ipak {
             from: &PathBuf,
             to: &PathBuf,
         ) -> Result<(), Error> {
-            archive::extract_archive(from, to).map_err(|e| Error::from(e))
+            archive::extract_archive(from, to).map_err(Error::from)
         }
     }
 

@@ -229,7 +229,7 @@ impl Display for RelationData {
             color: fn(&str) -> String,
         ) -> String {
             if group.len() == 1 {
-                format!("{}", color(&group[0].to_string()))
+                color(&group[0].to_string()).to_string()
             } else {
                 let alts: Vec<String> =
                     group.iter().map(|d| d.to_string()).collect();

@@ -227,24 +227,22 @@ pub fn create_archive(
                             )
                         })?
                         .replace('\\', "/")
+                } else if relative == Path::new("") {
+                    dir_name.unwrap().to_string()
                 } else {
-                    if relative == Path::new("") {
-                        dir_name.unwrap().to_string()
-                    } else {
-                        format!(
-                            "{}/{}",
-                            dir_name.unwrap(),
-                            relative
-                                .to_str()
-                                .ok_or_else(|| {
-                                    std::io::Error::new(
-                                        std::io::ErrorKind::InvalidData,
-                                        "Invalid path encoding",
-                                    )
-                                })?
-                                .replace('\\', "/")
-                        )
-                    }
+                    format!(
+                        "{}/{}",
+                        dir_name.unwrap(),
+                        relative
+                            .to_str()
+                            .ok_or_else(|| {
+                                std::io::Error::new(
+                                    std::io::ErrorKind::InvalidData,
+                                    "Invalid path encoding",
+                                )
+                            })?
+                            .replace('\\', "/")
+                    )
                 };
                 if path.is_file() {
                     let mut f = File::open(path)?;
@@ -428,24 +426,22 @@ fn add_directory_contents<B: Write>(
                     })?
                     .replace('\\', "/")
             }
+        } else if relative == Path::new("") {
+            dir_name.unwrap().to_string()
         } else {
-            if relative == Path::new("") {
-                dir_name.unwrap().to_string()
-            } else {
-                format!(
-                    "{}/{}",
-                    dir_name.unwrap(),
-                    relative
-                        .to_str()
-                        .ok_or_else(|| {
-                            std::io::Error::new(
-                                std::io::ErrorKind::InvalidData,
-                                "Invalid path encoding",
-                            )
-                        })?
-                        .replace('\\', "/")
-                )
-            }
+            format!(
+                "{}/{}",
+                dir_name.unwrap(),
+                relative
+                    .to_str()
+                    .ok_or_else(|| {
+                        std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "Invalid path encoding",
+                        )
+                    })?
+                    .replace('\\', "/")
+            )
         };
 
         if name.is_empty() {

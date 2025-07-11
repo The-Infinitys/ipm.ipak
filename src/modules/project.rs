@@ -219,7 +219,7 @@ pub fn project_run(
     command: String,
     args: Vec<String>,
 ) -> Result<(), Error> {
-    run::run(shell, &command, args).map_err(|e| Error::from(e))
+    run::run(shell, &command, args).map_err(Error::from)
 }
 
 /// プロジェクトを初期化します。
@@ -230,7 +230,7 @@ pub fn project_run(
 /// `Ok(())` 初期化が正常に完了した場合。
 /// `Err(Error)` 初期化中にエラーが発生した場合。
 pub fn project_init() -> Result<(), Error> {
-    init::init().map_err(|e| Error::from(e))
+    init::init().map_err(Error::from)
 }
 
 /// プロジェクトをパッケージ化します。
@@ -247,7 +247,7 @@ pub fn project_package(target: Option<PackageTarget>) -> Result<(), Error> {
     let package_options =
         package::PackageOptions { target: target.unwrap_or_default() };
 
-    package::package(package_options).map_err(|e| Error::from(e))
+    package::package(package_options).map_err(Error::from)
 }
 
 /// プロジェクトをビルドします。
@@ -273,7 +273,7 @@ pub fn project_build(
         },
         build_shell: shell.unwrap_or_default(),
     };
-    build::build(build_options).map_err(|e| Error::from(e))
+    build::build(build_options).map_err(Error::from)
 }
 
 /// プロジェクトをインストールします。
@@ -299,7 +299,7 @@ pub fn project_install(
             ExecMode::Local
         },
     };
-    install::install(install_options).map_err(|e| Error::from(e))
+    install::install(install_options).map_err(Error::from)
 }
 
 /// プロジェクトを削除します。
@@ -321,7 +321,7 @@ pub fn project_remove(
         remove_shell: shell.unwrap_or_default(),
         remove_mode,
     };
-    remove::remove(remove_options).map_err(|e| Error::from(e))
+    remove::remove(remove_options).map_err(Error::from)
 }
 
 /// プロジェクトを完全に削除（パージ）します。
@@ -343,7 +343,7 @@ pub fn project_purge(
         purge_shell: shell.unwrap_or_default(),
         purge_mode,
     };
-    purge::purge(purge_options).map_err(|e| Error::from(e))
+    purge::purge(purge_options).map_err(Error::from)
 }
 
 /// プロジェクトのメタデータを表示します。
@@ -354,7 +354,7 @@ pub fn project_purge(
 /// `Ok(())` メタデータが正常に表示された場合。
 /// `Err(Error)` メタデータの表示中にエラーが発生した場合。
 pub fn project_metadata() -> Result<(), Error> {
-    metadata::show_metadata().map_err(|e| Error::from(e))
+    metadata::show_metadata().map_err(Error::from)
 }
 
 /// 新しいプロジェクトを作成します。

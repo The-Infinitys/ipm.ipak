@@ -32,7 +32,7 @@ pub fn install(
     file_path: &PathBuf,
     install_mode: ExecMode,
 ) -> Result<(), Error> {
-    let target_path = env::current_dir()?.join(&file_path);
+    let target_path = env::current_dir()?.join(file_path);
 
     if !target_path.is_file() {
         eprintln!("Couldn't find target file: {}", target_path.display());
