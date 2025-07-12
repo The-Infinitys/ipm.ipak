@@ -83,7 +83,7 @@ pub fn extract_archive(
     from: &PathBuf,
     to: &PathBuf,
 ) -> Result<(), std::io::Error> {
-    dprintln!(
+    log::debug!(
         "Extracting archive from: {} to: {}",
         from.display(),
         to.display()
@@ -164,7 +164,7 @@ pub fn create_archive(
     to: &PathBuf,
     archive_type: ArchiveType,
 ) -> Result<(), std::io::Error> {
-    dprintln!(
+    log::debug!(
         "Creating archive from: {} to: {} with type: {}",
         from.display(),
         to.display(),

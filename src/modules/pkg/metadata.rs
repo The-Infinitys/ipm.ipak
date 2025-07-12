@@ -2,7 +2,6 @@
 //! パッケージアーカイブからメタデータを抽出し、表示します。
 
 use super::super::pkg;
-use crate::dprintln;
 use crate::modules::pkg::PackageData;
 use crate::modules::project;
 use crate::utils::archive::extract_archive;
@@ -27,7 +26,7 @@ pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
     }
 
     let temp_dir = tempdir()?;
-    dprintln!("Created temp directory at {}", temp_dir.path().display());
+    log::debug!("Created temp directory at {}", temp_dir.path().display());
 
     let pkg_archive_in_temp = temp_dir.path().join(
         target_path.file_name().ok_or_else(|| {
@@ -39,12 +38,12 @@ pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
     );
 
     fs::copy(&target_path, &pkg_archive_in_temp)?;
-    dprintln!(
+    log::debug!(
         "Copied package to temp directory: {}",
         pkg_archive_in_temp.display()
     );
 
-    dprintln!(
+    log::debug!(
         "Extracting archive from {} to {}",
         pkg_archive_in_temp.display(),
         temp_dir.path().display()
@@ -55,7 +54,7 @@ pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
     let metadata_process_result = {
         let original_cwd = env::current_dir()?;
         env::set_current_dir(temp_dir.path())?;
-        dprintln!(
+        log::debug!(
             "Changed current directory to {}",
             temp_dir.path().display()
         );
@@ -63,7 +62,7 @@ pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
         let result = metadata_process();
 
         env::set_current_dir(&original_cwd)?;
-        dprintln!(
+        log::debug!(
             "Restored current directory to {}",
             original_cwd.display()
         );

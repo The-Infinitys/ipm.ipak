@@ -23,7 +23,7 @@ pub struct ConfigureOptions {
 /// `Ok(())` 設定が正常に完了した場合。
 /// `Err(Error)` 設定中にエラーが発生した場合。
 pub fn configure(opts: ConfigureOptions) -> Result<(), Error> {
-    dprintln!(
+    log::debug!(
         "Configuring project in {:?} mode using {:?} shell",
         opts.configure_mode,
         opts.configure_shell
@@ -35,7 +35,7 @@ pub fn configure(opts: ConfigureOptions) -> Result<(), Error> {
     let status = command.status()?;
 
     if status.success() {
-        dprintln!("Project configured successfully.");
+        log::debug!("Project configured successfully.");
         Ok(())
     } else {
         Err(Error::from(std::io::Error::new(

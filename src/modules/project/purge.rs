@@ -49,7 +49,7 @@ impl Display for PurgeOptions {
 /// `Ok(())` パージが正常に完了した場合。
 /// `Err(String)` パージ中にエラーが発生した場合。
 pub fn purge(opts: PurgeOptions) -> Result<(), String> {
-    dprintln!("{}", &opts);
+    log::debug!("{}", &opts);
 
     let target_dir = metadata::get_dir().map_err(|_| {
         "Error: Couldn't find Ipak Directory. Make sure you are in an ipak project.".to_string()

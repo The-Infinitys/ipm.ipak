@@ -16,7 +16,7 @@ pub fn get_dir() -> Result<PathBuf, io::Error> {
     let mut current_path = env::current_dir()?;
     loop {
         let metadata_path = current_path.join("ipak/project.yaml");
-        dprintln!("{}", metadata_path.display());
+        log::debug!("{}", metadata_path.display());
         if is_file_exists(metadata_path.to_str().ok_or_else(|| {
             io::Error::new(
                 io::ErrorKind::InvalidInput,
@@ -25,7 +25,7 @@ pub fn get_dir() -> Result<PathBuf, io::Error> {
         })?) {
             return Ok(current_path);
         } else {
-            dprintln!(
+            log::debug!(
                 "Not found project.yaml in {}",
                 current_path.display()
             );
@@ -135,7 +135,7 @@ pub fn write(package_data: &PackageData) -> Result<(), io::Error> {
         )
     })?;
 
-    dprintln!(
+    log::debug!(
         "Successfully wrote project metadata to {}",
         metadata_path.display()
     );
@@ -154,7 +154,7 @@ pub fn from_current() -> Result<PackageData, io::Error> {
     let current_dir = env::current_dir()?;
     let metadata_path = current_dir.join("ipak/project.yaml");
 
-    dprintln!("Attempting to read from: {}", metadata_path.display());
+    log::debug!("Attempting to read from: {}", metadata_path.display());
 
     if !is_file_exists(metadata_path.to_str().ok_or_else(|| {
         io::Error::new(
@@ -215,7 +215,7 @@ pub fn to_current(package_data: &PackageData) -> Result<(), io::Error> {
     })?;
     std::fs::create_dir_all(parent_dir)?;
 
-    dprintln!("Attempting to write to: {}", metadata_path.display());
+    log::debug!("Attempting to write to: {}", metadata_path.display());
 
     let yaml_string =
         serde_yaml::to_string(package_data).map_err(|e| {
@@ -236,7 +236,7 @@ pub fn to_current(package_data: &PackageData) -> Result<(), io::Error> {
         )
     })?;
 
-    dprintln!(
+    log::debug!(
         "Successfully wrote project metadata to {}",
         metadata_path.display()
     );

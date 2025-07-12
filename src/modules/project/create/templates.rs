@@ -110,11 +110,11 @@ pub fn rust(pkg_data: PackageData) -> Result<PackageData, io::Error> {
         })?;
     if !shell::is_cmd_available("cargo") {
         let rustup_url = "https://www.rust-lang.org/tools/install";
-        eprintln!("Error: 'cargo' command not found.");
-        eprintln!(
+        log::error!("Error: 'cargo' command not found.");
+        log::error!(
             "To create a Rust project, you need to install Cargo (Rust's package manager)."
         );
-        eprintln!(
+        log::error!(
             "Please visit {} for installation instructions.",
             rustup_url
         );
@@ -192,11 +192,11 @@ pub fn rust(pkg_data: PackageData) -> Result<PackageData, io::Error> {
 pub fn python(pkg_data: PackageData) -> Result<PackageData, io::Error> {
     if !shell::is_cmd_available("python3") {
         let python_url = "https://www.python.org/downloads/";
-        eprintln!("Error: 'python3' command not found.");
-        eprintln!(
+        log::error!("Error: 'python3' command not found.");
+        log::error!(
             "To create a Python project, you need to install Python 3."
         );
-        eprintln!(
+        log::error!(
             "Please visit {} for installation instructions.",
             python_url
         );
@@ -224,7 +224,7 @@ pub fn python(pkg_data: PackageData) -> Result<PackageData, io::Error> {
             venv_status
         )));
     }
-    eprintln!(
+    log::error!(
         "Virtual environment 'venv' created successfully in the current directory."
     );
 
@@ -297,9 +297,9 @@ pub fn dotnet(pkg_data: PackageData) -> Result<PackageData, io::Error> {
     let mut pkg_data = pkg_data;
     if !shell::is_cmd_available("dotnet") {
         let dotnet_url = "https://dotnet.microsoft.com/download";
-        eprintln!("Error: 'dotnet' command not found.");
-        eprintln!("To create a .NET project, you need to install .NET");
-        eprintln!("For more information, please visit {}.", dotnet_url);
+        log::error!("Error: 'dotnet' command not found.");
+        log::error!("To create a .NET project, you need to install .NET");
+        log::error!("For more information, please visit {}.", dotnet_url);
         return Err(Error::new(
             ErrorKind::NotFound,
             "dotnet command not found. Please install .NET.",
@@ -375,9 +375,9 @@ pub fn clang(pkg_data: PackageData) -> Result<PackageData, io::Error> {
     let mut pkg_data = pkg_data;
     if !shell::is_cmd_available("cmake") {
         let clang_url = "https://clang.llvm.org/download.html";
-        eprintln!("Error: 'clang' command not found.");
-        eprintln!("To create a C++ project, you need to install clang");
-        eprintln!("For more information, please visit {}.", clang_url);
+        log::error!("Error: 'clang' command not found.");
+        log::error!("To create a C++ project, you need to install clang");
+        log::error!("For more information, please visit {}.", clang_url);
         return Err(Error::new(
             ErrorKind::NotFound,
             "clang command not found. Please install clang.",

@@ -49,7 +49,7 @@ impl Display for RemoveOptions {
 /// `Ok(())` 削除が正常に完了した場合。
 /// `Err(String)` 削除中にエラーが発生した場合。
 pub fn remove(opts: RemoveOptions) -> Result<(), String> {
-    dprintln!("{}", &opts);
+    log::debug!("{}", &opts);
 
     let target_dir = metadata::get_dir().map_err(|_| {
         "Error: Couldn't find Ipak Directory. Make sure you are in a project directory or Ipak is installed."

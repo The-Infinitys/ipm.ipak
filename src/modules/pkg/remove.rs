@@ -55,7 +55,7 @@ pub fn remove(
         };
 
         if !final_pkg_destination_path.exists() {
-            eprintln!(
+            log::error!(
                 "Package not found at: {}",
                 final_pkg_destination_path.display()
             );
@@ -108,7 +108,7 @@ fn uninstall_package(
     }
 
     env::set_current_dir(final_pkg_destination_path)?;
-    dprintln!(
+    log::debug!(
         "Changed current directory to {}",
         final_pkg_destination_path.display()
     );
@@ -116,7 +116,7 @@ fn uninstall_package(
     let result = uninstall_process(pkg_name, uninstall_mode);
 
     env::set_current_dir(&original_cwd)?;
-    dprintln!("Restored current directory to {}", original_cwd.display());
+    log::debug!("Restored current directory to {}", original_cwd.display());
 
     result
 }
@@ -137,11 +137,11 @@ fn remove_package_from_list(
     match uninstall_mode {
         ExecMode::Local => {
             pkg::list::del_pkg_local(pkg_name)?;
-            dprintln!("Removed package '{}' from local list.", pkg_name);
+            log::debug!("Removed package '{}' from local list.", pkg_name);
         }
         ExecMode::Global => {
             pkg::list::del_pkg_global(pkg_name)?;
-            dprintln!("Removed package '{}' from global list.", pkg_name);
+            log::debug!("Removed package '{}' from global list.", pkg_name);
         }
     }
     Ok(())
@@ -183,7 +183,7 @@ fn uninstall_process(
             Ok(())
         }
         Err(e) => {
-            eprintln!("You cannot uninstall this package.\n{}", e);
+            log::error!("You cannot uninstall this package.\n{}", e);
             Err(std::io::Error::new(std::io::ErrorKind::Unsupported, e))
         }
     }

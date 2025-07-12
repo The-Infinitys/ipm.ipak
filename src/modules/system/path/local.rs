@@ -13,7 +13,7 @@ use std::path::PathBuf;
 /// ユーザーのホームディレクトリへの`PathBuf`。
 fn home_path() -> PathBuf {
     let home_path_str = env::var("HOME").unwrap_or_else(|_| {
-        eprintln!("Error: HOME environment variable not set. Attempting to use username.");
+        log::error!("Error: HOME environment variable not set. Attempting to use username.");
         let username = shell::username();
         format!("/home/{}", username)
     });

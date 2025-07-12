@@ -313,7 +313,7 @@ pub fn add_pkg_local(
         {
             data.installed_packages[i] = new_pkg.clone();
             found = true;
-            eprintln!(
+            log::error!(
                 "{} Package '{}' already exists locally. Updating its data.",
                 "Info:".blue().bold(),
                 data.installed_packages[i].info.about.package.name
@@ -324,7 +324,7 @@ pub fn add_pkg_local(
 
     if !found {
         data.installed_packages.push(new_pkg);
-        eprintln!(
+        log::error!(
             "{} Package added to local list.",
             "Info:".blue().bold()
         );
@@ -355,7 +355,7 @@ pub fn add_pkg_global(
         {
             data.installed_packages[i] = new_pkg.clone();
             found = true;
-            eprintln!(
+            log::error!(
                 "{} Package '{}' already exists globally. Updating its data.",
                 "Info:".blue().bold(),
                 data.installed_packages[i].info.about.package.name
@@ -366,7 +366,7 @@ pub fn add_pkg_global(
 
     if !found {
         data.installed_packages.push(new_pkg);
-        eprintln!(
+        log::error!(
             "{} Package added to global list.",
             "Info:".blue().bold()
         );
@@ -395,7 +395,7 @@ pub fn del_pkg_local(package_name: &str) -> Result<bool, io::Error> {
         apply_local(data)?;
         Ok(true)
     } else {
-        eprintln!(
+        log::error!(
             "{} Package '{}' not found in local installations.",
             "Warning:".yellow().bold(),
             package_name
@@ -423,7 +423,7 @@ pub fn del_pkg_global(package_name: &str) -> Result<bool, io::Error> {
         apply_global(data)?;
         Ok(true)
     } else {
-        eprintln!(
+        log::error!(
             "{} Package '{}' not found in global installations.",
             "Warning:".yellow().bold(),
             package_name

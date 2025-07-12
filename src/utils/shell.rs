@@ -26,7 +26,7 @@ pub fn is_cmd_available(cmd: &str) -> bool {
             }
         }
         Err(e) => {
-            eprintln!("PATH環境変数の読み取りに失敗しました: {}", e);
+            log::error!("PATH環境変数の読み取りに失敗しました: {}", e);
         }
     }
     false
@@ -126,7 +126,7 @@ pub fn pager(target_string: String) {
 
     // 特定の引数でページャーの起動に失敗した場合、引数なしで再試行
     if let Err(ref e) = child_result {
-        eprintln!(
+        log::error!(
             "Warning: Pager '{}' failed to start with specific arguments ({}). Retrying without arguments.",
             pager_command_str, e
         );
@@ -137,7 +137,7 @@ pub fn pager(target_string: String) {
     let mut child = match child_result {
         Ok(child) => child,
         Err(e) => {
-            eprintln!(
+            log::error!(
                 "Error: Pager '{}' failed to start ({}). Printing directly to stdout.",
                 pager_command_str, e
             );
@@ -150,7 +150,7 @@ pub fn pager(target_string: String) {
 
     if let Some(mut stdin) = child.stdin.take() {
         if let Err(e) = stdin.write_all(target_string.as_bytes()) {
-            eprintln!(
+            log::error!(
                 "Error: Failed to write to pager '{}' stdin ({}). Printing directly to stdout.",
                 pager_command_str, e
             );
@@ -160,7 +160,7 @@ pub fn pager(target_string: String) {
             return;
         }
     } else {
-        eprintln!(
+        log::error!(
             "Error: Failed to open pager '{}' stdin. Printing directly to stdout.",
             pager_command_str
         );
@@ -176,7 +176,7 @@ pub fn pager(target_string: String) {
         .expect("failed to wait for pager process");
 
     if !output.status.success() && !output.stderr.is_empty() {
-        eprintln!(
+        log::error!(
             "Pager '{}' exited with error: {}",
             pager_command_str,
             String::from_utf8_lossy(&output.stderr)

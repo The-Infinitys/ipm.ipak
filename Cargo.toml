@@ -8,9 +8,11 @@ ar = "0.9.0"
 chrono = { version = "0.4.41", features = ["serde"] }
 clap = { version = "4.5.41", features = ["derive"] }
 dialoguer = "0.11.0"
+env_logger = "0.11.8"
 file-format = "0.27.0"
 flate2 = "1.1.2"
 ignore = "0.4.23"
+log = "0.4.27"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = "0.9.34"

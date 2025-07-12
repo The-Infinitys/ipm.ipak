@@ -128,7 +128,7 @@ fn walk_and_copy(
                     skip_prefix,
                 )?;
             } else if gitignore.matched(path_rel, true).is_ignore() {
-                dprintln!("Ignored: {}", path_rel.display());
+                log::debug!("Ignored: {}", path_rel.display());
             } else {
                 let dest = dest_base.join(path_rel);
                 if let Some(parent) = dest.parent() {
@@ -145,7 +145,7 @@ fn walk_and_copy(
                         path, dest, e
                     )
                 })?;
-                dprintln!(
+                log::debug!(
                     "Copied {} to {}",
                     path.display(),
                     dest.display()
@@ -171,7 +171,7 @@ fn walk_and_copy(
 /// `Ok(())` パッケージ化が正常に完了した場合。
 /// `Err(String)` パッケージ化中にエラーが発生した場合。
 pub fn package(opts: PackageOptions) -> Result<(), String> {
-    dprintln!("Starting packaging process with options: {}", &opts);
+    log::debug!("Starting packaging process with options: {}", &opts);
 
     let target_dir = metadata::get_dir().map_err(|e| {
         format!(
@@ -179,12 +179,12 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
             e
         )
     })?;
-    dprintln!("Project directory: {}", target_dir.display());
+    log::debug!("Project directory: {}", target_dir.display());
 
     let project_metadata = metadata::metadata().map_err(|e| {
         format!("Error: Failed to read project metadata: {:?}", e)
     })?;
-    dprintln!(
+    log::debug!(
         "Project metadata loaded for: {} version {}",
         project_metadata.about.package.name,
         project_metadata.about.package.version
@@ -199,7 +199,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
             format!("Failed to parse '{}': {}", ignore_file.display(), e)
         })?
     } else {
-        dprintln!(
+        log::debug!(
             "Warning: '{}' not found, using empty ignore lists",
             ignore_file.display()
         );
@@ -221,24 +221,24 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         }
     };
 
-    dprintln!(
+    log::debug!(
         "Ignore list for target {}: [\n{}\n]",
         opts.target,
         ignore_list.join("\n")
     );
-    dprintln!("Target Directory: {}", target_dir.display());
+    log::debug!("Target Directory: {}", target_dir.display());
 
     let mut builder = GitignoreBuilder::new(&target_dir);
     for pattern in &ignore_list {
         if let Err(e) = builder.add_line(None, pattern.as_str()) {
-            eprintln!("Error: {}", e)
+            log::error!("Error: {}", e)
         };
-        dprintln!("Adding ignore pattern: {}", pattern);
+        log::debug!("Adding ignore pattern: {}", pattern);
     }
     let gitignore = builder
         .build()
         .map_err(|e| format!("Failed to build gitignore: {}", e))?;
-    dprintln!("Gitignore built: {}", gitignore.len());
+    log::debug!("Gitignore built: {}", gitignore.len());
 
     let source_base = &target_dir;
     let package_name = &project_metadata.about.package.name;
@@ -262,14 +262,14 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         })?;
     }
 
-    dprintln!("Creating zip archive at {}", archive_path.display());
+    log::debug!("Creating zip archive at {}", archive_path.display());
     create_archive(&dest_base, &archive_path, ArchiveType::Zip)
         .map_err(|e| format!("Failed to create archive: {}", e))?;
 
     fs::remove_dir_all(&dest_base).map_err(|e| {
         format!("Failed to remove directory {:?}: {}", dest_base, e)
     })?;
-    dprintln!("Removed temporary directory {}", dest_base.display());
+    log::debug!("Removed temporary directory {}", dest_base.display());
 
     if !archive_path.exists() {
         return Err(format!(
@@ -278,7 +278,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         ));
     }
 
-    dprintln!("Created archive at {}", archive_path.display());
+    log::debug!("Created archive at {}", archive_path.display());
 
     Ok(())
 }

@@ -79,7 +79,7 @@ impl Display for BuildMode {
 /// `Ok(())` ビルドが正常に完了した場合。
 /// `Err(String)` ビルド中にエラーが発生した場合。
 pub fn build(opts: BuildOptions) -> Result<(), String> {
-    dprintln!("{}", &opts);
+    log::debug!("{}", &opts);
     let target_dir =
         metadata::get_dir().map_err(|e| format!("Error: {}", e))?;
     let project_metadata =

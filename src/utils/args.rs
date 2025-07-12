@@ -13,6 +13,18 @@ use std::path::PathBuf;
 pub struct Args {
     #[command(subcommand)]
     pub command: Commands,
+
+    /// Suppress all output. / すべての出力を抑制します。
+    #[arg(long, short, global = true, conflicts_with_all = &["verbose", "debug"])]
+    pub quiet: bool,
+
+    /// Enable verbose output for detailed progress. / 詳細な進捗を表示するために冗長な出力を有効にします。
+    #[arg(long, short, global = true, conflicts_with = "quiet")]
+    pub verbose: bool,
+
+    /// Enable debug logging. / デバッグログを有効にします。
+    #[arg(long, global = true, conflicts_with = "quiet")]
+    pub debug: bool,
 }
 
 #[derive(Subcommand, Debug)]

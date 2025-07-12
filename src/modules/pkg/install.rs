@@ -124,7 +124,7 @@ pub fn install(
         let target_path = env::current_dir()?.join(file_path);
 
         if !target_path.is_file() {
-            eprintln!(
+            log::error!(
                 "Couldn't find target file: {}",
                 target_path.display()
             );
@@ -132,7 +132,7 @@ pub fn install(
         }
 
         let temp_dir = tempdir()?;
-        dprintln!(
+        log::debug!(
             "Created temp directory at {}",
             temp_dir.path().display()
         );
@@ -147,12 +147,12 @@ pub fn install(
         );
 
         fs::copy(&target_path, &pkg_archive_in_temp)?;
-        dprintln!(
+        log::debug!(
             "Copied package to temp directory: {}",
             pkg_archive_in_temp.display()
         );
 
-        dprintln!(
+        log::debug!(
             "Extracting archive from {} to {}",
             pkg_archive_in_temp.display(),
             temp_dir.path().display()
@@ -166,7 +166,7 @@ pub fn install(
         let install_process_result = {
             let original_cwd = env::current_dir()?;
             env::set_current_dir(temp_dir.path())?;
-            dprintln!(
+            log::debug!(
                 "Changed current directory to {}",
                 temp_dir.path().display()
             );
@@ -174,7 +174,7 @@ pub fn install(
             let result = installation_process(install_mode);
 
             env::set_current_dir(&original_cwd)?;
-            dprintln!(
+            log::debug!(
                 "Restored current directory to {}",
                 original_cwd.display()
             );
@@ -224,7 +224,7 @@ pub fn install(
             }
         }
 
-        dprintln!(
+        log::debug!(
             "Successfully installed package to {}",
             final_pkg_destination_path.display()
         );
@@ -237,11 +237,14 @@ pub fn install(
         match install_mode {
             ExecMode::Local => {
                 pkg::list::add_pkg_local(installed_package_data)?;
-                dprintln!("Added package '{}' to local list.", pkg_name);
+                log::debug!("Added package '{}' to local list.", pkg_name);
             }
             ExecMode::Global => {
                 pkg::list::add_pkg_global(installed_package_data)?;
-                dprintln!("Added package '{}' to global list.", pkg_name);
+                log::debug!(
+                    "Added package '{}' to global list.",
+                    pkg_name
+                );
             }
         }
     }
@@ -309,11 +312,7 @@ fn installation_process(
             Ok(package_data)
         }
         Err(e) => {
-            eprintln!(
-                "You cannot install this package.
-{}",
-                e
-            );
+            log::error!("You cannot install this package.\n{}", e);
             Err(std::io::Error::new(std::io::ErrorKind::Unsupported, e))
         }
     }

@@ -63,7 +63,7 @@ fn setup_template_files(
             )
         })?;
     }
-    dprintln!("Successfully set up template files.");
+    log::debug!("Successfully set up template files.");
     Ok(())
 }
 
@@ -84,7 +84,7 @@ pub fn init() -> Result<(), std::io::Error> {
     if readme_path.exists() {
         let readme_content = fs::read_to_string(readme_path)?;
         pkg_metadata.about.package.description = readme_content;
-        dprintln!("Initialized project metadata.");
+        log::debug!("Initialized project metadata.");
     }
 
     let mut pkg_lang = PackageLanguage::Other;
@@ -109,7 +109,7 @@ pub fn init() -> Result<(), std::io::Error> {
         }
     }
 
-    dprintln!("Detected package language: {}", pkg_lang);
+    log::debug!("Detected package language: {}", pkg_lang);
 
     match pkg_lang {
         PackageLanguage::Rust => {
@@ -146,17 +146,17 @@ pub fn init() -> Result<(), std::io::Error> {
             }
         }
         PackageLanguage::Other => {
-            dprintln!(
+            log::debug!(
                 "No specific package language detected, skipping name and version extraction."
             );
         }
     }
     metadata::to_current(&pkg_metadata)?;
-    dprintln!(
+    log::debug!(
         "Project metadata initialized/updated in ipak/project.yaml."
     );
 
-    dprintln!("Setting up ipak scripts based on detected language...");
+    log::debug!("Setting up ipak scripts based on detected language...");
 
     let script_readme_content =
         include_str!("create/templates/script-README.md").to_string();
@@ -335,7 +335,7 @@ pub fn init() -> Result<(), std::io::Error> {
 
     script_setup_result?;
 
-    dprintln!("ipak init process completed successfully.");
+    log::debug!("ipak init process completed successfully.");
     Ok(())
 }
 

@@ -1,7 +1,8 @@
 use clap::Parser;
-use ipak::modules::{pkg, project, system, utils};
-use ipak::utils::args::{Args, Commands};
+use ipak::prelude::ipak::args::CommandExecution;
+use ipak::utils::args::Args;
 use ipak::utils::error::Error;
+use log::LevelFilter;
 
 /// The main function of the `ipak` CLI application.
 ///
@@ -10,11 +11,18 @@ use ipak::utils::error::Error;
 fn main() -> Result<(), Error> {
     let args = Args::parse();
 
-    match args.command {
-        Commands::Project(args) => project::project(args)?,
-        Commands::System(args) => system::system(args)?,
-        Commands::Pkg(args) => pkg::pkg(args)?,
-        Commands::Utils(args) => utils::utils(args)?,
-    };
-    Ok(())
+    let mut log_builder = env_logger::builder();
+
+    if args.quiet {
+        log_builder.filter_level(LevelFilter::Off);
+    } else if args.debug {
+        log_builder.filter_level(LevelFilter::Debug);
+    } else if args.verbose {
+        log_builder.filter_level(LevelFilter::Info);
+    } else {
+        log_builder.filter_level(LevelFilter::Warn);
+    }
+
+    log_builder.init();
+    args.command.exec()
 }

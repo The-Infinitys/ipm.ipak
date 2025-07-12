@@ -387,7 +387,7 @@ pub fn project_create(
             email: author_email.unwrap_or_else(generate_email_address),
         },
     };
-    println!("{}", params);
+    log::info!("{}", params);
 
     fs::create_dir(&params.project_name)
         .map_err(|err| -> Error { err.into() })?;

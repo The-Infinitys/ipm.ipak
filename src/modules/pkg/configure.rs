@@ -1,6 +1,5 @@
 //! このモジュールは、`ipak`パッケージの設定に関連する機能を提供します。
 
-use crate::dprintln;
 use crate::modules::project::ExecMode;
 use crate::modules::project::configure as project_configure;
 use crate::modules::system::path;
@@ -62,7 +61,7 @@ pub fn configure(
         };
 
         if !final_pkg_destination_path.exists() {
-            eprintln!(
+            log::error!(
                 "Package directory not found at: {}",
                 final_pkg_destination_path.display()
             );
@@ -71,7 +70,7 @@ pub fn configure(
 
         let original_cwd = env::current_dir()?;
         env::set_current_dir(&final_pkg_destination_path)?;
-        dprintln!(
+        log::debug!(
             "Changed current directory to {}",
             final_pkg_destination_path.display()
         );
@@ -84,12 +83,12 @@ pub fn configure(
             .map_err(std::io::Error::other)?;
 
         env::set_current_dir(&original_cwd)?;
-        dprintln!(
+        log::debug!(
             "Restored current directory to {}",
             original_cwd.display()
         );
 
-        dprintln!("Successfully configured package: {}", package_name);
+        log::debug!("Successfully configured package: {}", package_name);
     }
     Ok(())
 }
