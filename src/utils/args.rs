@@ -208,4 +208,16 @@ pub enum PkgCommands {
         #[arg()]
         package_path: PathBuf,
     },
+    /// Configure a package. / パッケージを設定します。
+    Configure {
+        /// Name of the package to configure. / 設定するパッケージの名前。
+        #[arg()]
+        package_names: Vec<String>,
+        /// Configure locally. / ローカルで設定します。
+        #[arg(long)]
+        local: bool,
+        /// Configure globally. / グローバルで設定します。
+        #[arg(long)]
+        global: bool,
+    },
 }

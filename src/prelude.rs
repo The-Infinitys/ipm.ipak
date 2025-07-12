@@ -89,6 +89,7 @@ pub mod ipak {
         pub use install::install;
         pub use purge::purge;
         pub use remove::remove;
+        pub use configure::configure;
     }
 
     /// 引数系の処理をまとめています。

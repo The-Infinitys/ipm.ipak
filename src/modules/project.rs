@@ -24,6 +24,7 @@ pub mod metadata;
 pub mod package;
 pub mod purge;
 pub mod remove;
+pub mod configure;
 pub mod run;
 use super::pkg::AuthorAboutData;
 use clap;

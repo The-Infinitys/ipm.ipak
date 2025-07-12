@@ -26,6 +26,7 @@ pub mod lock;
 pub mod metadata;
 pub mod purge;
 pub mod remove;
+pub mod configure;
 /// パッケージのインストールモードを定義する列挙型。
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum Mode {
@@ -389,6 +390,9 @@ pub fn pkg(args: PkgCommands) -> Result<(), Error> {
         }
         PkgCommands::MetaData { package_path } => {
             metadata::metadata(&package_path)
+        }
+        PkgCommands::Configure { package_names, local, global } => {
+            configure::configure(&package_names, (local, global).into())
         }
     }
 }
