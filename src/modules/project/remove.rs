@@ -4,7 +4,6 @@
 use super::ExecMode;
 use super::ExecShell;
 use super::metadata;
-use crate::dprintln;
 use crate::utils::color::colorize::*;
 use std::fmt::{self, Display};
 

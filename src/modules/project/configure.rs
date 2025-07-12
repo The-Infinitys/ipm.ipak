@@ -2,7 +2,6 @@
 
 use super::ExecMode;
 use super::ExecShell;
-use crate::dprintln;
 use crate::utils::error::Error;
 
 /// プロジェクト設定のオプションを定義する構造体です。

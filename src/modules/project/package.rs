@@ -3,7 +3,6 @@
 //! 指定されたターゲット（ソースビルド、通常、最小）に応じたアーカイブを作成します。
 
 use super::metadata;
-use crate::dprintln;
 use crate::utils::archive::{ArchiveType, create_archive};
 use crate::utils::color::colorize::*;
 use ignore::gitignore::GitignoreBuilder;

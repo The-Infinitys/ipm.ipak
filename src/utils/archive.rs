@@ -1,7 +1,6 @@
 //! このモジュールは、様々な形式のアーカイブ（zip, tar.gz, tar.xz, tar.zstd, tar, unix ar）の作成と展開機能を提供します。
 //! ファイルパスの処理とアーカイブタイプに応じた適切な圧縮・解凍ロジックを管理します。
 
-use crate::dprintln;
 use ar::Archive as ArArchive;
 use ar::Builder as ArBuilder;
 use clap;

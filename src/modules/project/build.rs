@@ -3,7 +3,6 @@
 
 use super::ExecShell;
 use super::metadata::{self, metadata};
-use crate::dprintln;
 use crate::utils::color::colorize::*;
 use crate::utils::version::Version;
 use std::fmt::{self, Display};

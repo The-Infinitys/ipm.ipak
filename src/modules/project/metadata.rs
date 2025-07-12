@@ -1,7 +1,6 @@
 //! このモジュールは、`ipak`プロジェクトのメタデータ（`project.yaml`）の読み書きと管理を行います。
 //! プロジェクトディレクトリの探索、メタデータの取得、表示、保存などの機能を提供します。
 
-use crate::dprintln;
 use crate::{modules::pkg::PackageData, utils::files::is_file_exists};
 use std::{env, io, path::PathBuf};
 

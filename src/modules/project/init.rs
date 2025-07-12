@@ -2,7 +2,6 @@
 //! プロジェクトの言語を検出し、それに応じた`ipak`スクリプトと設定ファイルを生成します。
 
 use super::metadata;
-use crate::dprintln;
 use crate::utils::files::file_creation;
 use crate::utils::version::Version;
 use std::env;

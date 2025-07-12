@@ -5,7 +5,6 @@ use super::super::pkg;
 use super::super::project;
 use super::super::project::ExecMode;
 use super::depend;
-use crate::dprintln;
 use crate::modules::pkg::lock::LockManager;
 use crate::modules::system::path;
 use crate::utils::error::Error;
