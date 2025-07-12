@@ -8,8 +8,6 @@ pub mod archive;
 pub mod args;
 /// カラー出力ユーリティ
 pub mod color;
-/// デバッグユーリティ
-pub mod debug;
 /// エラーの基盤となります。
 pub mod error;
 /// ファイル操作をします。

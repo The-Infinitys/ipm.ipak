@@ -83,7 +83,7 @@ pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
 /// `Err(Error)` ファイルが見つからない、アーカイブの展開、またはメタデータの読み込みに失敗した場合。
 pub fn metadata(target_path: &PathBuf) -> Result<(), Error> {
     let pkg_data = get(target_path)?;
-    println!("{}", pkg_data);
+    log::info!("{}", pkg_data);
     Ok(())
 }
 

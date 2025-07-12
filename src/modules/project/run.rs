@@ -26,7 +26,7 @@ pub fn run(
     args: Vec<String>,
 ) -> Result<(), String> {
     let name = name.to_ascii_lowercase();
-    println!("{}: {}", "Run".bold().green(), name.bold().cyan());
+    log::info!("{}: {}", "Run".bold().green(), name.bold().cyan());
     let exec_shell = shell.unwrap_or_default();
     let target_dir =
         metadata::get_dir().map_err(|e| format!("Error: {}", e))?;

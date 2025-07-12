@@ -89,7 +89,7 @@ pub fn metadata() -> Result<PackageData, io::Error> {
 /// `Err(io::Error)` メタデータの読み込みに失敗した場合。
 pub fn show_metadata() -> Result<(), io::Error> {
     let package_data = from_current()?;
-    println!("{}", package_data);
+    log::info!("{}", package_data);
     Ok(())
 }
 

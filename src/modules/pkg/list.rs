@@ -162,7 +162,7 @@ pub fn list(mode: ExecMode) -> Result<(), Error> {
         ExecMode::Local => get_local().map_err(Error::from)?,
         ExecMode::Global => get_global().map_err(Error::from)?,
     };
-    println!("{}", packages_list_data);
+    log::info!("{}", packages_list_data);
     Ok(())
 }
 
