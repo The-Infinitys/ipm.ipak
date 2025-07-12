@@ -70,8 +70,11 @@ pub enum ProjectCommands {
     },
     /// Install the project. / プロジェクトをインストールします。
     Install {
+        /// Install locally. / ローカルにインストールします。
+        #[arg(long, conflicts_with = "global")]
+        local: bool,
         /// Install globally. / グローバルにインストールします。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "local")]
         global: bool,
         /// Shell to use (e.g., bash, zsh). / 使用するシェル (例: bash, zsh)。
         #[arg(long)]
@@ -80,10 +83,10 @@ pub enum ProjectCommands {
     /// Remove the project. / プロジェクトを削除します。
     Remove {
         /// Remove locally. / ローカルで削除します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "global")]
         local: bool,
         /// Remove globally. / グローバルで削除します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "local")]
         global: bool,
         /// Shell to use (e.g., bash, zsh). / 使用するシェル (例: bash, zsh)。
         #[arg(long)]
@@ -92,10 +95,10 @@ pub enum ProjectCommands {
     /// Completely remove the project and associated data. / プロジェクトと関連データを完全に削除します。
     Purge {
         /// Purge locally. / ローカルで完全に削除します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "global")]
         local: bool,
         /// Purge globally. / グローバルで完全に削除します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "local")]
         global: bool,
         /// Shell to use (e.g., bash, zsh). / 使用するシェル (例: bash, zsh)。
         #[arg(long)]
@@ -172,10 +175,10 @@ pub enum PkgCommands {
     /// List installed packages. / インストール済みパッケージを一覧表示します。
     List {
         /// List local packages. / ローカルパッケージを一覧表示します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "global")]
         local: bool,
         /// List global packages. / グローバルパッケージを一覧表示します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "local")]
         global: bool,
     },
     /// Install a package. / パッケージをインストールします。
@@ -184,10 +187,10 @@ pub enum PkgCommands {
         #[arg()]
         file_paths: Vec<PathBuf>,
         /// Install locally. / ローカルにインストールします。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "global")]
         local: bool,
         /// Install globally. / グローバルにインストールします。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "local")]
         global: bool,
     },
     /// Remove a package (binaries only, config files are kept). / パッケージを削除します。バイナリのみが削除され、設定ファイルは残ったままになります。
@@ -196,10 +199,10 @@ pub enum PkgCommands {
         #[arg()]
         package_names: Vec<String>,
         /// Remove locally. / ローカルで削除します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "global")]
         local: bool,
         /// Remove globally. / グローバルで削除します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "local")]
         global: bool,
     },
     /// Purge a package (completely removed, including config files). / パッケージを削除します。設定ファイルも含めて完全に削除されます。
@@ -208,10 +211,10 @@ pub enum PkgCommands {
         #[arg()]
         package_names: Vec<String>,
         /// Purge locally. / ローカルで完全に削除します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "global")]
         local: bool,
         /// Purge globally. / グローバルで完全に削除します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "local")]
         global: bool,
     },
     /// Display package metadata. / パッケージのメタデータを表示します。
@@ -226,10 +229,10 @@ pub enum PkgCommands {
         #[arg()]
         package_names: Vec<String>,
         /// Configure locally. / ローカルで設定します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "global")]
         local: bool,
         /// Configure globally. / グローバルで設定します。
-        #[arg(long)]
+        #[arg(long, conflicts_with = "local")]
         global: bool,
     },
 }

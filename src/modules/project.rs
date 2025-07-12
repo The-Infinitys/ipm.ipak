@@ -17,6 +17,7 @@ use purge::PurgeOptions;
 use remove::RemoveOptions;
 use std::{env, fs, str::FromStr};
 pub mod build;
+pub mod configure;
 pub mod create;
 mod init;
 pub mod install;
@@ -24,7 +25,6 @@ pub mod metadata;
 pub mod package;
 pub mod purge;
 pub mod remove;
-pub mod configure;
 pub mod run;
 use super::pkg::AuthorAboutData;
 use clap;
@@ -197,8 +197,8 @@ pub fn project(args: ProjectCommands) -> Result<(), Error> {
         ProjectCommands::Build { release, shell } => {
             project_build(release, shell)
         }
-        ProjectCommands::Install { global, shell } => {
-            project_install(global, shell)
+        ProjectCommands::Install { local, global, shell } => {
+            project_install((local, global).into(), shell)
         }
         ProjectCommands::Remove { local, global, shell } => {
             project_remove((local, global).into(), shell)
@@ -291,16 +291,12 @@ pub fn project_build(
 /// `Ok(())` インストールが正常に完了した場合。
 /// `Err(Error)` インストール中にエラーが発生した場合。
 pub fn project_install(
-    global: bool,
+    mode: ExecMode,
     shell: Option<ExecShell>,
 ) -> Result<(), Error> {
     let install_options = InstallOptions {
         install_shell: shell.unwrap_or_default(),
-        install_mode: if global {
-            ExecMode::Global
-        } else {
-            ExecMode::Local
-        },
+        install_mode: mode,
     };
     install::install(install_options).map_err(Error::from)
 }
