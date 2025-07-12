@@ -37,8 +37,7 @@ pub fn configure(opts: ConfigureOptions) -> Result<(), Error> {
         log::debug!("Project configured successfully.");
         Ok(())
     } else {
-        Err(Error::from(std::io::Error::new(
-            std::io::ErrorKind::Other,
+        Err(Error::from(std::io::Error::other(
             format!("Failed to configure project: {:?}", status.code()),
         )))
     }
