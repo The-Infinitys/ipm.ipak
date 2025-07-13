@@ -5,6 +5,7 @@ use super::ExecMode;
 use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::utils::color::colorize::*;
+use crate::utils::error::IpakError;
 use crate::utils::version::Version;
 use std::fmt::{self, Display};
 use std::process::Command;
@@ -54,12 +55,10 @@ impl Display for InstallOptions {
 /// # Returns
 /// `Ok(())` インストールが正常に完了した場合。
 /// `Err(String)` インストール中にエラーが発生した場合。
-pub fn install(opts: InstallOptions) -> Result<(), String> {
+pub fn install(opts: InstallOptions) -> Result<(), IpakError> {
     log::debug!("{}", &opts);
-    let target_dir =
-        metadata::get_dir().map_err(|e| format!("IpakError: {}", e))?;
-    let project_metadata =
-        metadata().map_err(|e| format!("IpakError: {}", e))?;
+    let target_dir = metadata::get_dir()?;
+    let project_metadata = metadata()?;
 
     fn setup_execshell(
         cmd: &mut Command,
@@ -84,13 +83,11 @@ pub fn install(opts: InstallOptions) -> Result<(), String> {
         &opts.install_mode,
     );
 
-    let status = install_process.status().map_err(|e| {
-        format!("Failed to execute install process: {}", e)
-    })?;
+    let status = install_process.status()?;
 
     if status.success() {
         Ok(())
     } else {
-        Err(format!("Install process failed with status: {}", status))
+        Err(IpakError::CommandExecution(status.code().unwrap_or(-1)))
     }
 }

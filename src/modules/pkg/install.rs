@@ -70,7 +70,9 @@ pub fn install(
 
     for path in file_paths {
         if !path.is_file() {
-            return Err(IpakError::from(std::io::ErrorKind::NotFound));
+            return Err(IpakError::Io(std::io::Error::from(
+                std::io::ErrorKind::NotFound,
+            )));
         }
 
         let package_data = path.metadata()?;
@@ -127,7 +129,9 @@ pub fn install(
                 "Couldn't find target file: {}",
                 target_path.display()
             );
-            return Err(IpakError::from(std::io::ErrorKind::NotFound));
+            return Err(IpakError::Io(
+                std::io::ErrorKind::NotFound.into(),
+            ));
         }
 
         let temp_dir = tempdir()?;

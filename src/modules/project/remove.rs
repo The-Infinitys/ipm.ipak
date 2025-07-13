@@ -5,6 +5,7 @@ use super::ExecMode;
 use super::ExecShell;
 use super::metadata;
 use crate::utils::color::colorize::*;
+use crate::utils::error::IpakError;
 use std::fmt::{self, Display};
 
 /// プロジェクト削除のオプションを定義する構造体です。
@@ -47,17 +48,12 @@ impl Display for RemoveOptions {
 /// # Returns
 /// `Ok(())` 削除が正常に完了した場合。
 /// `Err(String)` 削除中にエラーが発生した場合。
-pub fn remove(opts: RemoveOptions) -> Result<(), String> {
+pub fn remove(opts: RemoveOptions) -> Result<(), IpakError> {
     log::debug!("{}", &opts);
 
-    let target_dir = metadata::get_dir().map_err(|_| {
-        "IpakError: Couldn't find Ipak Directory. Make sure you are in a project directory or Ipak is installed."
-            .to_string()
-    })?;
+    let target_dir = metadata::get_dir()?;
 
-    let project_metadata = metadata::metadata().map_err(|e| {
-        format!("IpakError: Failed to retrieve project metadata: {:?}", e)
-    })?;
+    let project_metadata = metadata::metadata()?;
 
     let mut remove_process = opts.remove_shell.generate();
 
@@ -71,16 +67,11 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
         .env("IPAK_REMOVE_MODE", opts.remove_mode.to_string())
         .arg("ipak/scripts/remove.sh");
 
-    let status = remove_process
-        .status()
-        .map_err(|e| format!("Failed to execute remove process: {}", e))?;
+    let status = remove_process.status()?;
 
     if status.success() {
         Ok(())
     } else {
-        Err(format!(
-            "Remove process failed with status: {}",
-            status.code().unwrap_or(-1)
-        ))
+        Err(IpakError::CommandExecution(status.code().unwrap_or(-1)))
     }
 }

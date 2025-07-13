@@ -4,9 +4,9 @@
 use super::metadata::{self, metadata};
 use crate::modules::project::ExecShell;
 use crate::utils::color::colorize::*;
+use crate::utils::error::IpakError;
 use crate::utils::version::Version;
 use std::process::Command;
-
 /// プロジェクト内で指定されたスクリプトを実行します。
 ///
 /// プロジェクトのメタデータから実行ディレクトリとプロジェクト名、バージョンを取得し、
@@ -24,14 +24,12 @@ pub fn run(
     shell: Option<ExecShell>,
     name: &str,
     args: Vec<String>,
-) -> Result<(), String> {
+) -> Result<(), IpakError> {
     let name = name.to_ascii_lowercase();
     log::info!("{}: {}", "Run".bold().green(), name.bold().cyan());
     let exec_shell = shell.unwrap_or_default();
-    let target_dir =
-        metadata::get_dir().map_err(|e| format!("IpakError: {}", e))?;
-    let project_metadata =
-        metadata().map_err(|e| format!("IpakError: {}", e))?;
+    let target_dir = metadata::get_dir()?;
+    let project_metadata = metadata()?;
 
     fn setup_execshell(
         cmd: &mut Command,
@@ -59,13 +57,10 @@ pub fn run(
         args,
     );
 
-    let status = exec_process
-        .status()
-        .map_err(|e| format!("Failed to execute exec process: {}", e))?;
-
+    let status = exec_process.status()?;
     if status.success() {
         Ok(())
     } else {
-        Err(format!("exec process failed with status: {}", status))
+        Err(IpakError::CommandExecution(status.code().unwrap_or(-1)))
     }
 }

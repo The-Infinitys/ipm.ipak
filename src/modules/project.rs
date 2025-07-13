@@ -220,7 +220,7 @@ pub fn project_run(
     command: String,
     args: Vec<String>,
 ) -> Result<(), IpakError> {
-    run::run(shell, &command, args).map_err(IpakError::from)
+    run::run(shell, &command, args)
 }
 
 /// プロジェクトを初期化します。
@@ -250,7 +250,7 @@ pub fn project_package(
     let package_options =
         package::PackageOptions { target: target.unwrap_or_default() };
 
-    package::package(package_options).map_err(IpakError::from)
+    package::package(package_options)
 }
 
 /// プロジェクトをビルドします。
@@ -276,7 +276,7 @@ pub fn project_build(
         },
         build_shell: shell.unwrap_or_default(),
     };
-    build::build(build_options).map_err(IpakError::from)
+    build::build(build_options)
 }
 
 /// プロジェクトをインストールします。
@@ -302,7 +302,7 @@ pub fn project_install(
             ExecMode::Local
         },
     };
-    install::install(install_options).map_err(IpakError::from)
+    install::install(install_options)
 }
 
 /// プロジェクトを削除します。
@@ -324,7 +324,7 @@ pub fn project_remove(
         remove_shell: shell.unwrap_or_default(),
         remove_mode,
     };
-    remove::remove(remove_options).map_err(IpakError::from)
+    remove::remove(remove_options)
 }
 
 /// プロジェクトを完全に削除（パージ）します。
@@ -346,7 +346,7 @@ pub fn project_purge(
         purge_shell: shell.unwrap_or_default(),
         purge_mode,
     };
-    purge::purge(purge_options).map_err(IpakError::from)
+    purge::purge(purge_options)
 }
 
 /// プロジェクトのメタデータを表示します。

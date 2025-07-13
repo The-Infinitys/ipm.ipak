@@ -65,7 +65,9 @@ pub fn configure(
                 "Package directory not found at: {}",
                 final_pkg_destination_path.display()
             );
-            return Err(std::io::ErrorKind::NotFound.into());
+            return Err(IpakError::Io(std::io::Error::from(
+                std::io::ErrorKind::NotFound,
+            )));
         }
 
         let original_cwd = env::current_dir()?;

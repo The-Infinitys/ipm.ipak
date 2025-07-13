@@ -5,6 +5,7 @@
 use super::metadata;
 use crate::utils::archive::{ArchiveType, create_archive};
 use crate::utils::color::colorize::*;
+use crate::utils::error::IpakError;
 use ignore::gitignore::GitignoreBuilder;
 use serde_yaml;
 use std::fmt::{self, Display};
@@ -92,31 +93,23 @@ fn walk_and_copy(
     dest_base: &Path,
     gitignore: &ignore::gitignore::Gitignore,
     skip_prefix: &Path,
-) -> Result<(), String> {
+) -> Result<(), IpakError> {
     fn inner(
         dir: &Path,
         source_base: &Path,
         dest_base: &Path,
         gitignore: &ignore::gitignore::Gitignore,
         skip_prefix: &Path,
-    ) -> Result<(), String> {
-        let dir_rel = dir.strip_prefix(source_base).map_err(|_| {
-            format!("Failed to get relative path for directory {:?}", dir)
-        })?;
+    ) -> Result<(), IpakError> {
+        let dir_rel = dir.strip_prefix(source_base)?;
         if dir_rel.starts_with(skip_prefix) {
             return Ok(());
         }
 
-        for entry in fs::read_dir(dir).map_err(|e| {
-            format!("Failed to read directory {:?}: {}", dir, e)
-        })? {
-            let entry = entry
-                .map_err(|e| format!("Failed to get entry: {}", e))?;
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
             let path = entry.path();
-            let path_rel =
-                path.strip_prefix(source_base).map_err(|_| {
-                    format!("Failed to get relative path for {:?}", path)
-                })?;
+            let path_rel = path.strip_prefix(source_base)?;
 
             if path.is_dir() {
                 inner(
@@ -131,19 +124,9 @@ fn walk_and_copy(
             } else {
                 let dest = dest_base.join(path_rel);
                 if let Some(parent) = dest.parent() {
-                    fs::create_dir_all(parent).map_err(|e| {
-                        format!(
-                            "Failed to create directories for {:?}: {}",
-                            parent, e
-                        )
-                    })?;
+                    fs::create_dir_all(parent)?;
                 }
-                fs::copy(&path, &dest).map_err(|e| {
-                    format!(
-                        "Failed to copy {:?} to {:?}: {}",
-                        path, dest, e
-                    )
-                })?;
+                fs::copy(&path, &dest)?;
                 log::debug!(
                     "Copied {} to {}",
                     path.display(),
@@ -168,21 +151,14 @@ fn walk_and_copy(
 ///
 /// # Returns
 /// `Ok(())` パッケージ化が正常に完了した場合。
-/// `Err(String)` パッケージ化中にエラーが発生した場合。
-pub fn package(opts: PackageOptions) -> Result<(), String> {
+/// `Err(IpakError)` パッケージ化中にエラーが発生した場合。
+pub fn package(opts: PackageOptions) -> Result<(), IpakError> {
     log::debug!("Starting packaging process with options: {}", &opts);
 
-    let target_dir = metadata::get_dir().map_err(|e| {
-        format!(
-            "IpakError: Couldn't find Ipak Directory. Make sure you are in an ipak project. Details: {:?}", 
-            e
-        )
-    })?;
+    let target_dir = metadata::get_dir()?;
     log::debug!("Project directory: {}", target_dir.display());
 
-    let project_metadata = metadata::metadata().map_err(|e| {
-        format!("IpakError: Failed to read project metadata: {:?}", e)
-    })?;
+    let project_metadata = metadata::metadata()?;
     log::debug!(
         "Project metadata loaded for: {} version {}",
         project_metadata.about.package.name,
@@ -191,12 +167,8 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
 
     let ignore_file = target_dir.join("ipak").join("project-ignore.yaml");
     let ignore_config: ProjectIgnore = if ignore_file.exists() {
-        let file = fs::File::open(&ignore_file).map_err(|e| {
-            format!("Failed to open '{}': {}", ignore_file.display(), e)
-        })?;
-        serde_yaml::from_reader(file).map_err(|e| {
-            format!("Failed to parse '{}': {}", ignore_file.display(), e)
-        })?
+        let file = fs::File::open(&ignore_file)?;
+        serde_yaml::from_reader(file)?
     } else {
         log::debug!(
             "Warning: '{}' not found, using empty ignore lists",
@@ -234,9 +206,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         };
         log::debug!("Adding ignore pattern: {}", pattern);
     }
-    let gitignore = builder
-        .build()
-        .map_err(|e| format!("Failed to build gitignore: {}", e))?;
+    let gitignore = builder.build()?;
     log::debug!("Gitignore built: {}", gitignore.len());
 
     let source_base = &target_dir;
@@ -256,25 +226,19 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
         .join(format!("{}-{}.ipak", package_name, version));
 
     if let Some(parent) = archive_path.parent() {
-        fs::create_dir_all(parent).map_err(|e| {
-            format!("Failed to create directories for {:?}: {}", parent, e)
-        })?;
+        fs::create_dir_all(parent)?;
     }
 
     log::debug!("Creating zip archive at {}", archive_path.display());
-    create_archive(&dest_base, &archive_path, ArchiveType::Zip)
-        .map_err(|e| format!("Failed to create archive: {}", e))?;
+    create_archive(&dest_base, &archive_path, ArchiveType::Zip)?;
 
-    fs::remove_dir_all(&dest_base).map_err(|e| {
-        format!("Failed to remove directory {:?}: {}", dest_base, e)
-    })?;
+    fs::remove_dir_all(&dest_base)?;
     log::debug!("Removed temporary directory {}", dest_base.display());
 
     if !archive_path.exists() {
-        return Err(format!(
-            "Archive file {} was not created",
-            archive_path.display()
-        ));
+        return Err(std::io::Error::from(
+            std::io::ErrorKind::AlreadyExists,
+        ).into());
     }
 
     log::debug!("Created archive at {}", archive_path.display());

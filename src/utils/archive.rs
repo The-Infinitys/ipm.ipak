@@ -1,6 +1,7 @@
 //! このモジュールは、様々な形式のアーカイブ（zip, tar.gz, tar.xz, tar.zstd, tar, unix ar）の作成と展開機能を提供します。
 //! ファイルパスの処理とアーカイブタイプに応じた適切な圧縮・解凍ロジックを管理します。
 
+use crate::utils::error::IpakError;
 use ar::Archive as ArArchive;
 use ar::Builder as ArBuilder;
 use clap;
@@ -57,11 +58,11 @@ impl FromStr for ArchiveType {
     }
 }
 
-pub fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
+pub fn get_archive_type(path: &Path) -> Result<ArchiveType, IpakError> {
     let archive_format = match FileFormat::from_file(path) {
         Ok(file_format) => file_format,
         Err(e) => {
-            return Err(format!("IpakError while getting file format: {}", e));
+            return Err(e.into());
         }
     };
     let archive_extension = archive_format.extension();
@@ -74,7 +75,7 @@ pub fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
             Ok(ArchiveType::TarZstd)
         }
         "deb" | "rpm" | "ar" | "a" => Ok(ArchiveType::UnixAr),
-        _ => Err(archive_extension.to_string()),
+        _ => Err(std::io::Error::from(std::io::ErrorKind::Unsupported).into()),
     }
 }
 

@@ -1,7 +1,7 @@
 use crate::modules::pkg::PackageRange;
 use std::fmt; // PackageRange を使用するために追加
-
-#[derive(Debug)]
+use thiserror;
+#[derive(Debug, thiserror::Error)]
 pub enum InstallError {
     MissingDependencies {
         package: String,
@@ -75,9 +75,8 @@ impl fmt::Display for InstallError {
     }
 }
 
-impl std::error::Error for InstallError {}
 
-#[derive(Debug)]
+#[derive(Debug,thiserror::Error)]
 pub enum RemoveError {
     DependencyOfOtherPackages {
         package: String,
@@ -102,4 +101,3 @@ impl fmt::Display for RemoveError {
     }
 }
 
-impl std::error::Error for RemoveError {}

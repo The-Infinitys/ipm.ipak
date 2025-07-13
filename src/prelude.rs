@@ -44,7 +44,7 @@ pub mod ipak {
             path: &PathBuf,
         ) -> Result<ArchiveType, IpakError> {
             let target_path = env::current_dir()?.join(path);
-            archive::get_archive_type(&target_path).map_err(IpakError::from)
+            archive::get_archive_type(&target_path)
         }
 
         /// 指定したパスからアーカイブを作成します。

@@ -4,6 +4,7 @@
 use super::ExecShell;
 use super::metadata::{self, metadata};
 use crate::utils::color::colorize::*;
+use crate::utils::error::IpakError;
 use crate::utils::version::Version;
 use std::fmt::{self, Display};
 use std::process::Command;
@@ -77,12 +78,10 @@ impl Display for BuildMode {
 /// # Returns
 /// `Ok(())` ビルドが正常に完了した場合。
 /// `Err(String)` ビルド中にエラーが発生した場合。
-pub fn build(opts: BuildOptions) -> Result<(), String> {
+pub fn build(opts: BuildOptions) -> Result<(), IpakError> {
     log::debug!("{}", &opts);
-    let target_dir =
-        metadata::get_dir().map_err(|e| format!("IpakError: {}", e))?;
-    let project_metadata =
-        metadata().map_err(|e| format!("IpakError: {}", e))?;
+    let target_dir = metadata::get_dir()?;
+    let project_metadata = metadata()?;
 
     fn setup_execshell(
         cmd: &mut Command,
@@ -108,13 +107,11 @@ pub fn build(opts: BuildOptions) -> Result<(), String> {
         &opts.build_mode,
     );
 
-    let status = build_process
-        .status()
-        .map_err(|e| format!("Failed to execute build process: {}", e))?;
+    let status = build_process.status()?;
 
     if status.success() {
         Ok(())
     } else {
-        Err(format!("Build process failed with status: {}", status))
+        Err(IpakError::CommandExecution(status.code().unwrap_or(-1)))
     }
 }

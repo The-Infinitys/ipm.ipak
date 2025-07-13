@@ -58,7 +58,9 @@ pub fn remove(
                 "Package not found at: {}",
                 final_pkg_destination_path.display()
             );
-            return Err(std::io::ErrorKind::NotFound.into());
+            return Err(IpakError::Io(
+                std::io::ErrorKind::NotFound.into(),
+            ));
         }
 
         uninstall_package(
@@ -115,7 +117,10 @@ fn uninstall_package(
     let result = uninstall_process(pkg_name, uninstall_mode);
 
     env::set_current_dir(&original_cwd)?;
-    log::debug!("Restored current directory to {}", original_cwd.display());
+    log::debug!(
+        "Restored current directory to {}",
+        original_cwd.display()
+    );
 
     result
 }
@@ -140,7 +145,10 @@ fn remove_package_from_list(
         }
         ExecMode::Global => {
             pkg::list::del_pkg_global(pkg_name)?;
-            log::debug!("Removed package '{}' from global list.", pkg_name);
+            log::debug!(
+                "Removed package '{}' from global list.",
+                pkg_name
+            );
         }
     }
     Ok(())

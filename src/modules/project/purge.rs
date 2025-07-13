@@ -5,6 +5,7 @@ use super::ExecMode;
 use super::ExecShell;
 use super::metadata;
 use crate::utils::color::colorize::*;
+use crate::utils::error::IpakError;
 use std::fmt::{self, Display};
 
 /// プロジェクトパージのオプションを定義する構造体です。
@@ -47,16 +48,12 @@ impl Display for PurgeOptions {
 /// # Returns
 /// `Ok(())` パージが正常に完了した場合。
 /// `Err(String)` パージ中にエラーが発生した場合。
-pub fn purge(opts: PurgeOptions) -> Result<(), String> {
+pub fn purge(opts: PurgeOptions) -> Result<(), IpakError> {
     log::debug!("{}", &opts);
 
-    let target_dir = metadata::get_dir().map_err(|_| {
-        "IpakError: Couldn't find Ipak Directory. Make sure you are in an ipak project.".to_string()
-    })?;
+    let target_dir = metadata::get_dir()?;
 
-    let project_metadata = metadata::metadata().map_err(|e| {
-        format!("IpakError: Failed to read project metadata: {:?}", e)
-    })?;
+    let project_metadata = metadata::metadata()?;
 
     let mut purge_process = opts.purge_shell.generate();
     purge_process
@@ -69,19 +66,11 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
         .env("IPAK_PURGE_MODE", opts.purge_mode.to_string())
         .arg("ipak/scripts/purge.sh");
 
-    let status = purge_process
-        .status()
-        .map_err(|e| format!("Failed to execute purge process: {}", e))?;
+    let status = purge_process.status()?;
 
     if status.success() {
         Ok(())
     } else {
-        let code_info = status
-            .code()
-            .map_or("".to_string(), |c| format!(" (exit code: {})", c));
-        Err(format!(
-            "Purge process failed with status: {}{}",
-            status, code_info
-        ))
+        Err(IpakError::CommandExecution(status.code().unwrap_or(-1)))
     }
 }
