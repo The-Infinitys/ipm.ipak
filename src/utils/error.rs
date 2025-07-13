@@ -6,7 +6,7 @@ use crate::modules::pkg::depend::error::{InstallError, RemoveError};
 
 /// アプリケーション全体で利用されるカスタムエラー構造体です。
 /// エラーの種類と詳細なメッセージを保持します。
-pub struct Error {
+pub struct IpakError {
     pub kind: ErrorKind,
     pub message: String,
     // 他のエラータイプをラップするためのフィールドを追加
@@ -34,38 +34,38 @@ impl fmt::Display for ErrorKind {
         match self {
             Self::Other => write!(f, "Other"),
             Self::Io(io_errorkind) => write!(f, "IO-{}", io_errorkind),
-            Self::Install => write!(f, "Package Installation Error"),
-            Self::Remove => write!(f, "Package Removal Error"),
+            Self::Install => write!(f, "Package Installation IpakError"),
+            Self::Remove => write!(f, "Package Removal IpakError"),
         }
     }
 }
 
-impl From<&str> for Error {
-    /// 文字列スライスから`Error`を生成します。
+impl From<&str> for IpakError {
+    /// 文字列スライスから`IpakError`を生成します。
     fn from(value: &str) -> Self {
-        Error::other(value.into())
+        IpakError::other(value.into())
     }
 }
 
-impl From<String> for Error {
-    /// `String`から`Error`を生成します。
+impl From<String> for IpakError {
+    /// `String`から`IpakError`を生成します。
     fn from(value: String) -> Self {
-        Error::other(value)
+        IpakError::other(value)
     }
 }
 
-impl From<io::ErrorKind> for Error {
-    /// `io::ErrorKind`から`Error`を生成します。
+impl From<io::ErrorKind> for IpakError {
+    /// `io::ErrorKind`から`IpakError`を生成します。
     fn from(value: io::ErrorKind) -> Self {
-        Error::new(ErrorKind::Io(value), "".into(), None)
+        IpakError::new(ErrorKind::Io(value), "".into(), None)
     }
 }
 
-impl From<io::Error> for Error {
-    /// `io::Error`から`Error`を生成します。
+impl From<io::Error> for IpakError {
+    /// `io::Error`から`IpakError`を生成します。
     fn from(value: io::Error) -> Self {
-        // io::Error は std::error::Error を実装しているので、source に渡せる
-        Error::new(
+        // io::Error は std::error::IpakError を実装しているので、source に渡せる
+        IpakError::new(
             ErrorKind::Io(value.kind()),
             value.to_string(),
             Some(Box::new(value)),
@@ -73,10 +73,10 @@ impl From<io::Error> for Error {
     }
 }
 
-// InstallError から Error への変換を実装
-impl From<InstallError> for Error {
+// InstallError から IpakError への変換を実装
+impl From<InstallError> for IpakError {
     fn from(value: InstallError) -> Self {
-        Error::new(
+        IpakError::new(
             ErrorKind::Install,
             value.to_string(),
             Some(Box::new(value)),
@@ -84,10 +84,10 @@ impl From<InstallError> for Error {
     }
 }
 
-// RemoveError から Error への変換を実装
-impl From<RemoveError> for Error {
+// RemoveError から IpakError への変換を実装
+impl From<RemoveError> for IpakError {
     fn from(value: RemoveError) -> Self {
-        Error::new(
+        IpakError::new(
             ErrorKind::Remove,
             value.to_string(),
             Some(Box::new(value)),
@@ -95,7 +95,7 @@ impl From<RemoveError> for Error {
     }
 }
 
-impl Error {
+impl IpakError {
     /// その他の種類のエラーを生成します。
     ///
     /// # Arguments
@@ -142,7 +142,7 @@ impl Error {
                 write!(
                     f,
                     "\n  {}:\n    {}",
-                    "Source Error".bold().yellow(),
+                    "Source IpakError".bold().yellow(),
                     source
                 )?;
             }
@@ -151,29 +151,29 @@ impl Error {
     }
 }
 
-impl fmt::Display for Error {
-    /// `Error`をユーザーフレンドリーな形式で表示します。
+impl fmt::Display for IpakError {
+    /// `IpakError`をユーザーフレンドリーな形式で表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "{}:", "Error".red().bold())?;
+        writeln!(f, "{}:", "IpakError".red().bold())?;
         self.display_for(f)
     }
 }
 
-impl fmt::Debug for Error {
-    /// `Error`をデバッグ形式で表示します。
+impl fmt::Debug for IpakError {
+    /// `IpakError`をデバッグ形式で表示します。
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f)?;
         self.display_for(f)
     }
 }
 
-// std::error::Error トレイトを実装
-impl std::error::Error for Error {
+// std::error::IpakError トレイトを実装
+impl std::error::Error for IpakError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         // ここで型キャストを行います。
-        // self.source.as_ref() は Option<&Box<dyn std::error::Error + Send + Sync + 'static>> を返します。
-        // map(|s| s.as_ref()) は Option<&(dyn std::error::Error + Send + Sync + 'static)> を返します。
-        // これを &(dyn std::error::Error + 'static) にダウンキャストします。
+        // self.source.as_ref() は Option<&Box<dyn std::error::IpakError + Send + Sync + 'static>> を返します。
+        // map(|s| s.as_ref()) は Option<&(dyn std::error::IpakError + Send + Sync + 'static)> を返します。
+        // これを &(dyn std::error::IpakError + 'static) にダウンキャストします。
         self.source
             .as_ref()
             .map(|s| s.as_ref() as &(dyn std::error::Error + 'static))

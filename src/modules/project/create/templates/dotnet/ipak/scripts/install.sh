@@ -4,11 +4,11 @@ set -e
 
 # Ensure project name, version, and install mode are set
 if [ -z "$IPAK_PROJECT_NAME" ] || [ -z "$IPAK_PROJECT_VERSION" ]; then
-    echo "Error: IPAK_PROJECT_NAME and IPAK_PROJECT_VERSION must be set" >&2
+    echo "IpakError: IPAK_PROJECT_NAME and IPAK_PROJECT_VERSION must be set" >&2
     exit 1
 fi
 if [ -z "$IPAK_INSTALL_MODE" ]; then
-    echo "Error: IPAK_INSTALL_MODE must be set (local or global)" >&2
+    echo "IpakError: IPAK_INSTALL_MODE must be set (local or global)" >&2
     exit 1
 fi
 
@@ -17,7 +17,7 @@ case "$IPAK_INSTALL_MODE" in
     local|global)
         ;;
     *)
-        echo "Error: Invalid IPAK_INSTALL_MODE: $IPAK_INSTALL_MODE (must be 'local' or 'global')" >&2
+        echo "IpakError: Invalid IPAK_INSTALL_MODE: $IPAK_INSTALL_MODE (must be 'local' or 'global')" >&2
         exit 1
         ;;
 esac
@@ -33,7 +33,7 @@ DEST_PATH="$INSTALL_DIR/$IPAK_PROJECT_NAME"
 
 # Check if binary exists
 if [ ! -f "$BINARY_PATH" ]; then
-    echo "Error: Binary '$BINARY_PATH' not found. Run build first." >&2
+    echo "IpakError: Binary '$BINARY_PATH' not found. Run build first." >&2
     exit 1
 fi
 

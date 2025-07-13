@@ -174,14 +174,14 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
 
     let target_dir = metadata::get_dir().map_err(|e| {
         format!(
-            "Error: Couldn't find Ipak Directory. Make sure you are in an ipak project. Details: {:?}", 
+            "IpakError: Couldn't find Ipak Directory. Make sure you are in an ipak project. Details: {:?}", 
             e
         )
     })?;
     log::debug!("Project directory: {}", target_dir.display());
 
     let project_metadata = metadata::metadata().map_err(|e| {
-        format!("Error: Failed to read project metadata: {:?}", e)
+        format!("IpakError: Failed to read project metadata: {:?}", e)
     })?;
     log::debug!(
         "Project metadata loaded for: {} version {}",
@@ -230,7 +230,7 @@ pub fn package(opts: PackageOptions) -> Result<(), String> {
     let mut builder = GitignoreBuilder::new(&target_dir);
     for pattern in &ignore_list {
         if let Err(e) = builder.add_line(None, pattern.as_str()) {
-            log::error!("Error: {}", e)
+            log::error!("IpakError: {}", e)
         };
         log::debug!("Adding ignore pattern: {}", pattern);
     }

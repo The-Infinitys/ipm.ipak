@@ -12,7 +12,7 @@ use std::path::Path;
 ///
 /// # Returns
 /// `Ok(())` 成功した場合。
-/// `Err(Error)` ファイル操作に失敗した場合。
+/// `Err(IpakError)` ファイル操作に失敗した場合。
 pub fn configure() -> Result<(), Error> {
     let configure_list =
         [["/etc/ipak/README.md", include_str!("data/global/README.md")]];

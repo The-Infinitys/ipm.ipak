@@ -51,12 +51,12 @@ pub fn remove(opts: RemoveOptions) -> Result<(), String> {
     log::debug!("{}", &opts);
 
     let target_dir = metadata::get_dir().map_err(|_| {
-        "Error: Couldn't find Ipak Directory. Make sure you are in a project directory or Ipak is installed."
+        "IpakError: Couldn't find Ipak Directory. Make sure you are in a project directory or Ipak is installed."
             .to_string()
     })?;
 
     let project_metadata = metadata::metadata().map_err(|e| {
-        format!("Error: Failed to retrieve project metadata: {:?}", e)
+        format!("IpakError: Failed to retrieve project metadata: {:?}", e)
     })?;
 
     let mut remove_process = opts.remove_shell.generate();

@@ -12,7 +12,7 @@ use std::{
 ///
 /// # Returns
 /// `Ok(())`: ディレクトリが正常に作成されたか、既に存在していた場合
-/// `Err(Error)`: ディレクトリの作成に失敗した場合
+/// `Err(IpakError)`: ディレクトリの作成に失敗した場合
 pub fn dir_creation(path_str: &str) -> Result<(), Error> {
     let path = path::Path::new(path_str);
     std::fs::create_dir_all(path)?;
@@ -28,7 +28,7 @@ pub fn dir_creation(path_str: &str) -> Result<(), Error> {
 ///
 /// # Returns
 /// `Ok(())`: ファイルが正常に作成され、コンテンツが書き込まれた場合
-/// `Err(Error)`: ファイルの作成または書き込みに失敗した場合
+/// `Err(IpakError)`: ファイルの作成または書き込みに失敗した場合
 pub fn file_creation(path_str: &str, content: &str) -> Result<(), Error> {
     let path = path::Path::new(path_str);
 

@@ -5,7 +5,7 @@ use super::super::system::path;
 use super::PackageData;
 use crate::modules::project::ExecMode;
 use crate::utils::color::colorize::*;
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use serde_yaml;
@@ -156,11 +156,11 @@ impl Display for InstalledPackageData {
 ///
 /// # Returns
 /// `Ok(())` パッケージリストが正常に表示された場合。
-/// `Err(Error)` パッケージリストの取得または表示中にエラーが発生した場合。
-pub fn list(mode: ExecMode) -> Result<(), Error> {
+/// `Err(IpakError)` パッケージリストの取得または表示中にエラーが発生した場合。
+pub fn list(mode: ExecMode) -> Result<(), IpakError> {
     let packages_list_data = match mode {
-        ExecMode::Local => get_local().map_err(Error::from)?,
-        ExecMode::Global => get_global().map_err(Error::from)?,
+        ExecMode::Local => get_local().map_err(IpakError::from)?,
+        ExecMode::Global => get_global().map_err(IpakError::from)?,
     };
     log::info!("{}", packages_list_data);
     Ok(())

@@ -3,7 +3,7 @@
 
 use crate::utils::archive::{create_archive, extract_archive};
 use crate::utils::args::{ArchiveCommands, UtilsCommands};
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 
 /// ユーティリティコマンドを処理します。
 ///
@@ -14,8 +14,8 @@ use crate::utils::error::Error;
 ///
 /// # Returns
 /// `Ok(())` 成功した場合。
-/// `Err(Error)` エラーが発生した場合。
-pub fn utils(args: UtilsCommands) -> Result<(), Error> {
+/// `Err(IpakError)` エラーが発生した場合。
+pub fn utils(args: UtilsCommands) -> Result<(), IpakError> {
     match args {
         UtilsCommands::Archive(args) => archive(args)?,
     }
@@ -31,15 +31,15 @@ pub fn utils(args: UtilsCommands) -> Result<(), Error> {
 ///
 /// # Returns
 /// `Ok(())` 成功した場合。
-/// `Err(Error)` エラーが発生した場合。
-fn archive(args: ArchiveCommands) -> Result<(), Error> {
+/// `Err(IpakError)` エラーが発生した場合。
+fn archive(args: ArchiveCommands) -> Result<(), IpakError> {
     match args {
         ArchiveCommands::Create { from, to, archive_type } => {
             create_archive(&from, &to, archive_type)
-                .map_err(Error::from)?
+                .map_err(IpakError::from)?
         }
         ArchiveCommands::Extract { from, to } => {
-            extract_archive(&from, &to).map_err(Error::from)?
+            extract_archive(&from, &to).map_err(IpakError::from)?
         }
     }
     Ok(())

@@ -1,14 +1,14 @@
 use clap::Parser;
 use ipak::prelude::ipak::args::CommandExecution;
 use ipak::utils::args::Args;
-use ipak::utils::error::Error;
+use ipak::utils::error::IpakError;
 use log::LevelFilter;
 
 /// The main function of the `ipak` CLI application.
 ///
 /// This function parses command-line arguments, dispatches to the appropriate
-/// subcommand handler, and returns a `Result` indicating success or an `Error`.
-fn main() -> Result<(), Error> {
+/// subcommand handler, and returns a `Result` indicating success or an `IpakError`.
+fn main() -> Result<(), IpakError> {
     let args = Args::parse();
 
     let mut log_builder = env_logger::builder();

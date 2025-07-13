@@ -4,7 +4,7 @@
 
 use crate::modules::project::build::BuildMode;
 use crate::modules::project::package::PackageTarget;
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 use crate::utils::shell::is_superuser;
 use crate::utils::{
     args::ProjectCommands,
@@ -179,8 +179,8 @@ impl Display for ExecShell {
 ///
 /// # Returns
 /// `Ok(())` 成功した場合。
-/// `Err(Error)` エラーが発生した場合。
-pub fn project(args: ProjectCommands) -> Result<(), Error> {
+/// `Err(IpakError)` エラーが発生した場合。
+pub fn project(args: ProjectCommands) -> Result<(), IpakError> {
     match args {
         ProjectCommands::Create {
             project_name,
@@ -219,8 +219,8 @@ pub fn project_run(
     shell: Option<ExecShell>,
     command: String,
     args: Vec<String>,
-) -> Result<(), Error> {
-    run::run(shell, &command, args).map_err(Error::from)
+) -> Result<(), IpakError> {
+    run::run(shell, &command, args).map_err(IpakError::from)
 }
 
 /// プロジェクトを初期化します。
@@ -229,9 +229,9 @@ pub fn project_run(
 ///
 /// # Returns
 /// `Ok(())` 初期化が正常に完了した場合。
-/// `Err(Error)` 初期化中にエラーが発生した場合。
-pub fn project_init() -> Result<(), Error> {
-    init::init().map_err(Error::from)
+/// `Err(IpakError)` 初期化中にエラーが発生した場合。
+pub fn project_init() -> Result<(), IpakError> {
+    init::init().map_err(IpakError::from)
 }
 
 /// プロジェクトをパッケージ化します。
@@ -243,14 +243,14 @@ pub fn project_init() -> Result<(), Error> {
 ///
 /// # Returns
 /// `Ok(())` パッケージ化が正常に完了した場合。
-/// `Err(Error)` パッケージ化中にエラーが発生した場合。
+/// `Err(IpakError)` パッケージ化中にエラーが発生した場合。
 pub fn project_package(
     target: Option<PackageTarget>,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     let package_options =
         package::PackageOptions { target: target.unwrap_or_default() };
 
-    package::package(package_options).map_err(Error::from)
+    package::package(package_options).map_err(IpakError::from)
 }
 
 /// プロジェクトをビルドします。
@@ -263,11 +263,11 @@ pub fn project_package(
 ///
 /// # Returns
 /// `Ok(())` ビルドが正常に完了した場合。
-/// `Err(Error)` ビルド中にエラーが発生した場合。
+/// `Err(IpakError)` ビルド中にエラーが発生した場合。
 pub fn project_build(
     release: bool,
     shell: Option<ExecShell>,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     let build_options = BuildOptions {
         build_mode: if release {
             BuildMode::Release
@@ -276,7 +276,7 @@ pub fn project_build(
         },
         build_shell: shell.unwrap_or_default(),
     };
-    build::build(build_options).map_err(Error::from)
+    build::build(build_options).map_err(IpakError::from)
 }
 
 /// プロジェクトをインストールします。
@@ -289,11 +289,11 @@ pub fn project_build(
 ///
 /// # Returns
 /// `Ok(())` インストールが正常に完了した場合。
-/// `Err(Error)` インストール中にエラーが発生した場合。
+/// `Err(IpakError)` インストール中にエラーが発生した場合。
 pub fn project_install(
     global: bool,
     shell: Option<ExecShell>,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     let install_options = InstallOptions {
         install_shell: shell.unwrap_or_default(),
         install_mode: if global {
@@ -302,7 +302,7 @@ pub fn project_install(
             ExecMode::Local
         },
     };
-    install::install(install_options).map_err(Error::from)
+    install::install(install_options).map_err(IpakError::from)
 }
 
 /// プロジェクトを削除します。
@@ -315,16 +315,16 @@ pub fn project_install(
 ///
 /// # Returns
 /// `Ok(())` 削除が正常に完了した場合。
-/// `Err(Error)` 削除中にエラーが発生した場合。
+/// `Err(IpakError)` 削除中にエラーが発生した場合。
 pub fn project_remove(
     remove_mode: ExecMode,
     shell: Option<ExecShell>,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     let remove_options = RemoveOptions {
         remove_shell: shell.unwrap_or_default(),
         remove_mode,
     };
-    remove::remove(remove_options).map_err(Error::from)
+    remove::remove(remove_options).map_err(IpakError::from)
 }
 
 /// プロジェクトを完全に削除（パージ）します。
@@ -337,16 +337,16 @@ pub fn project_remove(
 ///
 /// # Returns
 /// `Ok(())` パージが正常に完了した場合。
-/// `Err(Error)` パージ中にエラーが発生した場合。
+/// `Err(IpakError)` パージ中にエラーが発生した場合。
 pub fn project_purge(
     purge_mode: ExecMode,
     shell: Option<ExecShell>,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     let purge_options = PurgeOptions {
         purge_shell: shell.unwrap_or_default(),
         purge_mode,
     };
-    purge::purge(purge_options).map_err(Error::from)
+    purge::purge(purge_options).map_err(IpakError::from)
 }
 
 /// プロジェクトのメタデータを表示します。
@@ -355,9 +355,9 @@ pub fn project_purge(
 ///
 /// # Returns
 /// `Ok(())` メタデータが正常に表示された場合。
-/// `Err(Error)` メタデータの表示中にエラーが発生した場合。
-pub fn project_metadata() -> Result<(), Error> {
-    metadata::show_metadata().map_err(Error::from)
+/// `Err(IpakError)` メタデータの表示中にエラーが発生した場合。
+pub fn project_metadata() -> Result<(), IpakError> {
+    metadata::show_metadata().map_err(IpakError::from)
 }
 
 /// 新しいプロジェクトを作成します。
@@ -372,13 +372,13 @@ pub fn project_metadata() -> Result<(), Error> {
 ///
 /// # Returns
 /// `Ok(())` プロジェクトが正常に作成された場合。
-/// `Err(Error)` プロジェクト作成中にエラーが発生した場合。
+/// `Err(IpakError)` プロジェクト作成中にエラーが発生した場合。
 pub fn project_create(
     project_name: String,
     template: Option<ProjectTemplateType>,
     author_name: Option<String>,
     author_email: Option<String>,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     let params = ProjectParams {
         project_name,
         project_template: template.unwrap_or_default(),
@@ -390,10 +390,10 @@ pub fn project_create(
     log::info!("{}", params);
 
     fs::create_dir(&params.project_name)
-        .map_err(|err| -> Error { err.into() })?;
+        .map_err(|err| -> IpakError { err.into() })?;
 
     env::set_current_dir(&params.project_name)
-        .map_err(|err| -> Error { err.into() })?;
+        .map_err(|err| -> IpakError { err.into() })?;
 
     create::create(&params)
         .map_err(|_| {
@@ -402,7 +402,7 @@ pub fn project_create(
                 &params.project_name
             ))
         })
-        .map_err(|err| -> Error { err.into() })?;
+        .map_err(|err| -> IpakError { err.into() })?;
 
     Ok(())
 }

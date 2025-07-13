@@ -5,13 +5,13 @@ use super::super::pkg;
 use crate::modules::pkg::PackageData;
 use crate::modules::project;
 use crate::utils::archive::extract_archive;
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
-pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
+pub fn get(target_path: &PathBuf) -> Result<PackageData, IpakError> {
     let target_path = env::current_dir()?.join(target_path);
 
     if !target_path.is_file() {
@@ -68,7 +68,7 @@ pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
         );
         result
     };
-    metadata_process_result.map_err(Error::from)
+    metadata_process_result.map_err(IpakError::from)
 }
 /// 指定されたパッケージアーカイブからメタデータを抽出し、表示します。
 ///
@@ -80,8 +80,8 @@ pub fn get(target_path: &PathBuf) -> Result<PackageData, Error> {
 ///
 /// # Returns
 /// `Ok(())` メタデータが正常に表示された場合。
-/// `Err(Error)` ファイルが見つからない、アーカイブの展開、またはメタデータの読み込みに失敗した場合。
-pub fn metadata(target_path: &PathBuf) -> Result<(), Error> {
+/// `Err(IpakError)` ファイルが見つからない、アーカイブの展開、またはメタデータの読み込みに失敗した場合。
+pub fn metadata(target_path: &PathBuf) -> Result<(), IpakError> {
     let pkg_data = get(target_path)?;
     log::info!("{}", pkg_data);
     Ok(())

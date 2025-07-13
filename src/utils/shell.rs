@@ -138,7 +138,7 @@ pub fn pager(target_string: String) {
         Ok(child) => child,
         Err(e) => {
             log::error!(
-                "Error: Pager '{}' failed to start ({}). Printing directly to stdout.",
+                "IpakError: Pager '{}' failed to start ({}). Printing directly to stdout.",
                 pager_command_str, e
             );
             io::stdout()
@@ -151,7 +151,7 @@ pub fn pager(target_string: String) {
     if let Some(mut stdin) = child.stdin.take() {
         if let Err(e) = stdin.write_all(target_string.as_bytes()) {
             log::error!(
-                "Error: Failed to write to pager '{}' stdin ({}). Printing directly to stdout.",
+                "IpakError: Failed to write to pager '{}' stdin ({}). Printing directly to stdout.",
                 pager_command_str, e
             );
             io::stdout()
@@ -161,7 +161,7 @@ pub fn pager(target_string: String) {
         }
     } else {
         log::error!(
-            "Error: Failed to open pager '{}' stdin. Printing directly to stdout.",
+            "IpakError: Failed to open pager '{}' stdin. Printing directly to stdout.",
             pager_command_str
         );
         io::stdout()

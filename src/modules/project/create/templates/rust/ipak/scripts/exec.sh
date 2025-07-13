@@ -4,7 +4,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 # Ensure IPAK_PROJECT_NAME is set
 if [ -z "$IPAK_PROJECT_NAME" ]; then
-    echo "Error: IPAK_PROJECT_NAME must be set." >&2
+    echo "IpakError: IPAK_PROJECT_NAME must be set." >&2
     exit 1
 fi
 
@@ -38,7 +38,7 @@ elif $debug_exists; then
     echo "Executing debug binary: $DEBUG_BINARY $*"
     "$DEBUG_BINARY" "$@"
 else
-    echo "Error: Neither release ('$RELEASE_BINARY') nor debug ('$DEBUG_BINARY') binary found." >&2
+    echo "IpakError: Neither release ('$RELEASE_BINARY') nor debug ('$DEBUG_BINARY') binary found." >&2
     echo "Please build the project first." >&2
     exit 1
 fi

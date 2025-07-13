@@ -3,7 +3,7 @@
 use crate::modules::project::ExecMode;
 use crate::modules::project::configure as project_configure;
 use crate::modules::system::path;
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 use std::env;
 
 /// 指定されたパッケージを設定します。
@@ -14,11 +14,11 @@ use std::env;
 ///
 /// # Returns
 /// `Ok(())` パッケージが正常に設定された場合。
-/// `Err(Error)` パッケージが見つからない、または設定中にエラーが発生した場合。
+/// `Err(IpakError)` パッケージが見つからない、または設定中にエラーが発生した場合。
 pub fn configure(
     package_names: &Vec<String>,
     configure_mode: ExecMode,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     for package_name in package_names {
         use super::list;
         let installed_packages = match configure_mode {
@@ -33,7 +33,7 @@ pub fn configure(
                 &pkgdata.info.about.package.name == package_name
             })
             .ok_or_else(|| {
-                Error::from(std::io::Error::new(
+                IpakError::from(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
                     format!("Package '{}' not found.", package_name),
                 ))

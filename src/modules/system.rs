@@ -3,7 +3,7 @@
 
 mod configure;
 pub mod path;
-use crate::utils::{args::SystemCommands, error::Error};
+use crate::utils::{args::SystemCommands, error::IpakError};
 
 /// システム関連のコマンドを処理します。
 ///
@@ -15,8 +15,8 @@ use crate::utils::{args::SystemCommands, error::Error};
 ///
 /// # Returns
 /// `Ok(())` 成功した場合。
-/// `Err(Error)` エラーが発生した場合。
-pub fn system(args: SystemCommands) -> Result<(), Error> {
+/// `Err(IpakError)` エラーが発生した場合。
+pub fn system(args: SystemCommands) -> Result<(), IpakError> {
     match args {
         SystemCommands::Configure { local, global } => {
             configure::configure({
@@ -28,7 +28,7 @@ pub fn system(args: SystemCommands) -> Result<(), Error> {
                     None
                 }
             })
-            .map_err(Error::from)?
+            .map_err(IpakError::from)?
         }
     }
     Ok(())

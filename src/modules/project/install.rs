@@ -57,9 +57,9 @@ impl Display for InstallOptions {
 pub fn install(opts: InstallOptions) -> Result<(), String> {
     log::debug!("{}", &opts);
     let target_dir =
-        metadata::get_dir().map_err(|e| format!("Error: {}", e))?;
+        metadata::get_dir().map_err(|e| format!("IpakError: {}", e))?;
     let project_metadata =
-        metadata().map_err(|e| format!("Error: {}", e))?;
+        metadata().map_err(|e| format!("IpakError: {}", e))?;
 
     fn setup_execshell(
         cmd: &mut Command,

@@ -9,7 +9,7 @@ use crate::modules::pkg::lock::LockManager;
 use crate::modules::project;
 use crate::modules::system::path;
 use crate::utils::archive::extract_archive;
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 use chrono::Local;
 use std::collections::HashMap;
 use std::env;
@@ -29,11 +29,11 @@ use tempfile::tempdir;
 ///
 /// # Returns
 /// `Ok(())` パッケージが正常にインストールされた場合。
-/// `Err(Error)` ファイルが見つからない、アーカイブの展開、ファイルの配置、またはパッケージリストの更新中にエラーが発生した場合。
+/// `Err(IpakError)` ファイルが見つからない、アーカイブの展開、ファイルの配置、またはパッケージリストの更新中にエラーが発生した場合。
 pub fn install(
     file_paths: &Vec<PathBuf>,
     install_mode: ExecMode,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     use super::depend::graph::DependencyGraphOperations;
     use super::list;
     pub trait PackageMetadata {
@@ -44,13 +44,13 @@ pub fn install(
         ///
         /// # 返り値
         /// `Ok(PackageData)` - メタデータが正常に取得された場合。
-        /// `Err(Error)` - エラーが発生した場合。
-        fn metadata(&self) -> Result<PackageData, Error>;
+        /// `Err(IpakError)` - エラーが発生した場合。
+        fn metadata(&self) -> Result<PackageData, IpakError>;
     }
 
     /// `PathBuf`に対する`PackageMetadata`トレイトの実装です。
     impl PackageMetadata for PathBuf {
-        fn metadata(&self) -> Result<PackageData, Error> {
+        fn metadata(&self) -> Result<PackageData, IpakError> {
             super::metadata::get(self)
         }
     }
@@ -70,7 +70,7 @@ pub fn install(
 
     for path in file_paths {
         if !path.is_file() {
-            return Err(Error::from(std::io::ErrorKind::NotFound));
+            return Err(IpakError::from(std::io::ErrorKind::NotFound));
         }
 
         let package_data = path.metadata()?;
@@ -127,7 +127,7 @@ pub fn install(
                 "Couldn't find target file: {}",
                 target_path.display()
             );
-            return Err(Error::from(std::io::ErrorKind::NotFound));
+            return Err(IpakError::from(std::io::ErrorKind::NotFound));
         }
 
         let temp_dir = tempdir()?;

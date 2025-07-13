@@ -4,7 +4,7 @@ set -e
 
 # Ensure project name and version are set
 if [ -z "$IPAK_PROJECT_NAME" ] || [ -z "$IPAK_PROJECT_VERSION" ]; then
-    echo "Error: IPAK_PROJECT_NAME and IPAK_PROJECT_VERSION must be set" >&2
+    echo "IpakError: IPAK_PROJECT_NAME and IPAK_PROJECT_VERSION must be set" >&2
     exit 1
 fi
 
@@ -15,7 +15,7 @@ BUILD_MODE="${IPAK_BUILD_MODE:-debug}"
 case "$BUILD_MODE" in
 release | debug) ;;
 *)
-    echo "Error: Invalid IPAK_BUILD_MODE: $BUILD_MODE (must be 'release' or 'debug')" >&2
+    echo "IpakError: Invalid IPAK_BUILD_MODE: $BUILD_MODE (must be 'release' or 'debug')" >&2
     exit 1
     ;;
 esac

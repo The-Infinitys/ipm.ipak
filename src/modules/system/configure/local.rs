@@ -17,7 +17,7 @@ use std::path::Path;
 ///
 /// # Returns
 /// `Ok(())` 成功した場合。
-/// `Err(Error)` ファイル操作または環境変数の取得に失敗した場合。
+/// `Err(IpakError)` ファイル操作または環境変数の取得に失敗した場合。
 pub fn configure() -> Result<(), Error> {
     let package_list_data = {
         let package_list_data =

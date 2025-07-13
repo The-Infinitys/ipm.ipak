@@ -2,7 +2,7 @@
 
 use super::ExecMode;
 use super::ExecShell;
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 
 /// プロジェクト設定のオプションを定義する構造体です。
 #[derive(Debug, Clone)]
@@ -20,8 +20,8 @@ pub struct ConfigureOptions {
 ///
 /// # Returns
 /// `Ok(())` 設定が正常に完了した場合。
-/// `Err(Error)` 設定中にエラーが発生した場合。
-pub fn configure(opts: ConfigureOptions) -> Result<(), Error> {
+/// `Err(IpakError)` 設定中にエラーが発生した場合。
+pub fn configure(opts: ConfigureOptions) -> Result<(), IpakError> {
     log::debug!(
         "Configuring project in {:?} mode using {:?} shell",
         opts.configure_mode,
@@ -37,7 +37,7 @@ pub fn configure(opts: ConfigureOptions) -> Result<(), Error> {
         log::debug!("Project configured successfully.");
         Ok(())
     } else {
-        Err(Error::from(std::io::Error::other(
+        Err(IpakError::from(std::io::Error::other(
             format!("Failed to configure project: {:?}", status.code()),
         )))
     }

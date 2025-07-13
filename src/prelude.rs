@@ -4,7 +4,7 @@
 /// ipakクレートの主要な機能を提供します。
 /// このモジュールをインポートすることで、ipakの様々なサブモジュールや関数に簡単にアクセスできます。
 pub mod ipak {
-    use crate::utils::error::Error;
+    use crate::utils::error::IpakError;
     /// バージョン構造体を利用できるようにしています。
     pub use crate::utils::version::{Version, VersionRange};
     use std::str::FromStr;
@@ -27,7 +27,7 @@ pub mod ipak {
 
     /// アーカイブ系統の処理をまとめています。
     pub mod archive {
-        use super::Error;
+        use super::IpakError;
         /// アーカイブ関連のユーティリティとアーカイブタイプを公開します。
         pub use crate::utils::archive::{self, ArchiveType};
         use std::{env, path::PathBuf};
@@ -39,12 +39,12 @@ pub mod ipak {
         ///
         /// # 返り値
         /// `Ok(ArchiveType)` - アーカイブタイプが正常に判定された場合。
-        /// `Err(Error)` - エラーが発生した場合。
+        /// `Err(IpakError)` - エラーが発生した場合。
         pub fn get_archive_type(
             path: &PathBuf,
-        ) -> Result<ArchiveType, Error> {
+        ) -> Result<ArchiveType, IpakError> {
             let target_path = env::current_dir()?.join(path);
-            archive::get_archive_type(&target_path).map_err(Error::from)
+            archive::get_archive_type(&target_path).map_err(IpakError::from)
         }
 
         /// 指定したパスからアーカイブを作成します。
@@ -56,14 +56,14 @@ pub mod ipak {
         ///
         /// # 返り値
         /// `Ok(())` - アーカイブが正常に作成された場合。
-        /// `Err(Error)` - エラーが発生した場合。
+        /// `Err(IpakError)` - エラーが発生した場合。
         pub fn create_archive(
             from: &PathBuf,
             to: &PathBuf,
             archive_type: ArchiveType,
-        ) -> Result<(), Error> {
+        ) -> Result<(), IpakError> {
             archive::create_archive(from, to, archive_type)
-                .map_err(Error::from)
+                .map_err(IpakError::from)
         }
 
         /// 指定したアーカイブを解凍します。
@@ -74,12 +74,12 @@ pub mod ipak {
         ///
         /// # 返り値
         /// `Ok(())` - アーカイブが正常に解凍された場合。
-        /// `Err(Error)` - エラーが発生した場合。
+        /// `Err(IpakError)` - エラーが発生した場合。
         pub fn extract_archive(
             from: &PathBuf,
             to: &PathBuf,
-        ) -> Result<(), Error> {
-            archive::extract_archive(from, to).map_err(Error::from)
+        ) -> Result<(), IpakError> {
+            archive::extract_archive(from, to).map_err(IpakError::from)
         }
     }
 
@@ -94,7 +94,7 @@ pub mod ipak {
 
     /// 引数系の処理をまとめています。
     pub mod args {
-        use super::Error;
+        use super::IpakError;
         /// 引数関連のユーティリティを公開します。
         pub use crate::utils::args::*;
 
@@ -107,13 +107,13 @@ pub mod ipak {
             ///
             /// # 返り値
             /// `Ok(())` - コマンドが正常に実行された場合。
-            /// `Err(Error)` - エラーが発生した場合。
-            fn exec(self) -> Result<(), Error>;
+            /// `Err(IpakError)` - エラーが発生した場合。
+            fn exec(self) -> Result<(), IpakError>;
         }
 
         /// `Commands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for Commands {
-            fn exec(self) -> Result<(), Error> {
+            fn exec(self) -> Result<(), IpakError> {
                 match self {
                     Self::Project(project_cmd) => project_cmd.exec(),
                     Self::System(system_cmd) => system_cmd.exec(),
@@ -125,28 +125,28 @@ pub mod ipak {
 
         /// `ProjectCommands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for ProjectCommands {
-            fn exec(self) -> Result<(), Error> {
+            fn exec(self) -> Result<(), IpakError> {
                 crate::modules::project::project(self)
             }
         }
 
         /// `SystemCommands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for SystemCommands {
-            fn exec(self) -> Result<(), Error> {
+            fn exec(self) -> Result<(), IpakError> {
                 crate::modules::system::system(self)
             }
         }
 
         /// `PkgCommands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for PkgCommands {
-            fn exec(self) -> Result<(), Error> {
+            fn exec(self) -> Result<(), IpakError> {
                 crate::modules::pkg::pkg(self)
             }
         }
 
         /// `UtilsCommands`列挙型に対する`CommandExecution`トレイトの実装です。
         impl CommandExecution for UtilsCommands {
-            fn exec(self) -> Result<(), Error> {
+            fn exec(self) -> Result<(), IpakError> {
                 crate::modules::utils::utils(self)
             }
         }

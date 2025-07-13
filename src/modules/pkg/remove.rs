@@ -7,7 +7,7 @@ use super::super::project::ExecMode;
 use super::depend;
 use crate::modules::pkg::lock::LockManager;
 use crate::modules::system::path;
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 use std::env;
 use std::path::PathBuf;
 
@@ -22,11 +22,11 @@ use std::path::PathBuf;
 ///
 /// # Returns
 /// `Ok(())` パッケージが正常に削除された場合。
-/// `Err(Error)` パッケージが見つからない、またはアンインストール中にエラーが発生した場合。
+/// `Err(IpakError)` パッケージが見つからない、またはアンインストール中にエラーが発生した場合。
 pub fn remove(
     target_pkg_names: &Vec<String>,
     uninstall_mode: ExecMode,
-) -> Result<(), Error> {
+) -> Result<(), IpakError> {
     let lock_manager =
         LockManager::new(matches!(uninstall_mode, ExecMode::Global));
     lock_manager.acquire_lock()?;

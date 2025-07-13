@@ -61,7 +61,7 @@ pub fn get_archive_type(path: &Path) -> Result<ArchiveType, String> {
     let archive_format = match FileFormat::from_file(path) {
         Ok(file_format) => file_format,
         Err(e) => {
-            return Err(format!("Error while getting file format: {}", e));
+            return Err(format!("IpakError while getting file format: {}", e));
         }
     };
     let archive_extension = archive_format.extension();

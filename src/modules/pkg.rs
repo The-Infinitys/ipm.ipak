@@ -9,7 +9,7 @@
 
 use crate::utils::args::PkgCommands;
 use crate::utils::color::colorize::*;
-use crate::utils::error::Error;
+use crate::utils::error::IpakError;
 use crate::utils::version::{Version, VersionRange};
 use crate::utils::{
     generate_email_address,
@@ -373,8 +373,8 @@ impl RelationData {
 /// * `args` - 処理するパッケージコマンド
 ///
 /// # エラー
-/// コマンドの処理中にエラーが発生した場合、`Error`を返します。
-pub fn pkg(args: PkgCommands) -> Result<(), Error> {
+/// コマンドの処理中にエラーが発生した場合、`IpakError`を返します。
+pub fn pkg(args: PkgCommands) -> Result<(), IpakError> {
     match args {
         PkgCommands::Install { file_paths, local, global } => {
             install::install(&file_paths, (local, global).into())

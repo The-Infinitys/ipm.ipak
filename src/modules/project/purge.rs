@@ -51,11 +51,11 @@ pub fn purge(opts: PurgeOptions) -> Result<(), String> {
     log::debug!("{}", &opts);
 
     let target_dir = metadata::get_dir().map_err(|_| {
-        "Error: Couldn't find Ipak Directory. Make sure you are in an ipak project.".to_string()
+        "IpakError: Couldn't find Ipak Directory. Make sure you are in an ipak project.".to_string()
     })?;
 
     let project_metadata = metadata::metadata().map_err(|e| {
-        format!("Error: Failed to read project metadata: {:?}", e)
+        format!("IpakError: Failed to read project metadata: {:?}", e)
     })?;
 
     let mut purge_process = opts.purge_shell.generate();

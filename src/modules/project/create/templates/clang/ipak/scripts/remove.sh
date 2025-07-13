@@ -4,11 +4,11 @@ set -e
 
 # Ensure project name, version, and remove mode are set
 if [ -z "$IPAK_PROJECT_NAME" ] || [ -z "$IPAK_PROJECT_VERSION" ]; then
-    echo "Error: IPAK_PROJECT_NAME and IPAK_PROJECT_VERSION must be set" >&2
+    echo "IpakError: IPAK_PROJECT_NAME and IPAK_PROJECT_VERSION must be set" >&2
     exit 1
 fi
 if [ -z "$IPAK_REMOVE_MODE" ]; then
-    echo "Error: IPAK_REMOVE_MODE must be set (local or global)" >&2
+    echo "IpakError: IPAK_REMOVE_MODE must be set (local or global)" >&2
     exit 1
 fi
 
@@ -17,7 +17,7 @@ case "$IPAK_REMOVE_MODE" in
     local|global)
         ;;
     *)
-        echo "Error: Invalid IPAK_REMOVE_MODE: $IPAK_REMOVE_MODE (must be 'local' or 'global')" >&2
+        echo "IpakError: Invalid IPAK_REMOVE_MODE: $IPAK_REMOVE_MODE (must be 'local' or 'global')" >&2
         exit 1
         ;;
 esac
